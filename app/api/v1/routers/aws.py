@@ -68,6 +68,11 @@ async def create_subnet(
         name=name,
     )
 
+@router.delete("/subnets/{subnet_id}")
+async def delete_subnet(subnet_id: str):
+    return AWSVPCManager().delete_subnet(subnet_id)
+
+
 
 # ============================================================
 # 🟦 AVAILABILITY ZONES

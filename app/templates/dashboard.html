@@ -62,6 +62,12 @@
             <button @click="reloadAll()" class="bg-slate-600 text-white px-4 py-2 rounded hover:bg-slate-700">
                 Refresh
             </button>
+
+
+
+            <!-- <button @click="reloadAll()" class="bg-slate-600 text-white px-4 py-2 rounded hover:bg-slate-700">
+                Refresh
+            </button> -->
         </div>
 
         <!-- ================= CREATE VPC MODAL ================= -->
@@ -162,11 +168,13 @@
                                     class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">
                                     Delete
                                 </button>
+
                                 <button @click="safeDeleteVPC(vpc)"
-                                    class="bg-yellow-500 text-black px-3 py-1 rounded hover:bg-yellow-600">
+                                    class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600">
                                     Safe Delete
                                 </button>
                             </td>
+
                         </tr>
                     </template>
                 </tbody>
@@ -221,9 +229,10 @@
                 + Create Route Table
             </button>
 
-            <button @click="reloadRoutes()" class="bg-slate-600 text-white px-4 py-2 rounded hover:bg-slate-700">
+            <button @click="loadRouteTables()" class="bg-slate-600 text-white px-4 py-2 rounded hover:bg-slate-700">
                 Refresh Route Tables
             </button>
+
         </div>
 
         <!-- ================= CREATE ROUTE TABLE MODAL ================= -->
@@ -380,35 +389,13 @@
                                             </template>
                                         </span>
 
-                                        <button x-show="!assoc.main"
+                                        <!-- <button x-show="!assoc.main"
                                             @click="deassociateRouteTable(assoc.association_id)"
                                             class="px-2 py-1 text-xs bg-orange-500 text-white rounded hover:bg-orange-600">
                                             De-Associate
-                                        </button>
+                                        </button> -->
                                     </div>
                                 </template>
-                            </td>
-
-
-                            <template x-for="assoc in rt.associations_details" :key="assoc.association_id">
-                                <div class="flex items-center justify-between gap-2">
-                                    <div class="font-mono text-xs">
-                                        <span x-text="assoc.subnet_id || 'MAIN'"></span>
-                                        <template x-if="assoc.main">
-                                            <span class="ml-1 text-[10px] text-slate-500">(main)</span>
-                                        </template>
-                                    </div>
-
-                                    <!-- De-associate button (NOT for main route table) -->
-                                    <template x-if="!assoc.main">
-                                        <button @click="deassociateRouteTable(assoc.association_id)"
-                                            class="text-red-600 hover:text-red-800 text-xs font-semibold"
-                                            title="De-associate subnet">
-                                            ✕
-                                        </button>
-                                    </template>
-                                </div>
-                            </template>
                             </td>
 
 
@@ -424,21 +411,35 @@
                                 </ul>
                             </td>
 
-                            <td class="px-4 py-2 border space-y-2">
+                            <td class="px-4 py-2 border space-y-2 text-xs">
+
+                                <!-- 🟢 Associate Subnet -->
                                 <button @click="openAssocModal(rt)"
-                                    class="bg-green-600 text-white px-3 py-1 rounded text-xs w-full hover:bg-green-700">
+                                    class="bg-green-600 text-white px-3 py-1 rounded w-full hover:bg-green-700">
                                     Associate Subnet
                                 </button>
 
+                                <!-- 🟡 De-Associate (only if non-main association exists) -->
+                                <button x-show="rt.associations_details && rt.associations_details.some(a => !a.main)"
+                                    @click="openAssocModal(rt)"
+                                    class="bg-yellow-500 text-black px-3 py-1 rounded w-full hover:bg-yellow-600">
+                                    De-Associate
+                                </button>
+
+                                <!-- 🔵 Add Route -->
                                 <button @click="openAddRouteModal(rt)"
-                                    class="bg-blue-600 text-white px-3 py-1 rounded text-xs w-full hover:bg-blue-700">
+                                    class="bg-blue-600 text-white px-3 py-1 rounded w-full hover:bg-blue-700">
                                     Add Route
                                 </button>
 
-                                <button @click="deleteRouteTable(rt)" :disabled="rt.is_main"
-                                    class="bg-red-600 text-white px-3 py-1 rounded text-xs w-full hover:bg-red-700">
+                                <!-- 🔴 Delete RTB (non-main only) -->
+                                <button x-show="!rt.is_main" @click="deleteRouteTable(rt)"
+                                    class="bg-red-600 text-white px-3 py-1 rounded w-full hover:bg-red-700">
                                     Delete RTB
                                 </button>
+
+                            </td>
+
                             </td>
                         </tr>
                     </template>
@@ -462,6 +463,7 @@
             <button @click="loadNatGateways()" class="bg-slate-600 text-white px-4 py-2 rounded hover:bg-slate-700">
                 Refresh NAT Gateways
             </button>
+
         </div>
 
         <!-- ================= CREATE NAT MODAL ================= -->
@@ -553,7 +555,7 @@
 
     </div>
 
-</div> <!-- END networkConsole ROOT -->
+</div>
 
 
 <!-- ============================================================= -->
@@ -692,25 +694,6 @@
                 }
             },
 
-            async loadRouteTables() {
-                try {
-                    const r = await fetch('/api/v1/aws/route-tables');
-                    const d = await r.json();
-                    this.routeTables = d.route_tables || [];
-                } catch {
-                    this.showError('Failed to load route tables');
-                }
-            },
-
-            async loadInternetGateways() {
-                try {
-                    const r = await fetch('/api/v1/aws/igw');
-                    const d = await r.json();
-                    this.internetGateways = d.internet_gateways || [];
-                } catch {
-                    this.showError('Failed to load internet gateways');
-                }
-            },
 
             async loadNatGateways() {
                 try {
@@ -807,6 +790,11 @@
                     (num >>> 8) & 255,
                     num & 255,
                 ].join('.');
+            },
+
+            closeSubnetModal() {
+                this.showCreateSubnet = false;
+                this.subnetError = '';
             },
 
             cidrRange(cidr) {
@@ -1295,11 +1283,11 @@
             // -----------------------------
             // NAT GATEWAYS
             // -----------------------------
-            natGateways: [],
-            showCreateNAT: false,
+            // natGateways: [],
+            // showCreateNAT: false,
             newNATSubnetId: '',
             newNATName: '',
-            natCreateError: '',
+            // natCreateError: '',
 
             async loadNatGateways() {
                 try {
