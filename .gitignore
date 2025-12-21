@@ -1,0 +1,39 @@
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Virtual environments
+.venv/
+
+# OS / Editor
+.DS_Store
+
+# Backup files
+*.bak.*
+*~ 
+
+# Logs
+*.log
+
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Virtual environments
+.venv/
+
+# OS / Editor
+.DS_Store
+
+# Backup files
+*.bak.*
+*~
+
+# Logs
+*.log
+
+# Prevent nested copy if it exists
+app-backend/
+
