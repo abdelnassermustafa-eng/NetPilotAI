@@ -1,29 +1,27 @@
 from fastapi import APIRouter
-from pydantic import BaseModel
-
-from app.models.base_model import VPCDeleteRequest
-
 from app.services.network.aws.vpc_api import AWSVPCManager
 from app.services.network.aws.ec2_api import AWSEC2Manager
 from app.services.network.aws.sg_api import SecurityGroupManager
 from app.services.network.aws.route_table_api import AWSRouteTableManager
 from app.services.network.aws.nat_gateway_api import AWSNatGatewayManager
-from app.services.network.aws.internet_gateway_api import AWSInternetGatewayManager
+from app.models.base_model import VPCDeleteRequest
+from pydantic import BaseModel
 
 
 router = APIRouter(tags=["AWS"])
+
 
 
 # ============================================================
 # 🟦 VPC ROUTES
 # ============================================================
 @router.get("/vpcs")
-def list_vpcs():
+async def list_vpcs():
     return AWSVPCManager().list_vpcs()
 
 
 @router.post("/vpcs")
-def create_vpc(cidr: str = "10.0.0.0/16"):
+async def create_vpc(cidr: str = "10.0.0.0/16"):
     return AWSVPCManager().create_vpc(cidr)
 
 
@@ -51,12 +49,12 @@ def delete_vpc_safe(vpc_id: str):
 # 🟦 SUBNET ROUTES
 # ============================================================
 @router.get("/subnets")
-def list_subnets():
+async def list_subnets():
     return AWSVPCManager().list_subnets()
 
 
 @router.post("/subnets")
-def create_subnet(
+async def create_subnet(
     vpc_id: str,
     cidr: str,
     availability_zone: str,
@@ -71,7 +69,7 @@ def create_subnet(
 
 
 @router.delete("/subnets/{subnet_id}")
-def delete_subnet(subnet_id: str):
+async def delete_subnet(subnet_id: str):
     return AWSVPCManager().delete_subnet(subnet_id)
 
 
@@ -79,18 +77,13 @@ def delete_subnet(subnet_id: str):
 # 🟦 AVAILABILITY ZONES
 # ============================================================
 @router.get("/availability-zones")
-def list_availability_zones():
+async def list_availability_zones():
     return AWSVPCManager().list_availability_zones()
 
-
-# ============================================================
-# 🟦 ROUTE TABLE MODELS
-# ============================================================
 class RouteTableCreate(BaseModel):
     vpc_id: str
     name: str
     description: str | None = None
-
 
 class RouteCreate(BaseModel):
     destination_cidr: str
@@ -102,12 +95,12 @@ class RouteCreate(BaseModel):
 # 🟦 ROUTE TABLE ROUTES
 # ============================================================
 @router.get("/route-tables")
-def list_route_tables():
+async def list_route_tables():
     return AWSRouteTableManager().list_route_tables()
 
 
 @router.post("/route-tables")
-def create_route_table(payload: RouteTableCreate):
+async def create_route_table(payload: RouteTableCreate):
     return AWSRouteTableManager().create_route_table(
         vpc_id=payload.vpc_id,
         name=payload.name,
@@ -116,15 +109,14 @@ def create_route_table(payload: RouteTableCreate):
 
 
 @router.post("/route-tables/{rtb_id}/associate")
-def associate_route_table(rtb_id: str, subnet_id: str):
-    return AWSRouteTableManager().associate_route_table(
-        rtb_id=rtb_id,
-        subnet_id=subnet_id,
-    )
-
+async def associate_route_table(rtb_id: str, subnet_id: str):
+    return AWSRouteTableManager().associate_route_table(rtb_id, subnet_id)
 
 @router.post("/route-tables/{rtb_id}/routes")
-def create_route(rtb_id: str, payload: RouteCreate):
+async def create_route(
+    rtb_id: str,
+    payload: RouteCreate,
+):
     return AWSRouteTableManager().create_route(
         route_table_id=rtb_id,
         destination_cidr=payload.destination_cidr,
@@ -133,64 +125,69 @@ def create_route(rtb_id: str, payload: RouteCreate):
     )
 
 
+
 @router.post("/route-tables/{association_id}/disassociate")
-def disassociate_route_table(association_id: str):
+async def disassociate_route_table(association_id: str):
     return AWSRouteTableManager().disassociate(association_id)
 
 
 # ============================================================
-# 🟦 INTERNET GATEWAYS (AUTHORITATIVE)
+# 🟦 INTERNET GATEWAYS (FIXED & STABLE)
 # ============================================================
 @router.get("/internet-gateways")
-def list_internet_gateways():
-    return AWSInternetGatewayManager().list_igws()
+async def list_internet_gateways():
+    return AWSEC2Manager().list_internet_gateways()
 
 
 @router.post("/internet-gateways")
-def create_internet_gateway(name: str | None = None):
-    return AWSInternetGatewayManager().create_igw(name=name)
+async def create_internet_gateway(name: str | None = None):
+    return AWSEC2Manager().create_internet_gateway(name=name)
 
 
 @router.post("/internet-gateways/{igw_id}/attach")
-def attach_internet_gateway(igw_id: str, vpc_id: str):
-    return AWSInternetGatewayManager().attach_igw(igw_id, vpc_id)
+async def attach_internet_gateway(igw_id: str, vpc_id: str):
+    return AWSEC2Manager().attach_internet_gateway(igw_id, vpc_id)
 
 
 @router.post("/internet-gateways/{igw_id}/detach")
-def detach_internet_gateway(igw_id: str, vpc_id: str):
-    return AWSInternetGatewayManager().detach_igw(igw_id, vpc_id)
+async def detach_internet_gateway(igw_id: str, vpc_id: str):
+    return AWSEC2Manager().detach_internet_gateway(igw_id, vpc_id)
 
 
 @router.delete("/internet-gateways/{igw_id}")
-def delete_internet_gateway(igw_id: str):
-    return AWSInternetGatewayManager().delete_igw(igw_id)
+async def delete_internet_gateway(igw_id: str):
+    return AWSEC2Manager().delete_internet_gateway(igw_id)
 
 
 # ============================================================
-# 🟦 NAT GATEWAYS (LOCKED)
+# 🟦 NAT GATEWAYS (UNCHANGED — NEXT PROBLEM)
 # ============================================================
 @router.get("/nat-gateways")
-def list_nat_gateways():
+async def list_nat_gateways():
     return AWSNatGatewayManager().list_nat_gateways()
 
 
 @router.post("/nat-gateways")
-def create_nat_gateway(
+async def create_nat_gateway(
     subnet_id: str,
     name: str | None = None,
     allocation_id: str | None = None,
 ):
     return AWSNatGatewayManager().create_nat_gateway(
         subnet_id=subnet_id,
-        allocation_id=allocation_id,
         name=name,
+        allocation_id=allocation_id,
     )
 
 
 @router.delete("/nat-gateways/{nat_gateway_id}")
-def delete_nat_gateway(nat_gateway_id: str):
+async def delete_nat_gateway(
+    nat_gateway_id: str,
+    release_eip: bool = True,
+):
     return AWSNatGatewayManager().delete_nat_gateway(
-        nat_gateway_id=nat_gateway_id
+        nat_gateway_id=nat_gateway_id,
+        release_eip=release_eip,
     )
 
 
@@ -198,7 +195,7 @@ def delete_nat_gateway(nat_gateway_id: str):
 # 🟦 EC2
 # ============================================================
 @router.get("/instances")
-def list_instances():
+async def list_instances():
     return AWSEC2Manager().list_instances()
 
 
@@ -206,5 +203,5 @@ def list_instances():
 # 🟦 SECURITY GROUPS
 # ============================================================
 @router.get("/security-groups")
-def list_security_groups():
+async def list_security_groups():
     return SecurityGroupManager().list_security_groups()

@@ -29,6 +29,64 @@ class AWSRouteTableManager:
             return {"status": "failed", "error": str(e)}
 
     # ---------------------------------------------------------
+    # ASSOCIATE / REPLACE ROUTE TABLE (AWS-SAFE)
+    # ---------------------------------------------------------
+    def associate_route_table(self, rtb_id: str, subnet_id: str):
+        try:
+            # Step 1: Check existing association for this subnet
+            response = self.ec2.describe_route_tables(
+                Filters=[
+                    {
+                        "Name": "association.subnet-id",
+                        "Values": [subnet_id],
+                    }
+                ]
+            )
+
+            associations = []
+            for rt in response.get("RouteTables", []):
+                for assoc in rt.get("Associations", []):
+                    if assoc.get("SubnetId") == subnet_id:
+                        associations.append(assoc)
+
+            # Step 2: Replace association if one exists (MOST COMMON CASE)
+            if associations:
+                association_id = associations[0]["RouteTableAssociationId"]
+
+                self.ec2.replace_route_table_association(
+                    AssociationId=association_id,
+                    RouteTableId=rtb_id,
+                )
+
+                return {
+                    "status": "success",
+                    "action": "replaced",
+                    "route_table_id": rtb_id,
+                    "subnet_id": subnet_id,
+                    "association_id": association_id,
+                }
+
+            # Step 3: Otherwise associate normally (RARE CASE)
+            result = self.ec2.associate_route_table(
+                RouteTableId=rtb_id,
+                SubnetId=subnet_id,
+            )
+
+            return {
+                "status": "success",
+                "action": "associated",
+                "route_table_id": rtb_id,
+                "subnet_id": subnet_id,
+                "association_id": result["AssociationId"],
+            }
+
+        except ClientError as e:
+            return {
+                "status": "failed",
+                "error": e.response["Error"]["Message"],
+            }
+
+    # ---------------------------------------------------------
     # CREATE ROUTE TABLE
     # ---------------------------------------------------------
     def create_route_table(self, vpc_id: str, name: str, description: str):
