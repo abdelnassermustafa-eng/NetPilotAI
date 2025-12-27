@@ -1062,7 +1062,6 @@
 
     <!-- ================= VALIDATION TAB ================= -->
     <div x-show="activeTab === 'validation'" x-cloak class="space-y-6">
-
         <div class="bg-slate-50 border border-slate-200 rounded-lg p-6">
             <h2 class="text-lg font-semibold text-slate-800">
                 Validation & Operations
@@ -1083,6 +1082,34 @@
             <div class="mt-4 text-sm text-slate-500 italic">
                 Validation data will appear here as features are enabled.
             </div>
+        </div>
+
+
+        <!-- ================= VPC DEPENDENCY INSPECTION (UI ONLY) ================= -->
+        <div class="bg-slate-50 border border-slate-200 rounded-lg p-5 space-y-4">
+
+            <h3 class="text-md font-semibold text-slate-800">
+                VPC Dependency Inspection
+            </h3>
+
+            <p class="text-sm text-slate-600">
+                Inspect why a VPC cannot be safely deleted. This check is read-only and
+                does not modify any resources.
+            </p>
+
+            <!-- VPC SELECTOR (no logic yet) -->
+            <div class="flex items-center space-x-3">
+                <select disabled
+                    class="border rounded px-3 py-2 text-sm w-80 bg-slate-100 text-slate-500 cursor-not-allowed">
+                    <option>-- Select VPC (coming next phase) --</option>
+                </select>
+
+                <button disabled
+                    class="px-4 py-2 text-sm font-medium rounded bg-slate-300 text-slate-600 cursor-not-allowed">
+                    Inspect
+                </button>
+            </div>
+
         </div>
 
     </div>
@@ -1109,6 +1136,12 @@
             // =============================
             activeTab: 'network',
             globalError: null,
+
+            // =============================
+            // VALIDATION STATE (Phase 1B)
+            // =============================
+            validationVpcId: '',
+
 
             // =============================
             // CORE DATA
