@@ -128,6 +128,14 @@
                 : 'px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-800'">
                 ⚙️ NAT Gateways
             </button>
+
+            <button @click="activeTab = 'validation'" :class="activeTab === 'validation'
+                    ? 'px-3 py-2 text-sm font-medium border-b-2 border-blue-600 text-blue-600'
+                    : 'px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-800'">
+                🧪 Validation & Operations
+            </button>
+
+
         </nav>
     </div>
     <div x-show="activeTab === 'network'" x-cloak class="space-y-6">
