@@ -5,17 +5,28 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+
+# ----------------------------
+# Core Routers (VALID)
+# ----------------------------
 from app.api.v1.routers.dashboard import router as dashboard_router
 from app.api.v1.routers.aws import router as aws_router
 from app.api.v1.routers.health import router as health_router
+from app.api.v1.routers.ops_docs import router as ops_docs_router
+
 from app.db.init_db import init_db
 
-from app.api.v1.routers.ops_docs import router as ops_docs_router
-from app.api.v1.routers.aws_subnet_inspect import router as aws_subnet_inspect_router
-from app.api.v1.routers.aws_vpcs import router as aws_vpcs_router
-from app.api.v1.routers.aws_route_tables import router as aws_route_tables_router
-from app.api.v1.routers.aws_internet_gateways import router as aws_igw_router
-from app.api.v1.routers.aws_nat_gateways import router as aws_nat_router
+# ----------------------------
+# Future / Not-present Routers (COMMENTED)
+# ----------------------------
+# from app.api.v1.routers.aws_subnet_inspect import router as aws_subnet_inspect_router
+# from app.api.v1.routers.aws_vpcs import router as aws_vpcs_router
+# from app.api.v1.routers.aws_route_tables import router as aws_route_tables_router
+# from app.api.v1.routers.aws_internet_gateways import router as aws_igw_router
+# from app.api.v1.routers.aws_nat_gateways import router as aws_nat_router
+
+
+templates = Jinja2Templates(directory="app/templates")
 
 
 app = FastAPI(
@@ -25,25 +36,21 @@ app = FastAPI(
 )
 
 # ----------------------------
-# Static & Templates
-# ----------------------------
-templates = Jinja2Templates(directory="app/templates")
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
-
-# ----------------------------
 # Routers
 # ----------------------------
 app.include_router(health_router, prefix="/api/v1")
 app.include_router(aws_router, prefix="/api/v1/aws")
 app.include_router(dashboard_router, prefix="/api/v1/dashboard")
-app.include_router(ops_docs_router)
-app.include_router(aws_subnet_inspect_router, prefix="/api/v1")
-app.include_router(aws_vpcs_router, prefix="/api/v1")
-app.include_router(aws_route_tables_router, prefix="/api/v1")
-app.include_router(aws_igw_router, prefix="/api/v1")
-app.include_router(aws_nat_router, prefix="/api/v1")
+app.include_router(ops_docs_router, prefix="/api/v1/ops", tags=["validation", "operations"])
 
-
+# ----------------------------
+# Future / Not-present Routers (COMMENTED)
+# ----------------------------
+# app.include_router(aws_subnet_inspect_router, prefix="/api/v1")
+# app.include_router(aws_vpcs_router, prefix="/api/v1")
+# app.include_router(aws_route_tables_router, prefix="/api/v1")
+# app.include_router(aws_igw_router, prefix="/api/v1")
+# app.include_router(aws_nat_router, prefix="/api/v1")
 
 
 

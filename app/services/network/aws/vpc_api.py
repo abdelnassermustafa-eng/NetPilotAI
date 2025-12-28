@@ -625,3 +625,42 @@ class AWSVPCManager:
                 "subnet_id": subnet_id,
                 "error": message,
             }
+
+    def inspect_vpc_dependencies(self, vpc_id: str):
+        """
+        Read-only inspection of VPC dependencies.
+        Does NOT modify or delete any resources.
+        """
+
+        deps = {
+            "subnets": 0,
+            "internet_gateways": 0,
+            "nat_gateways": 0,
+        }
+
+        # Subnets
+        subnets = self.ec2.describe_subnets(
+            Filters=[{"Name": "vpc-id", "Values": [vpc_id]}]
+        )["Subnets"]
+        deps["subnets"] = len(subnets)
+
+        # Internet Gateways
+        igws = self.ec2.describe_internet_gateways(
+            Filters=[{"Name": "attachment.vpc-id", "Values": [vpc_id]}]
+        )["InternetGateways"]
+        deps["internet_gateways"] = len(igws)
+
+        # NAT Gateways
+        ngws = self.ec2.describe_nat_gateways(
+            Filter=[{"Name": "vpc-id", "Values": [vpc_id]}]
+        )["NatGateways"]
+        deps["nat_gateways"] = len(ngws)
+
+        can_delete = all(v == 0 for v in deps.values())
+
+        return {
+            "vpc_id": vpc_id,
+            "can_delete": can_delete,
+            "dependencies": deps,
+        }
+

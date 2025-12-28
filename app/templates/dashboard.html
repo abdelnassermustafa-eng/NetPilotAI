@@ -1097,18 +1097,73 @@
                 does not modify any resources.
             </p>
 
-            <!-- VPC SELECTOR (no logic yet) -->
-            <div class="flex items-center space-x-3">
-                <select disabled
-                    class="border rounded px-3 py-2 text-sm w-80 bg-slate-100 text-slate-500 cursor-not-allowed">
-                    <option>-- Select VPC (coming next phase) --</option>
-                </select>
+            <!-- VPC Dependency Inspection -->
+            <div class="bg-white rounded-xl shadow p-6 space-y-4">
 
-                <button disabled
-                    class="px-4 py-2 text-sm font-medium rounded bg-slate-300 text-slate-600 cursor-not-allowed">
-                    Inspect
-                </button>
+                <h2 class="text-lg font-semibold text-slate-800">
+                    VPC Dependency Inspection
+                </h2>
+
+                <p class="text-sm text-slate-600">
+                    Inspect why a VPC cannot be safely deleted.
+                    This check is read-only and does not modify any resources.
+                </p>
+
+                <div class="flex items-center gap-3">
+
+                    <!-- Inspect Button (WORKING) -->
+                    <button @click="inspectVpcDependencies" :disabled="inspectingVpc"
+                        class="px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-700 disabled:opacity-50">
+                        <span x-show="!inspectingVpc">Inspect</span>
+                        <span x-show="inspectingVpc">Inspecting…</span>
+                    </button>
+
+                    <!-- VPC Selector -->
+                    <select x-model="selectedVpcId"
+                        class="border rounded px-3 py-2 text-sm w-80 bg-white text-slate-700">
+
+                        <option value="" disabled>Select VPC</option>
+
+                        <template x-for="vpc in vpcs" :key="vpc.vpc_id">
+                            <option :value="vpc.vpc_id" x-text="`${vpc.vpc_id} (${vpc.cidr})`">
+                            </option>
+                        </template>
+
+                    </select>
+
+                </div>
+
+
+                <!-- Error -->
+                <div x-show="vpcInspectionError" class="text-red-600 text-sm">
+                    <span x-text="vpcInspectionError"></span>
+                </div>
+
+                <!-- Results -->
+                <div x-show="vpcInspectionResult" class="mt-4">
+                    <h3 class="font-medium text-slate-700 mb-2">Dependencies found:</h3>
+
+                    <ul class="text-sm text-slate-700 space-y-1">
+                        <template x-for="(count, name) in vpcInspectionResult.dependencies" :key="name">
+                            <li>
+                                • <span x-text="name.replaceAll('_',' ')"></span>:
+                                <strong x-text="count"></strong>
+                            </li>
+                        </template>
+                    </ul>
+
+                    <div class="mt-3 text-sm">
+                        <span x-show="vpcInspectionResult.deletable" class="text-green-600 font-medium">
+                            ✔ VPC can be safely deleted
+                        </span>
+
+                        <span x-show="!vpcInspectionResult.deletable" class="text-amber-600 font-medium">
+                            ⚠ VPC has blocking dependencies
+                        </span>
+                    </div>
+                </div>
             </div>
+
 
         </div>
 
@@ -1129,6 +1184,7 @@
             // =============================
             init() {
                 this.reloadAll();
+                this.loadVpcsForInspection();
             },
 
             // =============================
@@ -1141,6 +1197,8 @@
             // VALIDATION STATE (Phase 1B)
             // =============================
             validationVpcId: '',
+            selectedVpcId: '',
+
 
 
             // =============================
@@ -1183,6 +1241,14 @@
             newNATSubnetId: '',
             newNATName: 'NetPilot-NAT',
             natCreateError: '',
+
+            // -----------------------------
+            // VPC INSPECTION
+            // -----------------------------
+            vpcInspectionResult: null,
+            vpcInspectionError: null,
+            inspectingVpc: false,
+
 
             // =============================
             // INTERNET GATEWAYS (CREATE)
@@ -1383,6 +1449,66 @@
                     this.showError('Failed to safe-delete VPC');
                 }
             },
+
+            async inspectVpcDependencies() {
+                this.inspectingVpc = true;
+                this.vpcInspectionError = null;
+                this.vpcInspectionResult = null;
+
+                const vpcId = this.selectedVpcId;
+
+                try {
+                    const res = await fetch(
+                        `/api/v1/aws/vpcs/${vpcId}/inspect`
+                    );
+                    const data = await res.json();
+
+                    if (!res.ok) {
+                        this.vpcInspectionError = data.error || "Inspection failed";
+                        return;
+                    }
+
+                    this.vpcInspectionResult = data;
+
+                } catch (e) {
+                    this.vpcInspectionError = "Failed to contact backend";
+                } finally {
+                    this.inspectingVpc = false;
+                }
+            },
+
+
+            // -----------------------------
+            // VPC SELECTOR
+            // -----------------------------
+            vpcs: [],
+            selectedVpcId: '',
+            vpcListError: null,
+
+            async loadVpcsForInspection() {
+                this.vpcListError = null;
+
+                try {
+                    const res = await fetch('/api/v1/aws/vpcs');
+                    const data = await res.json();
+
+                    if (!res.ok) {
+                        this.vpcListError = data.error || 'Failed to load VPCs';
+                        return;
+                    }
+
+                    this.vpcs = data.vpcs || [];
+
+                    // Auto-select first VPC (safe default)
+                    if (this.vpcs.length && !this.selectedVpcId) {
+                        this.selectedVpcId = this.vpcs[0].vpc_id;
+                    }
+
+                } catch (e) {
+                    this.vpcListError = 'Unable to contact backend';
+                }
+            },
+
 
             // =============================
             // SUBNET UI

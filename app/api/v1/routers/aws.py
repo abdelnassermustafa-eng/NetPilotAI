@@ -10,6 +10,8 @@ from app.services.network.aws.route_table_api import AWSRouteTableManager
 from app.services.network.aws.nat_gateway_api import AWSNatGatewayManager
 from app.services.network.aws.internet_gateway_api import AWSInternetGatewayManager
 
+from app.services.aws.vpc_inspector import VPCInspector
+
 
 router = APIRouter(tags=["AWS"])
 
@@ -20,6 +22,11 @@ router = APIRouter(tags=["AWS"])
 @router.get("/vpcs")
 def list_vpcs():
     return AWSVPCManager().list_vpcs()
+
+@router.get("/vpcs/{vpc_id}/inspect")
+def inspect_vpc_dependencies(vpc_id: str):
+    inspector = VPCInspector()
+    return inspector.inspect(vpc_id)
 
 
 @router.post("/vpcs")
@@ -208,3 +215,12 @@ def list_instances():
 @router.get("/security-groups")
 def list_security_groups():
     return SecurityGroupManager().list_security_groups()
+
+@router.get("/vpcs/{vpc_id}/inspect")
+async def inspect_vpc(vpc_id: str):
+    """
+    Read-only inspection explaining why a VPC cannot be deleted.
+    """
+    api = VpcApi()
+    return api.inspect_vpc_dependencies(vpc_id)
+
