@@ -1101,12 +1101,12 @@
             <div class="bg-white rounded-xl shadow p-6 space-y-4">
 
                 <h2 class="text-lg font-semibold text-slate-800">
-                    VPC Dependency Inspection
+                    VPC & Subnets
                 </h2>
 
                 <p class="text-sm text-slate-600">
-                    Inspect why a VPC cannot be safely deleted.
-                    This check is read-only and does not modify any resources.
+                    Live validation of VPC structure and subnet dependencies.
+                    Read-only. No resources are modified.
                 </p>
 
                 <div class="flex items-center gap-3">
@@ -1132,6 +1132,40 @@
                     </select>
 
                 </div>
+
+                <!-- Subnets Validation Details -->
+                <div x-show="vpcInspectionResult?.dependencies?.subnets > 0" class="mt-6 border-t pt-4">
+
+                    <button @click="showSubnetDetails = !showSubnetDetails"
+                        class="text-sm font-medium text-slate-700 hover:underline">
+
+                        ▸ Subnets
+                        (<span x-text="vpcInspectionResult.dependencies.subnets"></span>)
+                    </button>
+
+                    <div x-show="showSubnetDetails" class="mt-3">
+                        <table class="min-w-full text-sm border">
+                            <thead class="bg-slate-100">
+                                <tr>
+                                    <th class="px-3 py-2 text-left">Subnet ID</th>
+                                    <th class="px-3 py-2 text-left">CIDR</th>
+                                    <th class="px-3 py-2 text-left">AZ</th>
+                                    <th class="px-3 py-2 text-left">State</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- populated next step -->
+                                <tr>
+                                    <td class="px-3 py-2 text-slate-500 italic" colspan="4">
+                                        Subnet details will appear here.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+
 
 
                 <!-- Error -->
@@ -1188,6 +1222,71 @@
                         </template>
                     </ul>
                 </div>
+
+                <!-- ROUTE TABLES -->
+                <div class="mt-4">
+
+                    <button @click="expandedValidation.route_tables = !expandedValidation.route_tables"
+                        class="text-sm font-medium text-slate-700 hover:underline">
+
+                        ▸ Route Tables
+                        (<span x-text="vpcInspectionResult.dependencies.route_tables"></span>)
+                    </button>
+
+                    <div x-show="expandedValidation.route_tables" class="mt-2 ml-4 space-y-3">
+
+                        <!-- Loading -->
+                        <div x-show="routeTableLoading" class="text-sm italic text-slate-500">
+                            Loading route tables…
+                        </div>
+
+                        <!-- Error -->
+                        <div x-show="routeTableError" class="text-sm text-red-600">
+                            <span x-text="routeTableError"></span>
+                        </div>
+
+                        <!-- Summary -->
+                        <div x-show="routeTableInspection && !routeTableLoading"
+                            class="text-sm text-slate-600 space-y-1">
+
+                            <div>• Total route tables:
+                                <strong x-text="routeTableInspection.summary.total_route_tables"></strong>
+                            </div>
+                            <div>• Main route tables:
+                                <strong x-text="routeTableInspection.summary.main_route_tables"></strong>
+                            </div>
+                            <div>• Orphaned route tables:
+                                <strong x-text="routeTableInspection.summary.orphaned_route_tables"></strong>
+                            </div>
+                            <div>• With default route:
+                                <strong x-text="routeTableInspection.summary.route_tables_with_default_route"></strong>
+                            </div>
+                        </div>
+
+                        <!-- DETAILS LIST -->
+                        <ul x-show="routeTableInspection && !routeTableLoading"
+                            class="mt-2 space-y-1 text-sm text-slate-700">
+
+                            <template x-for="rt in routeTableInspection.details" :key="rt.route_table_id">
+
+                                <li>
+                                    • <strong x-text="rt.route_table_id"></strong>
+                                    <span x-show="rt.is_main" class="text-xs text-blue-600">(Main)</span>
+                                    —
+                                    associations:
+                                    <span x-text="rt.association_count"></span>,
+                                    default route:
+                                    <span x-text="rt.has_default_route ? 'yes' : 'no'"></span>,
+                                    state:
+                                    <span x-text="rt.state"></span>
+                                </li>
+
+                            </template>
+                        </ul>
+
+                    </div>
+                </div>
+
 
                 <!-- INTERNET GATEWAYS -->
                 <div>
@@ -1354,17 +1453,53 @@
             vpcInspectionResult: null,
             vpcInspectionError: null,
             inspectingVpc: false,
+            showSubnetDetails: false,
 
-            // -----------------------------
-            // VALIDATION DETAILS UI STATE
-            // -----------------------------
+            // =============================
+            // VALIDATION DETAILS (ROUTE TABLES)
+            // =============================
             expandedValidation: {
                 subnets: false,
+                route_tables: false,
                 internet_gateways: false,
                 nat_gateways: false,
-                route_tables: false,
                 network_interfaces: false,
             },
+
+            routeTableInspection: null,
+            routeTableLoading: false,
+            routeTableError: null,
+
+            async loadRouteTableValidation() {
+                if (!this.selectedVpcId) return;
+
+                this.routeTableLoading = true;
+                this.routeTableError = null;
+
+                try {
+                    const res = await fetch(
+                        `/api/v1/aws/route-tables/inspect?vpc_id=${this.selectedVpcId}`
+                    );
+
+                    const data = await res.json();
+
+                    if (!res.ok) {
+                        this.routeTableError = data.error || "Failed to load route tables";
+                        this.routeTableInspection = null;
+                        return;
+                    }
+
+                    this.routeTableInspection = data;
+
+                } catch (e) {
+                    this.routeTableError = "Failed to contact backend";
+                    this.routeTableInspection = null;
+                } finally {
+                    this.routeTableLoading = false;
+                }
+            },
+
+
 
 
             // =============================
@@ -1586,6 +1721,7 @@
                     }
 
                     this.vpcInspectionResult = data;
+                    await this.loadRouteTableValidation();
 
                 } catch (e) {
                     this.vpcInspectionError = "Failed to contact backend";
