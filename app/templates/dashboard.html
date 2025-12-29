@@ -1164,6 +1164,112 @@
                 </div>
             </div>
 
+            <!-- ================= VALIDATION DETAILS ================= -->
+            <div x-show="vpcInspectionResult && vpcInspectionResult.details" class="mt-6 border-t pt-4 space-y-3">
+
+                <h3 class="text-md font-semibold text-slate-800">
+                    Validation Details
+                </h3>
+
+                <!-- SUBNETS -->
+                <div>
+                    <button @click="expandedValidation.subnets = !expandedValidation.subnets"
+                        class="text-sm font-medium text-slate-700 hover:underline">
+                        ▸ Subnets (<span x-text="vpcInspectionResult.summary.subnets"></span>)
+                    </button>
+
+                    <ul x-show="expandedValidation.subnets" class="mt-2 ml-4 text-sm text-slate-600 space-y-1">
+                        <template x-for="s in vpcInspectionResult.details.subnets" :key="s.subnet_id">
+                            <li>
+                                • <strong x-text="s.subnet_id"></strong>
+                                (<span x-text="s.cidr"></span>,
+                                <span x-text="s.availability_zone"></span>)
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+
+                <!-- INTERNET GATEWAYS -->
+                <div>
+                    <button @click="expandedValidation.internet_gateways = !expandedValidation.internet_gateways"
+                        class="text-sm font-medium text-slate-700 hover:underline">
+                        ▸ Internet Gateways (<span x-text="vpcInspectionResult.summary.internet_gateways"></span>)
+                    </button>
+
+                    <ul x-show="expandedValidation.internet_gateways"
+                        class="mt-2 ml-4 text-sm text-slate-600 space-y-1">
+                        <template x-for="igw in vpcInspectionResult.details.internet_gateways"
+                            :key="igw.internet_gateway_id">
+                            <li>
+                                • <strong x-text="igw.internet_gateway_id"></strong>
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+
+                <!-- NAT GATEWAYS -->
+                <div>
+                    <button @click="expandedValidation.nat_gateways = !expandedValidation.nat_gateways"
+                        class="text-sm font-medium text-slate-700 hover:underline">
+                        ▸ NAT Gateways (<span x-text="vpcInspectionResult.summary.nat_gateways"></span>)
+                    </button>
+
+                    <ul x-show="expandedValidation.nat_gateways" class="mt-2 ml-4 text-sm text-slate-600 space-y-1">
+                        <template x-for="nat in vpcInspectionResult.details.nat_gateways" :key="nat.nat_gateway_id">
+                            <li>
+                                • <strong x-text="nat.nat_gateway_id"></strong>
+                                (subnet:
+                                <span x-text="nat.subnet_id"></span>,
+                                state:
+                                <span x-text="nat.state"></span>)
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+
+                <!-- ROUTE TABLES -->
+                <div>
+                    <button @click="expandedValidation.route_tables = !expandedValidation.route_tables"
+                        class="text-sm font-medium text-slate-700 hover:underline">
+                        ▸ Route Tables (<span x-text="vpcInspectionResult.summary.route_tables"></span>)
+                    </button>
+
+                    <ul x-show="expandedValidation.route_tables" class="mt-2 ml-4 text-sm text-slate-600 space-y-1">
+                        <template x-for="rt in vpcInspectionResult.details.route_tables" :key="rt.route_table_id">
+                            <li>
+                                • <strong x-text="rt.route_table_id"></strong>
+                                <span x-show="rt.is_main">(Main)</span>
+                                — associations:
+                                <span x-text="rt.association_count"></span>
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+
+                <!-- NETWORK INTERFACES -->
+                <div>
+                    <button @click="expandedValidation.network_interfaces = !expandedValidation.network_interfaces"
+                        class="text-sm font-medium text-slate-700 hover:underline">
+                        ▸ Network Interfaces (<span x-text="vpcInspectionResult.summary.network_interfaces"></span>)
+                    </button>
+
+                    <ul x-show="expandedValidation.network_interfaces"
+                        class="mt-2 ml-4 text-sm text-slate-600 space-y-1">
+                        <template x-for="eni in vpcInspectionResult.details.network_interfaces"
+                            :key="eni.network_interface_id">
+                            <li>
+                                • <strong x-text="eni.network_interface_id"></strong>
+                                (subnet:
+                                <span x-text="eni.subnet_id"></span>,
+                                status:
+                                <span x-text="eni.status"></span>)
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+
+            </div>
+
 
         </div>
 
@@ -1248,6 +1354,17 @@
             vpcInspectionResult: null,
             vpcInspectionError: null,
             inspectingVpc: false,
+
+            // -----------------------------
+            // VALIDATION DETAILS UI STATE
+            // -----------------------------
+            expandedValidation: {
+                subnets: false,
+                internet_gateways: false,
+                nat_gateways: false,
+                route_tables: false,
+                network_interfaces: false,
+            },
 
 
             // =============================
