@@ -11,6 +11,11 @@ from app.services.network.aws.nat_gateway_api import AWSNatGatewayManager
 from app.services.network.aws.internet_gateway_api import AWSInternetGatewayManager
 
 from app.services.aws.vpc_inspector import VPCInspector
+from app.services.aws.route_table_inspector import RouteTableInspector
+from app.services.aws.nat_gateway_inspector import NatGatewayInspector
+from app.services.aws.internet_gateway_inspector import InternetGatewayInspector
+
+
 
 
 router = APIRouter(tags=["AWS"])
@@ -27,6 +32,21 @@ def list_vpcs():
 def inspect_vpc_dependencies(vpc_id: str):
     inspector = VPCInspector()
     return inspector.inspect(vpc_id)
+
+@router.get("/route-tables/inspect")
+async def inspect_route_tables(vpc_id: str):
+    inspector = RouteTableInspector()
+    return inspector.inspect_vpc_route_tables(vpc_id)
+
+@router.get("/nat-gateways/inspect")
+async def inspect_nat_gateways(vpc_id: str):
+    inspector = NatGatewayInspector()
+    return inspector.inspect_vpc_nat_gateways(vpc_id)
+
+@router.get("/internet-gateways/inspect")
+async def inspect_internet_gateways(vpc_id: str):
+    inspector = InternetGatewayInspector()
+    return inspector.inspect_vpc_internet_gateways(vpc_id)
 
 
 @router.post("/vpcs")

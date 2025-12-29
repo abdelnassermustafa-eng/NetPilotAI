@@ -37,3 +37,5 @@ __pycache__/
 # Prevent nested copy if it exists
 app-backend/
 
+__pycache__/
+*.pyc
