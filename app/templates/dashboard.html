@@ -1347,296 +1347,360 @@
 
                         <!-- DETAILS LIST -->
                         <ul x-show="routeTableInspection && !routeTableLoading"
-                            class="mt-2 space-y-1 text-sm text-slate-700">
+                            class="mt-2 space-y-2 text-sm text-slate-700">
 
                             <template x-for="rt in routeTableInspection.details" :key="rt.route_table_id">
 
-                                <!-- ROUTE TABLE SUMMARY LINE -->
-                                <li>
-                                    • <strong class="font-mono font-bold" x-text="rt.route_table_id"></strong>
-                                    <span x-show="rt.is_main" class="text-xs text-blue-600">(Main)</span>
-                                    —
-                                    associations:
-                                    <span x-text="rt.association_count"></span>,
-                                    default route:
-                                    <span x-text="rt.has_default_route ? 'yes' : 'no'"></span>,
-                                    state:
-                                    <span x-text="rt.state"></span>
-                                </li>
+                                <!-- ONE LI PER ROUTE TABLE -->
+                                <li class="space-y-2">
 
-                                <!-- WHY THIS ROUTE TABLE BLOCKS DELETION -->
-                                <div class="mt-2 ml-6 text-sm text-slate-700 space-y-1">
-
-                                    <div x-show="rt.is_main">
-                                        ❌ <span class="text-amber-700 font-medium">Cannot delete</span> because this is
-                                        the
-                                        <span class="text-indigo-700 font-medium">main route table</span> for the VPC
-                                        <span class="font-mono font-bold text-slate-900"
-                                            x-text="vpcInspectionResult?.vpc_id"></span>.
-                                    </div>
-
-                                    <div x-show="rt.has_default_route">
-                                        🔁 <span class="text-blue-700 font-medium">Default route present</span>
-                                        (<span class="font-mono font-bold">0.0.0.0/0</span>)
-                                    </div>
-
-                                    <div x-show="rt.association_count > 0">
-                                        🔗 <span class="font-medium">Associated with</span>
-                                        <span class="font-bold" x-text="rt.association_count"></span>
-                                        subnet<span x-show="rt.association_count > 1">s</span>
-                                    </div>
-
-                                </div>
-
-                            </template>
-                        </ul>
-
-                    </div>
-                </div>
-
-
-                <!-- INTERNET GATEWAYS -->
-                <div>
-                    <button @click="expandedValidation.internet_gateways = !expandedValidation.internet_gateways"
-                        class="text-sm font-medium text-slate-700 hover:underline">
-                        ▸ Internet Gateways
-                        <span x-text="internetGatewayInspection.length"></span>
-                    </button>
-
-                    <div x-show="expandedValidation.internet_gateways" x-cloak
-                        class="mt-2 ml-4 space-y-4 text-sm text-slate-600">
-
-
-
-                        <template x-for="igw in internetGatewayInspection" :key="igw.internet_gateway_id">
-
-                            <div class="border-l-2 border-slate-300 pl-3 space-y-2">
-
-                                <!-- IGW SUMMARY -->
-                                <div>
-                                    • <strong class="font-mono text-slate-900"
-                                        x-text="igw.internet_gateway_id"></strong>
-                                </div>
-
-                                <!-- ATTACHMENT INFO -->
-                                <div class="ml-4 space-y-1">
-
+                                    <!-- ROUTE TABLE SUMMARY LINE -->
                                     <div>
-                                        attached VPC:
-                                        <span x-show="igw.attached_vpc_id" class="font-mono font-bold text-slate-900"
-                                            x-text="igw.attached_vpc_id"></span>
-
-                                        <span x-show="!igw.attached_vpc_id" class="italic text-slate-400">
-                                            none
-                                        </span>
+                                        • <strong class="font-mono font-bold" x-text="rt.route_table_id"></strong>
+                                        <span x-show="rt.is_main" class="text-xs text-blue-600">(Main)</span>
+                                        —
+                                        associations:
+                                        <span x-text="rt.association_count"></span>,
+                                        default route:
+                                        <span x-text="rt.has_default_route ? 'yes' : 'no'"></span>,
+                                        state:
+                                        <span x-text="rt.state"></span>
                                     </div>
 
-                                    <div>
-                                        attachment state:
-                                        <span x-text="igw.attachment_state || 'detached'"></span>
-                                    </div>
+                                    <!-- WHY THIS ROUTE TABLE BLOCKS DELETION -->
+                                    <div class="ml-6 text-sm text-slate-700 space-y-1">
 
-                                    <div>
-                                        blocking deletion:
-                                        <span x-show="igw.attached_vpc_id" class="text-amber-600 font-medium">
-                                            yes
-                                        </span>
-                                        <span x-show="!igw.attached_vpc_id" class="text-green-600 font-medium">
-                                            no
-                                        </span>
-                                    </div>
-
-                                    <div x-show="igw.referenced_by_route_tables?.length" class="text-xs text-slate-500">
-                                        referenced by
-                                        <span class="font-bold" x-text="igw.referenced_by_route_tables.length"></span>
-                                        route table(s)
-                                    </div>
-
-                                </div>
-
-                                <!-- WHY BLOCKING -->
-                                <div x-show="igw.attached_vpc_id" class="mt-2 ml-4 text-sm text-slate-700 space-y-1">
-
-                                    <div>
-                                        ❌ <span class="text-amber-700 font-medium">Cannot delete</span> because this
-                                        <span class="text-indigo-700 font-medium">Internet Gateway</span> is
-                                        <span class="font-semibold text-slate-900">attached</span> to the VPC
-                                        <span class="font-mono font-bold text-slate-900"
-                                            x-text="igw.attached_vpc_id"></span>.
-                                    </div>
-
-                                </div>
-
-                                <!-- ================= PHASE 3.1 — IGW SAFE DELETION PLAYBOOK ================= -->
-                                <div x-show="igw.attached_vpc_id"
-                                    class="mt-3 ml-6 p-3 rounded-lg border border-amber-300 bg-amber-50 text-sm space-y-2">
-
-                                    <div class="font-semibold text-amber-800">
-                                        🛡️ Phase 3.1 — Internet Gateway Safe Deletion Playbook
-                                    </div>
-
-                                    <ol class="list-decimal ml-5 space-y-1 text-slate-700">
-
-                                        <li>
-                                            Detach IGW from VPC
-                                            <div class="ml-4 text-xs text-slate-600">
-                                                VPC:
-                                                <span class="font-mono font-bold text-slate-900"
-                                                    x-text="igw.attached_vpc_id"></span>
-                                            </div>
-                                        </li>
-
-                                        <li x-show="igw.referenced_by_route_tables?.length">
-                                            Remove default routes referencing this IGW
-                                            <template x-for="rt in igw.referenced_by_route_tables"
-                                                :key="rt.route_table_id">
-                                                <div class="ml-4 text-xs">
-                                                    • <span class="font-mono font-bold text-slate-900"
-                                                        x-text="rt.route_table_id"></span>
-                                                    →
-                                                    <span class="font-semibold" x-text="rt.destination"></span>
-                                                </div>
-                                            </template>
-                                        </li>
-
-                                        <li>
-                                            Verify no remaining dependencies (NAT, ENIs)
-                                        </li>
-
-                                        <li class="text-green-700 font-semibold">
-                                            Delete Internet Gateway
-                                        </li>
-
-                                    </ol>
-
-                                    <div class="text-xs text-amber-800 italic">
-                                        Read-only guidance — no actions executed automatically.
-                                    </div>
-                                    <!-- ================= CLI SAFE DELETION (READ-ONLY) ================= -->
-                                    <div
-                                        class="mt-3 ml-4 bg-slate-50 border border-slate-200 rounded-lg p-4 text-xs font-mono text-slate-800">
-
-                                        <div class="font-semibold text-slate-700 mb-2">
-                                            CLI — Internet Gateway Safe Deletion (Read-Only)
+                                        <div x-show="rt.is_main">
+                                            ❌ <span class="text-amber-700 font-medium">Cannot delete</span>
+                                            because this is the
+                                            <span class="text-indigo-700 font-medium">main route table</span>
+                                            for VPC
+                                            <span class="font-mono font-bold text-slate-900"
+                                                x-text="vpcInspectionResult?.vpc_id"></span>.
                                         </div>
 
-                                        <!-- Step 1 -->
-                                        <div class="mb-2">
-                                            <span class="font-semibold text-indigo-700">1.</span>
-                                            Detach Internet Gateway from VPC
-                                            <pre class="mt-1 bg-white p-2 rounded border">
+                                        <div x-show="rt.has_default_route">
+                                            🔁 <span class="text-blue-700 font-medium">Default route present</span>
+                                            (<span class="font-mono font-bold">0.0.0.0/0</span>)
+                                        </div>
+
+                                        <div x-show="rt.association_count > 0">
+                                            🔗 <span class="font-medium">Associated with</span>
+                                            <span class="font-bold" x-text="rt.association_count"></span>
+                                            subnet<span x-show="rt.association_count > 1">s</span>
+                                        </div>
+
+                                    </div>
+
+                                    <!-- ================= ROUTE TABLE SAFE DELETION PLAYBOOK ================= -->
+                                    <div
+                                        class="ml-6 border border-slate-200 rounded-lg p-4 bg-slate-50 text-xs text-slate-800">
+
+                                        <div class="font-semibold text-slate-800 mb-2">
+                                            🛡️ Route Table Safe Deletion Playbook
+                                        </div>
+
+                                        <!-- MAIN ROUTE TABLE -->
+                                        <div x-show="rt.is_main" class="text-amber-700 font-medium mb-2">
+                                            ❌ This is the <strong>main route table</strong>.
+                                            Main route tables cannot be deleted.
+                                        </div>
+
+                                        <!-- NON-MAIN ROUTE TABLE -->
+                                        <div x-show="!rt.is_main">
+
+                                            <div class="mb-2">
+                                                <span class="font-semibold text-indigo-700">1.</span>
+                                                Verify no subnet associations:
+                                                <strong x-text="rt.association_count"></strong>
+                                            </div>
+
+                                            <div x-show="rt.has_default_route" class="mb-2">
+                                                <span class="font-semibold text-indigo-700">2.</span>
+                                                Remove default route
+                                                (<span class="font-mono font-bold">0.0.0.0/0</span>)
+                                            </div>
+
+                                            <div class="mb-2">
+                                                <span class="font-semibold text-indigo-700"
+                                                    x-text="rt.has_default_route ? '3.' : '2.'">
+                                                </span>
+                                                Delete route table
+                                            </div>
+
+                                            <!-- Commands -->
+                                            <pre x-show="rt.has_default_route"
+                                                class="mt-1 bg-white p-2 rounded border font-mono">
+                                        aws ec2 delete-route \
+                                        --route-table-id <span x-text="rt.route_table_id"></span> \
+                                        --destination-cidr-block 0.0.0.0/0
+                                            </pre>
+
+                                            <pre class="mt-1 bg-white p-2 rounded border font-mono">
+                                        aws ec2 delete-route-table \
+                                        --route-table-id <span x-text="rt.route_table_id"></span>
+                                            </pre>
+
+                                        </div>
+
+
+                                    </div>
+
+                                    <div class="mt-2 italic text-slate-500">
+                                        Read-only guidance. Commands are not executed automatically.
+                                    </div>
+                    </div>
+
+                    </li>
+
+                    </template>
+                    </ul>
+
+                </div>
+            </div>
+
+
+
+
+            <!-- INTERNET GATEWAYS -->
+            <div>
+                <button @click="expandedValidation.internet_gateways = !expandedValidation.internet_gateways"
+                    class="text-sm font-medium text-slate-700 hover:underline">
+                    ▸ Internet Gateways
+                    <span x-text="internetGatewayInspection.length"></span>
+                </button>
+
+                <div x-show="expandedValidation.internet_gateways" x-cloak
+                    class="mt-2 ml-4 space-y-4 text-sm text-slate-600">
+
+
+
+                    <template x-for="igw in internetGatewayInspection" :key="igw.internet_gateway_id">
+
+                        <div class="border-l-2 border-slate-300 pl-3 space-y-2">
+
+                            <!-- IGW SUMMARY -->
+                            <div>
+                                • <strong class="font-mono text-slate-900" x-text="igw.internet_gateway_id"></strong>
+                            </div>
+
+                            <!-- ATTACHMENT INFO -->
+                            <div class="ml-4 space-y-1">
+
+                                <div>
+                                    attached VPC:
+                                    <span x-show="igw.attached_vpc_id" class="font-mono font-bold text-slate-900"
+                                        x-text="igw.attached_vpc_id"></span>
+
+                                    <span x-show="!igw.attached_vpc_id" class="italic text-slate-400">
+                                        none
+                                    </span>
+                                </div>
+
+                                <div>
+                                    attachment state:
+                                    <span x-text="igw.attachment_state || 'detached'"></span>
+                                </div>
+
+                                <div>
+                                    blocking deletion:
+                                    <span x-show="igw.attached_vpc_id" class="text-amber-600 font-medium">
+                                        yes
+                                    </span>
+                                    <span x-show="!igw.attached_vpc_id" class="text-green-600 font-medium">
+                                        no
+                                    </span>
+                                </div>
+
+                                <div x-show="igw.referenced_by_route_tables?.length" class="text-xs text-slate-500">
+                                    referenced by
+                                    <span class="font-bold" x-text="igw.referenced_by_route_tables.length"></span>
+                                    route table(s)
+                                </div>
+
+                            </div>
+
+                            <!-- WHY BLOCKING -->
+                            <div x-show="igw.attached_vpc_id" class="mt-2 ml-4 text-sm text-slate-700 space-y-1">
+
+                                <div>
+                                    ❌ <span class="text-amber-700 font-medium">Cannot delete</span> because
+                                    this
+                                    <span class="text-indigo-700 font-medium">Internet Gateway</span> is
+                                    <span class="font-semibold text-slate-900">attached</span> to the VPC
+                                    <span class="font-mono font-bold text-slate-900"
+                                        x-text="igw.attached_vpc_id"></span>.
+                                </div>
+
+                            </div>
+
+                            <!-- ================= PHASE 3.1 — IGW SAFE DELETION PLAYBOOK ================= -->
+                            <div x-show="igw.attached_vpc_id"
+                                class="mt-3 ml-6 p-3 rounded-lg border border-amber-300 bg-amber-50 text-sm space-y-2">
+
+                                <div class="font-semibold text-amber-800">
+                                    🛡️ — Internet Gateway Safe Deletion Playbook
+                                </div>
+
+                                <ol class="list-decimal ml-5 space-y-1 text-slate-700">
+
+                                    <li>
+                                        Detach IGW from VPC
+                                        <div class="ml-4 text-xs text-slate-600">
+                                            VPC:
+                                            <span class="font-mono font-bold text-slate-900"
+                                                x-text="igw.attached_vpc_id"></span>
+                                        </div>
+                                    </li>
+
+                                    <li x-show="igw.referenced_by_route_tables?.length">
+                                        Remove default routes referencing this IGW
+                                        <template x-for="rt in igw.referenced_by_route_tables" :key="rt.route_table_id">
+                                            <div class="ml-4 text-xs">
+                                                • <span class="font-mono font-bold text-slate-900"
+                                                    x-text="rt.route_table_id"></span>
+                                                →
+                                                <span class="font-semibold" x-text="rt.destination"></span>
+                                            </div>
+                                        </template>
+                                    </li>
+
+                                    <li>
+                                        Verify no remaining dependencies (NAT, ENIs)
+                                    </li>
+
+                                    <li class="text-green-700 font-semibold">
+                                        Delete Internet Gateway
+                                    </li>
+
+                                </ol>
+
+                                <div class="text-xs text-amber-800 italic">
+                                    Read-only guidance — no actions executed automatically.
+                                </div>
+                                <!-- ================= CLI SAFE DELETION (READ-ONLY) ================= -->
+                                <div
+                                    class="mt-3 ml-4 bg-slate-50 border border-slate-200 rounded-lg p-4 text-xs font-mono text-slate-800">
+
+                                    <div class="font-semibold text-slate-700 mb-2">
+                                        CLI — Internet Gateway Safe Deletion (Read-Only)
+                                    </div>
+
+                                    <!-- Step 1 -->
+                                    <div class="mb-2">
+                                        <span class="font-semibold text-indigo-700">1.</span>
+                                        Detach Internet Gateway from VPC
+                                        <pre class="mt-1 bg-white p-2 rounded border">
                                     aws ec2 detach-internet-gateway \
                                     --internet-gateway-id <strong x-text="igw.internet_gateway_id"></strong> \
                                     --vpc-id <strong x-text="igw.attached_vpc_id"></strong>
                                             </pre>
-                                        </div>
+                                    </div>
 
-                                        <!-- Step 2 -->
-                                        <div class="mb-2">
-                                            <span class="font-semibold text-indigo-700">2.</span>
-                                            Remove default routes pointing to this IGW
-                                            <template x-for="rt in igw.referenced_by_route_tables"
-                                                :key="rt.route_table_id">
-                                                <pre class="mt-1 bg-white p-2 rounded border">
+                                    <!-- Step 2 -->
+                                    <div class="mb-2">
+                                        <span class="font-semibold text-indigo-700">2.</span>
+                                        Remove default routes pointing to this IGW
+                                        <template x-for="rt in igw.referenced_by_route_tables" :key="rt.route_table_id">
+                                            <pre class="mt-1 bg-white p-2 rounded border">
                                     aws ec2 delete-route \
                                     --route-table-id <strong x-text="rt.route_table_id"></strong> \
                                     --destination-cidr-block <strong x-text="rt.destination"></strong>
                                                 </pre>
-                                            </template>
-                                        </div>
+                                        </template>
+                                    </div>
 
-                                        <!-- Step 3 -->
-                                        <div class="mb-2">
-                                            <span class="font-semibold text-indigo-700">3.</span>
-                                            Verify no remaining dependencies
-                                            <pre class="mt-1 bg-white p-2 rounded border">
+                                    <!-- Step 3 -->
+                                    <div class="mb-2">
+                                        <span class="font-semibold text-indigo-700">3.</span>
+                                        Verify no remaining dependencies
+                                        <pre class="mt-1 bg-white p-2 rounded border">
                                     aws ec2 describe-nat-gateways --filter Name=vpc-id,Values=<strong x-text="igw.attached_vpc_id"></strong>
                                     aws ec2 describe-network-interfaces --filters Name=vpc-id,Values=<strong x-text="igw.attached_vpc_id"></strong>
                                             </pre>
-                                        </div>
+                                    </div>
 
-                                        <!-- Step 4 -->
-                                        <div>
-                                            <span class="font-semibold text-indigo-700">4.</span>
-                                            Delete Internet Gateway
-                                            <pre class="mt-1 bg-white p-2 rounded border">
+                                    <!-- Step 4 -->
+                                    <div>
+                                        <span class="font-semibold text-indigo-700">4.</span>
+                                        Delete Internet Gateway
+                                        <pre class="mt-1 bg-white p-2 rounded border">
                                     aws ec2 delete-internet-gateway \
                                     --internet-gateway-id <strong x-text="igw.internet_gateway_id"></strong>
                                             </pre>
-                                        </div>
-
-                                        <div class="mt-2 italic text-slate-500">
-                                            Read-only guidance. Commands are not executed automatically.
-                                        </div>
                                     </div>
 
-
+                                    <div class="mt-2 italic text-slate-500">
+                                        Read-only guidance. Commands are not executed automatically.
+                                    </div>
                                 </div>
 
+
                             </div>
 
-                        </template>
+                        </div>
 
-                        <template x-if="internetGatewayInspection.length === 0">
-                            <div class="italic text-slate-400">
-                                No Internet Gateways found.
-                            </div>
-                        </template>
+                    </template>
 
-                    </div>
+                    <template x-if="internetGatewayInspection.length === 0">
+                        <div class="italic text-slate-400">
+                            No Internet Gateways found.
+                        </div>
+                    </template>
+
                 </div>
-
-
-
-                <!-- NAT GATEWAYS -->
-                <div>
-                    <button @click="expandedValidation.nat_gateways = !expandedValidation.nat_gateways"
-                        class="text-sm font-medium text-slate-700 hover:underline">
-                        ▸ NAT Gateways (<span x-text="vpcInspectionResult.summary.nat_gateways"></span>)
-                    </button>
-
-                    <ul x-show="expandedValidation.nat_gateways" class="mt-2 ml-4 text-sm text-slate-600 space-y-1">
-                        <template x-for="nat in vpcInspectionResult.details.nat_gateways" :key="nat.nat_gateway_id">
-                            <li>
-                                • <strong x-text="nat.nat_gateway_id"></strong>
-                                (subnet:
-                                <span x-text="nat.subnet_id"></span>,
-                                state:
-                                <span x-text="nat.state"></span>)
-                            </li>
-                        </template>
-                    </ul>
-                </div>
-
-
-                <!-- NETWORK INTERFACES -->
-                <div>
-                    <button @click="expandedValidation.network_interfaces = !expandedValidation.network_interfaces"
-                        class="text-sm font-medium text-slate-700 hover:underline">
-                        ▸ Network Interfaces (<span x-text="vpcInspectionResult.summary.network_interfaces"></span>)
-                    </button>
-
-                    <ul x-show="expandedValidation.network_interfaces"
-                        class="mt-2 ml-4 text-sm text-slate-600 space-y-1">
-                        <template x-for="eni in vpcInspectionResult.details.network_interfaces"
-                            :key="eni.network_interface_id">
-                            <li>
-                                • <strong x-text="eni.network_interface_id"></strong>
-                                (subnet:
-                                <span x-text="eni.subnet_id"></span>,
-                                status:
-                                <span x-text="eni.status"></span>)
-                            </li>
-                        </template>
-                    </ul>
-                </div>
-
             </div>
 
 
+
+            <!-- NAT GATEWAYS -->
+            <div>
+                <button @click="expandedValidation.nat_gateways = !expandedValidation.nat_gateways"
+                    class="text-sm font-medium text-slate-700 hover:underline">
+                    ▸ NAT Gateways (<span x-text="vpcInspectionResult.summary.nat_gateways"></span>)
+                </button>
+
+                <ul x-show="expandedValidation.nat_gateways" class="mt-2 ml-4 text-sm text-slate-600 space-y-1">
+                    <template x-for="nat in vpcInspectionResult.details.nat_gateways" :key="nat.nat_gateway_id">
+                        <li>
+                            • <strong x-text="nat.nat_gateway_id"></strong>
+                            (subnet:
+                            <span x-text="nat.subnet_id"></span>,
+                            state:
+                            <span x-text="nat.state"></span>)
+                        </li>
+                    </template>
+                </ul>
+            </div>
+
+
+            <!-- NETWORK INTERFACES -->
+            <div>
+                <button @click="expandedValidation.network_interfaces = !expandedValidation.network_interfaces"
+                    class="text-sm font-medium text-slate-700 hover:underline">
+                    ▸ Network Interfaces (<span x-text="vpcInspectionResult.summary.network_interfaces"></span>)
+                </button>
+
+                <ul x-show="expandedValidation.network_interfaces" class="mt-2 ml-4 text-sm text-slate-600 space-y-1">
+                    <template x-for="eni in vpcInspectionResult.details.network_interfaces"
+                        :key="eni.network_interface_id">
+                        <li>
+                            • <strong x-text="eni.network_interface_id"></strong>
+                            (subnet:
+                            <span x-text="eni.subnet_id"></span>,
+                            status:
+                            <span x-text="eni.status"></span>)
+                        </li>
+                    </template>
+                </ul>
+            </div>
+
         </div>
 
+
     </div>
+
+</div>
 
 
 </div>
