@@ -1226,14 +1226,15 @@
                 <!-- ROUTE TABLES -->
                 <div class="mt-4">
 
-                    <button @click="expandedValidation.route_tables = !expandedValidation.route_tables"
+                    <button
+                        @click="expandedValidation.route_tables_inspection = !expandedValidation.route_tables_inspection"
                         class="text-sm font-medium text-slate-700 hover:underline">
 
                         ▸ Route Tables
                         (<span x-text="vpcInspectionResult.dependencies.route_tables"></span>)
                     </button>
 
-                    <div x-show="expandedValidation.route_tables" class="mt-2 ml-4 space-y-3">
+                    <div x-show="expandedValidation.route_tables_inspection" class="mt-2 ml-4 space-y-3">
 
                         <!-- Loading -->
                         <div x-show="routeTableLoading" class="text-sm italic text-slate-500">
@@ -1292,19 +1293,71 @@
                 <div>
                     <button @click="expandedValidation.internet_gateways = !expandedValidation.internet_gateways"
                         class="text-sm font-medium text-slate-700 hover:underline">
-                        ▸ Internet Gateways (<span x-text="vpcInspectionResult.summary.internet_gateways"></span>)
+                        ▸ Internet Gateways
+                        <span x-text="internetGatewayInspection.length"></span>
                     </button>
 
-                    <ul x-show="expandedValidation.internet_gateways"
-                        class="mt-2 ml-4 text-sm text-slate-600 space-y-1">
-                        <template x-for="igw in vpcInspectionResult.details.internet_gateways"
-                            :key="igw.internet_gateway_id">
-                            <li>
-                                • <strong x-text="igw.internet_gateway_id"></strong>
-                            </li>
+                    <div x-show="expandedValidation.internet_gateways"
+                        class="mt-2 ml-4 space-y-3 text-sm text-slate-600">
+
+                        <template x-for="igw in internetGatewayInspection" :key="igw.internet_gateway_id">
+
+
+
+                            <div class="border-l-2 border-slate-300 pl-3">
+                                <div>
+                                    • <strong class="font-mono" x-text="igw.internet_gateway_id"></strong>
+                                </div>
+
+                                <div class="ml-4 space-y-1">
+
+                                    <div>
+                                        attached VPC:
+                                        <span x-show="igw.attached_vpc_id" class="font-mono"
+                                            x-text="igw.attached_vpc_id"></span>
+
+                                        <span x-show="!igw.attached_vpc_id" class="italic text-slate-400">
+                                            none
+                                        </span>
+                                    </div>
+
+                                    <div>
+                                        attachment state:
+                                        <span x-text="igw.attachment_state || 'detached'"></span>
+                                    </div>
+
+                                    <div>
+                                        blocking deletion:
+                                        <span x-show="igw.attached_vpc_id" class="text-amber-600 font-medium">
+                                            yes
+                                        </span>
+
+                                        <span x-show="!igw.attached_vpc_id" class="text-green-600 font-medium">
+                                            no
+                                        </span>
+                                    </div>
+
+                                    <div x-show="igw.referenced_by_route_tables?.length"
+                                        class="text-xs text-slate-500 mt-1">
+                                        referenced by
+                                        <span x-text="igw.referenced_by_route_tables.length"></span>
+                                        route table(s)
+                                    </div>
+
+                                </div>
+                            </div>
+
                         </template>
-                    </ul>
+
+                        <template x-if="vpcInspectionResult.details.internet_gateways.length === 0">
+                            <div class="italic text-slate-400">
+                                No Internet Gateways found.
+                            </div>
+                        </template>
+
+                    </div>
                 </div>
+
 
                 <!-- NAT GATEWAYS -->
                 <div>
@@ -1454,6 +1507,7 @@
             vpcInspectionError: null,
             inspectingVpc: false,
             showSubnetDetails: false,
+            internetGatewayInspection: [],
 
             // =============================
             // VALIDATION DETAILS (ROUTE TABLES)
@@ -1464,6 +1518,7 @@
                 internet_gateways: false,
                 nat_gateways: false,
                 network_interfaces: false,
+                route_tables_inspection: false
             },
 
             routeTableInspection: null,
@@ -1703,9 +1758,12 @@
             },
 
             async inspectVpcDependencies() {
+                if (!this.selectedVpcId) return;
+
                 this.inspectingVpc = true;
                 this.vpcInspectionError = null;
                 this.vpcInspectionResult = null;
+                this.internetGatewayInspection = [];
 
                 const vpcId = this.selectedVpcId;
 
@@ -1720,8 +1778,25 @@
                         return;
                     }
 
+                    // Core VPC inspection
                     this.vpcInspectionResult = data;
+
+                    // Detailed Route Table inspection
                     await this.loadRouteTableValidation();
+
+                    // Internet Gateway inspection (separate endpoint)
+                    try {
+                        const igwRes = await fetch(
+                            `/api/v1/aws/internet-gateways/inspect?vpc_id=${vpcId}`
+                        );
+                        const igwData = await igwRes.json();
+
+                        this.internetGatewayInspection = Array.isArray(igwData.details)
+                            ? igwData.details
+                            : [];
+                    } catch (e) {
+                        this.internetGatewayInspection = [];
+                    }
 
                 } catch (e) {
                     this.vpcInspectionError = "Failed to contact backend";

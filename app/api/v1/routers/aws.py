@@ -1,5 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
+import boto3
+
 
 from app.models.base_model import VPCDeleteRequest
 
@@ -47,6 +49,26 @@ async def inspect_nat_gateways(vpc_id: str):
 async def inspect_internet_gateways(vpc_id: str):
     inspector = InternetGatewayInspector()
     return inspector.inspect_vpc_internet_gateways(vpc_id)
+
+@router.get("/subnets")
+async def list_subnets(vpc_id: str):
+    ec2 = boto3.client("ec2")
+    resp = ec2.describe_subnets(
+        Filters=[{"Name": "vpc-id", "Values": [vpc_id]}]
+    )
+
+    return {
+        "count": len(resp.get("Subnets", [])),
+        "subnets": [
+            {
+                "subnet_id": s["SubnetId"],
+                "cidr": s["CidrBlock"],
+                "availability_zone": s["AvailabilityZone"],
+                "state": s["State"],
+            }
+            for s in resp.get("Subnets", [])
+        ],
+    }
 
 
 @router.post("/vpcs")
