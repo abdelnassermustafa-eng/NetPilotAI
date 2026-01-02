@@ -50,9 +50,6 @@ async def inspect_internet_gateways(vpc_id: str):
     inspector = InternetGatewayInspector()
     return inspector.inspect_vpc_internet_gateways(vpc_id)
 
-@router.get("/subnets")
-async def list_subnets(vpc_id: str):
-    ec2 = boto3.client("ec2")
     resp = ec2.describe_subnets(
         Filters=[{"Name": "vpc-id", "Values": [vpc_id]}]
     )
@@ -98,10 +95,29 @@ def delete_vpc_safe(vpc_id: str):
 
 # ============================================================
 # 🟦 SUBNET ROUTES
-# ============================================================
 @router.get("/subnets")
-def list_subnets():
-    return AWSVPCManager().list_subnets()
+def list_subnets(vpc_id: str | None = None):
+    ec2 = boto3.client("ec2")
+
+    if vpc_id:
+        resp = ec2.describe_subnets(
+            Filters=[{"Name": "vpc-id", "Values": [vpc_id]}]
+        )
+    else:
+        resp = ec2.describe_subnets()
+
+    return [
+        {
+            "subnet_id": s["SubnetId"],
+            "vpc_id": s["VpcId"],
+            "cidr": s["CidrBlock"],
+            "availability_zone": s["AvailabilityZone"],
+            "state": s["State"],
+        }
+        for s in resp.get("Subnets", [])
+    ]
+
+# ============================================================
 
 
 @router.post("/subnets")
@@ -266,3 +282,120 @@ async def inspect_vpc(vpc_id: str):
     api = VpcApi()
     return api.inspect_vpc_dependencies(vpc_id)
 
+@router.get("/vpcs/{vpc_id}/subnets/inspection")
+async def inspect_subnets(vpc_id: str):
+    """
+    Read-only inspection of subnets within a VPC.
+    (Step 5: include ENI, NAT, and explicit route table associations)
+    """
+    import boto3
+    from collections import defaultdict
+
+    ec2 = boto3.client("ec2")
+
+    # 1) Subnets in VPC
+    resp = ec2.describe_subnets(
+        Filters=[{"Name": "vpc-id", "Values": [vpc_id]}]
+    )
+    subnets = resp.get("Subnets", [])
+
+    # 2) ENIs in VPC → group by subnet
+    eni_resp = ec2.describe_network_interfaces(
+        Filters=[{"Name": "vpc-id", "Values": [vpc_id]}]
+    )
+    eni_counts = defaultdict(int)
+    for eni in eni_resp.get("NetworkInterfaces", []):
+        subnet_id = eni.get("SubnetId")
+        if subnet_id:
+            eni_counts[subnet_id] += 1
+
+    # 3) NAT Gateways in VPC → group by subnet
+    nat_resp = ec2.describe_nat_gateways(
+        Filter=[{"Name": "vpc-id", "Values": [vpc_id]}]
+    )
+    nat_counts = defaultdict(int)
+    for nat in nat_resp.get("NatGateways", []):
+        subnet_id = nat.get("SubnetId")
+        if subnet_id:
+            nat_counts[subnet_id] += 1
+
+    # 4) Route table explicit associations → set of subnet IDs
+    rt_resp = ec2.describe_route_tables(
+        Filters=[{"Name": "vpc-id", "Values": [vpc_id]}]
+    )
+    rt_associated_subnets = set()
+    for rt in rt_resp.get("RouteTables", []):
+        for assoc in rt.get("Associations", []):
+            subnet_id = assoc.get("SubnetId")
+            if subnet_id:
+                rt_associated_subnets.add(subnet_id)
+
+    # 5) Build details
+    details = []
+    subnets_with_enis = 0
+    subnets_with_nat = 0
+    subnets_with_rt_assoc = 0
+
+    for sn in subnets:
+        subnet_id = sn.get("SubnetId")
+        eni_count = eni_counts.get(subnet_id, 0)
+        nat_count = nat_counts.get(subnet_id, 0)
+        rt_assoc = subnet_id in rt_associated_subnets
+
+        if eni_count > 0:
+            subnets_with_enis += 1
+        if nat_count > 0:
+            subnets_with_nat += 1
+        if rt_assoc:
+            subnets_with_rt_assoc += 1
+
+        can_delete = (eni_count == 0 and nat_count == 0)
+
+        details.append({
+            "subnet_id": subnet_id,
+            "cidr": sn.get("CidrBlock"),
+            "availability_zone": sn.get("AvailabilityZone"),
+            "state": sn.get("State"),
+            "eni_count": eni_count,
+            "nat_gateway_count": nat_count,
+            "route_table_associated": rt_assoc,
+            "can_delete": can_delete
+        })
+
+    return {
+        "summary": {
+            "total_subnets": len(subnets),
+            "subnets_with_enis": subnets_with_enis,
+            "subnets_with_nat": subnets_with_nat,
+            "subnets_with_route_table_associations": subnets_with_rt_assoc
+        },
+        "details": details
+    }
+
+# ============================================================
+# 🟦 NETWORK INTERFACES (ENIs) — INVENTORY
+# ============================================================
+@router.get("/network-interfaces")
+def list_network_interfaces(vpc_id: str):
+    import boto3
+
+    ec2 = boto3.client("ec2")
+
+    resp = ec2.describe_network_interfaces(
+        Filters=[{"Name": "vpc-id", "Values": [vpc_id]}]
+    )
+
+    interfaces = []
+    for eni in resp.get("NetworkInterfaces", []):
+        interfaces.append({
+            "eni_id": eni.get("NetworkInterfaceId"),
+            "subnet_id": eni.get("SubnetId"),
+            "status": eni.get("Status"),
+            "private_ip": eni.get("PrivateIpAddress"),
+            "interface_type": eni.get("InterfaceType"),
+            "attachment": eni.get("Attachment", {}).get("InstanceId")
+        })
+
+    return {
+        "network_interfaces": interfaces
+    }

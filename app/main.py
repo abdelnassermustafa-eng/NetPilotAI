@@ -344,3 +344,5 @@ from app.api.v1.routers.aws_health import router as aws_health_router
 app.include_router(aws_health_router, prefix="/api/v1")
 from app.api.v1.routers.aws_health_legacy import router as aws_health_legacy_router
 app.include_router(aws_health_legacy_router, prefix="/api/v1")
+from .api.v1.routers import network_interfaces_router
+app.include_router(network_interfaces_router)
