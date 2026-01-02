@@ -353,74 +353,76 @@
         <div class="bg-white p-6 rounded-lg shadow">
             <h2 class="text-lg font-semibold mb-4">Subnets</h2>
 
-<div class="mb-4 bg-slate-50 border border-slate-200 rounded-lg p-4">
-  <p class="text-sm text-slate-700">
-    Go to <strong>Validations &amp; Operations</strong> tab to validate the operations of Subnets, Route tables, Internet Gateways, Nat Gateways and Network Interfaces for your selected VPC
-  </p>
+            <div class="mb-4 bg-slate-50 border border-slate-200 rounded-lg p-4">
+                <p class="text-sm text-slate-700">
+                    Go to <strong>Validations &amp; Operations</strong> tab to validate the operations of Subnets, Route
+                    tables, Internet Gateways, Nat Gateways and Network Interfaces for your selected VPC
+                </p>
 
-  <div class="mt-3 flex items-center gap-3">
-    <label class="text-sm font-semibold text-slate-700">VPC</label>
+                <div class="mt-3 flex items-center gap-3">
+                    <label class="text-sm font-semibold text-slate-700">VPC</label>
 
-    <select
-      x-model="selectedVpcId"
-      @change="onVpcSelected()"
-      class="border rounded px-3 py-2 text-sm w-[34rem] bg-white text-slate-700"
-    >
-      <option value="" disabled>Select VPC</option>
-      <template x-for="vpc in vpcs" :key="vpc.vpc_id">
-        <option :value="vpc.vpc_id" x-text="`${vpc.vpc_id} (${vpc.cidr})`"></option>
-      </template>
-    </select>
+                    <select x-model="selectedVpcId" @change="onVpcSelected()"
+                        class="border rounded px-3 py-2 text-sm w-[34rem] bg-white text-slate-700">
 
-    <span class="text-xs text-slate-500" x-show="selectedVpcId">
-      Selected: <span class="font-mono" x-text="selectedVpcId"></span>
-    </span>
-  </div>
+                        <option value="" disabled>Select VPC</option>
+                        <template x-for="vpc in vpcs" :key="vpc.vpc_id">
+                            <option :value="vpc.vpc_id" x-text="`${vpc.vpc_id} (${vpc.cidr})`"></option>
+                        </template>
+                    </select>
+
+                    <span class="text-xs text-slate-500" x-show="selectedVpcId">
+                        Selected: <span class="font-mono" x-text="selectedVpcId"></span>
+                    </span>
+                </div>
 
 
-<div class="bg-white p-6 rounded-lg shadow mt-6">
-  <!-- <h2 class="text-lg font-semibold mb-4">
+                <div class="bg-white p-6 rounded-lg shadow mt-6">
+                    <!-- <h2 class="text-lg font-semibold mb-4">
     Interfaces (ENIs) — Selected VPC
   </h2> -->
 
-  <template x-if="eniError">
-    <div class="mb-3 bg-red-100 text-red-800 border border-red-300 px-3 py-2 rounded text-sm" x-text="eniError"></div>
-  </template>
+                    <template x-if="eniError">
+                        <div class="mb-3 bg-red-100 text-red-800 border border-red-300 px-3 py-2 rounded text-sm"
+                            x-text="eniError"></div>
+                    </template>
 
-  <template x-if="eniLoading">
-    <div class="text-sm italic text-slate-500">Loading interfaces…</div>
-  </template>
+                    <template x-if="eniLoading">
+                        <div class="text-sm italic text-slate-500">Loading interfaces…</div>
+                    </template>
 
-  <template x-if="!eniLoading && (!enis || enis.length === 0)">
-    <div class="text-sm text-slate-600">
-      No interfaces found for the selected VPC.
-    </div>
-  </template>
+                    <template x-if="!eniLoading && (!enis || enis.length === 0)">
+                        <div class="text-sm text-slate-600">
+                            No interfaces found for the selected VPC.
+                        </div>
+                    </template>
 
-  <template x-if="!eniLoading && enis && enis.length">
-    <table class="min-w-full border border-slate-300 rounded">
-      <thead class="bg-slate-200">
-        <tr>
-          <th class="px-4 py-2 border">ENI ID</th>
-          <th class="px-4 py-2 border">Subnet ID</th>
-          <th class="px-4 py-2 border">Status</th>
-        </tr>
-      </thead>
+                    <template x-if="!eniLoading && enis && enis.length">
+                        <table class="min-w-full border border-slate-300 rounded">
+                            <thead class="bg-slate-200">
+                                <tr>
+                                    <th class="px-4 py-2 border">ENI ID</th>
+                                    <th class="px-4 py-2 border">Subnet ID</th>
+                                    <th class="px-4 py-2 border">Status</th>
+                                </tr>
+                            </thead>
 
-      <tbody>
-        <template x-for="eni in enis" :key="eni.network_interface_id">
-          <tr>
-            <td class="px-4 py-2 border font-mono text-sm" x-text="eni.network_interface_id"></td>
-            <td class="px-4 py-2 border font-mono text-sm" x-text="eni.subnet_id || '—'"></td>
-            <td class="px-4 py-2 border text-sm" x-text="eni.status || '—'"></td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
-  </template>
-</div>
+                            <tbody>
+                                <template x-for="eni in enis" :key="eni.network_interface_id">
+                                    <tr>
+                                        <td class="px-4 py-2 border font-mono text-sm"
+                                            x-text="eni.network_interface_id"></td>
+                                        <td class="px-4 py-2 border font-mono text-sm" x-text="eni.subnet_id || '—'">
+                                        </td>
+                                        <td class="px-4 py-2 border text-sm" x-text="eni.status || '—'"></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </template>
+                </div>
 
-</div>
+            </div>
 
 
             <table class="min-w-full border border-slate-300 rounded">
@@ -456,52 +458,52 @@
 
     </div>
 
-<!-- ROUTE TABLES TAB -->
-<div x-show="activeTab === 'routes'" x-cloak class="space-y-6">
-    <div class="bg-white p-6 rounded-lg shadow">
-        <h2 class="text-lg font-semibold mb-2">Route Tables</h2>
-        <p class="text-sm text-slate-500">
-            Route table inventory and management for the selected VPC.
-        </p>
+    <!-- ROUTE TABLES TAB -->
+    <div x-show="activeTab === 'routes'" x-cloak class="space-y-6">
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-lg font-semibold mb-2">Route Tables</h2>
+            <p class="text-sm text-slate-500">
+                Route table inventory and management for the selected VPC.
+            </p>
+        </div>
     </div>
-</div>
 
-<!-- INTERNET GATEWAYS TAB -->
-<div x-show="activeTab === 'igws'" x-cloak class="space-y-6">
-    <div class="bg-white p-6 rounded-lg shadow">
-        <h2 class="text-lg font-semibold mb-2">Internet Gateways</h2>
-        <p class="text-sm text-slate-500">
-            Internet Gateway inventory and attachment status.
-        </p>
+    <!-- INTERNET GATEWAYS TAB -->
+    <div x-show="activeTab === 'igws'" x-cloak class="space-y-6">
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-lg font-semibold mb-2">Internet Gateways</h2>
+            <p class="text-sm text-slate-500">
+                Internet Gateway inventory and attachment status.
+            </p>
+        </div>
     </div>
-</div>
 
-<!-- NAT GATEWAYS TAB -->
-<div x-show="activeTab === 'nat'" x-cloak class="space-y-6">
-    <div class="bg-white p-6 rounded-lg shadow">
-        <h2 class="text-lg font-semibold mb-2">NAT Gateways</h2>
-        <p class="text-sm text-slate-500">
-            NAT Gateway inventory and routing dependencies.
-        </p>
+    <!-- NAT GATEWAYS TAB -->
+    <div x-show="activeTab === 'nat'" x-cloak class="space-y-6">
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-lg font-semibold mb-2">NAT Gateways</h2>
+            <p class="text-sm text-slate-500">
+                NAT Gateway inventory and routing dependencies.
+            </p>
+        </div>
     </div>
-</div>
 
-<!-- VALIDATION & OPERATIONS TAB -->
-<div x-show="activeTab === 'validation'" x-cloak class="space-y-6">
-    
-
-    <div class="bg-white p-6 rounded-lg shadow">
-        
-<h2 class="text-lg font-semibold mb-2">Validation & Operations</h2>
+    <!-- VALIDATION & OPERATIONS TAB -->
+    <div x-show="activeTab === 'validation'" x-cloak class="space-y-6">
 
 
-        <p class="text-sm text-slate-500">
-            Dependency inspection, validation, and safe operations for the selected VPC.
-        </p>
+        <div class="bg-white p-6 rounded-lg shadow">
+
+            <h2 class="text-lg font-semibold mb-2">Validation & Operations</h2>
+
+
+            <p class="text-sm text-slate-500">
+                Dependency inspection, validation, and safe operations for the selected VPC.
+            </p>
+        </div>
     </div>
-</div>
 
-<!-- ============================================================= -->
+    <!-- ============================================================= -->
     <!-- TAB 2: ROUTE TABLES -->
 
     <!-- ============================================================= -->
@@ -1315,16 +1317,13 @@
                     </button>
 
                     <!-- VPC Selector -->
-                    <select x-model="selectedVpcId"
+                    <select x-model="selectedVpcId" @change="onVpcSelected()"
                         class="border rounded px-3 py-2 text-sm w-80 bg-white text-slate-700">
-
                         <option value="" disabled>Select VPC</option>
 
                         <template x-for="vpc in vpcs" :key="vpc.vpc_id">
-                            <option :value="vpc.vpc_id" x-text="`${vpc.vpc_id} (${vpc.cidr})`">
-                            </option>
+                            <option :value="vpc.vpc_id" x-text="`${vpc.vpc_id} (${vpc.cidr})`"></option>
                         </template>
-
                     </select>
 
                 </div>
@@ -1916,790 +1915,790 @@
 <!-- ALPINE.JS LOGIC (Single Source of Truth) -->
 <!-- ============================================================= -->
 <script>
-function networkConsole() {
-  return {
-    // =============================
-    // INIT (ordered, no races)
-    // =============================
-    async init() {
-      await this.loadVPCs();        // sets selectedVpcId safely
-      await this.loadAZs();
-      await this.loadSubnets();     // now selectedVpcId exists
-      await this.loadRouteTables();
-      // Optional: health is user-triggered only
-    },
-
-    // =============================
-    // GLOBAL STATE
-    // =============================
-    activeTab: 'network',
-    globalError: null,
-
-    showError(msg) {
-      this.globalError = msg;
-      setTimeout(() => (this.globalError = null), 6000);
-    },
-
-    // =============================
-    // INFO TOGGLES
-    // =============================
-    showVpcInfo: true,
-    showRoutesInfo: true,
-    showIGWInfo: true,
-    showNatInfo: true,
-
-    // =============================
-    // CORE DATA (single definitions)
-    // =============================
-    vpcs: [],
-    selectedVpcId: '',
-    validationVpcId: "",
-    subnets: [],
-    availabilityZones: [],
-    routeTables: [],
-
-    // =============================
-    // VPC UI
-    // =============================
-    showCreateVPC: false,
-    newVpcCidr: '10.0.0.0/16',
-
-    async createVPC() {
-      if (!this.newVpcCidr) return this.showError('VPC CIDR is required');
-      try {
-        const res = await fetch(`/api/v1/aws/vpcs?cidr=${encodeURIComponent(this.newVpcCidr)}`, { method: 'POST' });
-        const data = await res.json();
-        if (!res.ok || data.status === 'failed') return this.showError(data.error || 'VPC creation failed');
-        this.showCreateVPC = false;
-        await this.loadVPCs();
-        await this.loadSubnets();
-        await this.loadRouteTables();
-      } catch {
-        this.showError('Failed to create VPC');
-      }
-    },
-
-    async deleteVPC(vpc) {
-      if (!vpc?.vpc_id) return this.showError('Invalid VPC');
-      if (!confirm(`Delete VPC ${vpc.vpc_id}? This cannot be undone.`)) return;
-      try {
-        const res = await fetch(`/api/v1/aws/vpc/${vpc.vpc_id}/delete`, { method: 'DELETE' });
-        const data = await res.json();
-        if (!res.ok || data.status === 'failed') return this.showError(data.error || 'VPC delete failed');
-        await this.loadVPCs();
-        await this.loadSubnets();
-        await this.loadRouteTables();
-      } catch {
-        this.showError('Failed to delete VPC');
-      }
-    },
-
-    async safeDeleteVPC(vpc) {
-      if (!vpc?.vpc_id) return this.showError('Invalid VPC');
-      if (!confirm(`Safe delete VPC ${vpc.vpc_id}?\nDependencies will be checked first.`)) return;
-      try {
-        const res = await fetch(`/api/v1/aws/vpc/${vpc.vpc_id}/safe-delete`, { method: 'DELETE' });
-        const data = await res.json();
-        if (!res.ok || data.status === 'failed') return this.showError(data.error || 'Safe delete blocked');
-        await this.loadVPCs();
-        await this.loadSubnets();
-        await this.loadRouteTables();
-      } catch {
-        this.showError('Failed to safe-delete VPC');
-      }
-    },
-
-    // =============================
-    // SUBNET UI
-    // =============================
-    showCreateSubnet: false,
-    subnetError: '',
-
-    newSubnetVPC: '',
-    newSubnetVPCManual: '',
-    newSubnetCIDR: '',
-    newSubnetAZ: '',
-    newSubnetName: '',
-
-    closeSubnetModal() {
-      this.showCreateSubnet = false;
-      this.newSubnetVPC = '';
-      this.newSubnetVPCManual = '';
-      this.newSubnetCIDR = '';
-      this.newSubnetAZ = '';
-      this.newSubnetName = '';
-      this.subnetError = '';
-    },
-
-    async submitCreateSubnet() {
-      this.subnetError = '';
-      const vpcId = this.newSubnetVPC || this.newSubnetVPCManual;
-
-      if (!vpcId || !this.newSubnetCIDR || !this.newSubnetAZ) {
-        this.subnetError = 'Missing required subnet fields';
-        return;
-      }
-
-      try {
-        const url =
-          `/api/v1/aws/subnets` +
-          `?vpc_id=${encodeURIComponent(vpcId)}` +
-          `&cidr=${encodeURIComponent(this.newSubnetCIDR)}` +
-          `&availability_zone=${encodeURIComponent(this.newSubnetAZ)}` +
-          `&name=${encodeURIComponent(this.newSubnetName || 'Subnet')}`;
-
-        const res = await fetch(url, { method: 'POST' });
-        const data = await res.json();
-
-        if (!res.ok || data.status === 'failed') {
-          this.subnetError = data.error || 'Subnet creation failed';
-          return;
-        }
-
-        this.showCreateSubnet = false;
-        await this.loadSubnets();
-        await this.loadRouteTables();
-      } catch {
-        this.subnetError = 'Failed to create subnet';
-      }
-    },
-
-    async deleteSubnet(subnet) {
-      if (!subnet?.subnet_id) return this.showError('Invalid subnet');
-      if (!confirm(`Delete subnet ${subnet.subnet_id}?`)) return;
-
-      try {
-        const res = await fetch(`/api/v1/aws/subnets/${subnet.subnet_id}`, { method: 'DELETE' });
-        const data = await res.json();
-        if (!res.ok || data.status === 'failed') return this.showError(data.error || 'Subnet delete failed');
-        await this.loadSubnets();
-        await this.loadRouteTables();
-      } catch {
-        this.showError('Failed to delete subnet');
-      }
-    },
-
-    // =============================
-    // ROUTE TABLE UI (keep as-is, cleaned)
-    // =============================
-    showCreateRTB: false,
-    showAssociateRTB: false,
-    showAddRoute: false,
-
-    newRTBVPC: '',
-    newRTBName: 'NetPilot-RTB',
-    newRTBDescription: '',
-
-    selectedRTBId: '',
-    selectedSubnetForAssoc: '',
-    candidateSubnetsForRTB: [],
-
-    rtbCreateError: '',
-    rtbAssocError: '',
-
-    addRouteRTBId: '',
-    addRouteDestination: '',
-    addRouteTargetType: 'igw',
-    addRouteTargetId: '',
-    addRouteError: '',
-
-    openCreateRTBModal() {
-      this.showCreateRTB = true;
-      this.rtbCreateError = '';
-      this.newRTBVPC = '';
-      this.newRTBName = 'NetPilot-RTB';
-      this.newRTBDescription = '';
-    },
-
-    closeCreateRTBModal() {
-      this.showCreateRTB = false;
-      this.newRTBVPC = '';
-      this.newRTBName = 'NetPilot-RTB';
-      this.newRTBDescription = '';
-      this.rtbCreateError = '';
-    },
-
-    openAssocModal(rt) {
-      this.selectedRTBId = rt.route_table_id;
-      this.selectedSubnetForAssoc = '';
-      this.candidateSubnetsForRTB = this.subnets.filter(s => s.vpc_id === rt.vpc_id);
-      this.rtbAssocError = '';
-      this.showAssociateRTB = true;
-    },
-
-    closeAssocModal() {
-      this.showAssociateRTB = false;
-      this.selectedRTBId = '';
-      this.selectedSubnetForAssoc = '';
-      this.candidateSubnetsForRTB = [];
-      this.rtbAssocError = '';
-    },
-
-    async associateRouteTable() {
-      this.rtbAssocError = '';
-      if (!this.selectedRTBId || !this.selectedSubnetForAssoc) {
-        this.rtbAssocError = 'Please select a subnet';
-        return;
-      }
-
-      try {
-        const res = await fetch(
-          `/api/v1/aws/route-tables/${this.selectedRTBId}/associate?subnet_id=${encodeURIComponent(this.selectedSubnetForAssoc)}`,
-          { method: 'POST' }
-        );
-        const data = await res.json();
-        if (!res.ok || data.status === 'failed') {
-          this.rtbAssocError = data.error || 'Association failed';
-          return;
-        }
-
-        this.closeAssocModal();
-        await this.loadRouteTables();
-      } catch {
-        this.rtbAssocError = 'Failed to associate route table';
-      }
-    },
-
-    async deassociateRouteTable(associationId) {
-      if (!associationId) return;
-      try {
-        const res = await fetch(`/api/v1/aws/route-tables/${associationId}/disassociate`, { method: 'POST' });
-        const data = await res.json();
-        if (!res.ok || data.status === 'failed') return this.showError(data.error || 'Failed to de-associate route table');
-        await this.loadRouteTables();
-      } catch {
-        this.showError('Failed to de-associate route table');
-      }
-    },
-
-    async submitCreateRTB() {
-      this.rtbCreateError = '';
-      if (!this.newRTBVPC) {
-        this.rtbCreateError = 'Please select a VPC';
-        return;
-      }
-
-      try {
-        const res = await fetch('/api/v1/aws/route-tables', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            vpc_id: this.newRTBVPC,
-            name: this.newRTBName,
-            description: this.newRTBDescription || ''
-          })
-        });
-
-        const data = await res.json();
-        if (!res.ok || data.status === 'failed') {
-          this.rtbCreateError = data.error || 'Route table creation failed';
-          return;
-        }
-
-        this.closeCreateRTBModal();
-        await this.loadRouteTables();
-      } catch {
-        this.rtbCreateError = 'Failed to create route table';
-      }
-    },
-
-    openAddRouteModal(rt) {
-      this.addRouteRTBId = rt.route_table_id;
-      this.addRouteDestination = '';
-      this.addRouteTargetType = 'igw';
-      this.addRouteTargetId = '';
-      this.addRouteError = '';
-      this.showAddRoute = true;
-    },
-
-    closeAddRouteModal() {
-      this.showAddRoute = false;
-      this.addRouteRTBId = '';
-      this.addRouteDestination = '';
-      this.addRouteTargetType = 'igw';
-      this.addRouteTargetId = '';
-      this.addRouteError = '';
-    },
-
-    async submitAddRoute() {
-      this.addRouteError = '';
-      if (!this.addRouteRTBId || !this.addRouteDestination || !this.addRouteTargetType || !this.addRouteTargetId) {
-        this.addRouteError = 'All fields are required';
-        return;
-      }
-
-      try {
-        const res = await fetch(`/api/v1/aws/route-tables/${this.addRouteRTBId}/routes`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            destination_cidr: this.addRouteDestination,
-            target_type: this.addRouteTargetType,
-            target_id: this.addRouteTargetId,
-          }),
-        });
-
-        const data = await res.json();
-        if (!res.ok || data.status === 'failed') {
-          this.addRouteError = data.error || 'Failed to add route';
-          return;
-        }
-
-        this.closeAddRouteModal();
-        await this.loadRouteTables();
-      } catch {
-        this.addRouteError = 'Failed to add route';
-      }
-    },
-
-    async deleteRouteTable(rt) {
-      if (rt?.is_main) return;
-      try {
-        const res = await fetch(`/api/v1/aws/route-tables/${rt.route_table_id}`, { method: 'DELETE' });
-        const data = await res.json();
-        if (!res.ok || data.status === 'failed') return this.showError(data.error || 'Route table delete failed');
-        await this.loadRouteTables();
-      } catch {
-        this.showError('Failed to delete route table');
-      }
-    },
-
-    // =============================
-    // IGW
-    // =============================
-    internetGateways: [],
-    igwError: null,
-
-    showCreateIGW: false,
-    showAttachIGW: false,
-    showDetachIGWConfirm: false,
-
-    igwCreateError: '',
-    igwAttachError: null,
-    igwDetachError: null,
-
-    newIGWName: '',
-    selectedIGWId: null,
-
-    selectedVpcForIGWAttach: '',
-    selectedVpcForIGWAttachManual: '',
-    selectedVpcForIGWDetach: '',
-    selectedVpcForIGWDetachManual: '',
-
-    closeCreateIGWModal() {
-      this.showCreateIGW = false;
-      this.newIGWName = '';
-      this.igwCreateError = '';
-    },
-
-    async submitCreateIGW() {
-      this.igwCreateError = '';
-      try {
-        const res = await fetch(`/api/v1/aws/internet-gateways?name=${encodeURIComponent(this.newIGWName || '')}`, { method: 'POST' });
-        const data = await res.json();
-        if (!res.ok || data.status === 'failed') {
-          this.igwCreateError = data.error || 'Failed to create Internet Gateway';
-          return;
-        }
-        this.closeCreateIGWModal();
-        await this.loadInternetGateways();
-      } catch {
-        this.igwCreateError = 'Failed to create Internet Gateway';
-      }
-    },
-
-    openAttachIGWModal(igwId) {
-      this.selectedIGWId = igwId;
-      this.selectedVpcForIGWAttach = '';
-      this.selectedVpcForIGWAttachManual = '';
-      this.igwAttachError = '';
-      this.showAttachIGW = true;
-    },
-
-    closeAttachIGWModal() {
-      this.showAttachIGW = false;
-      this.selectedIGWId = null;
-    },
-
-    async submitAttachIGW() {
-      const vpcId = this.selectedVpcForIGWAttach || this.selectedVpcForIGWAttachManual;
-      if (!this.selectedIGWId || !vpcId) {
-        this.igwAttachError = 'IGW and VPC are required';
-        return;
-      }
-
-      try {
-        const res = await fetch(`/api/v1/aws/internet-gateways/${this.selectedIGWId}/attach?vpc_id=${encodeURIComponent(vpcId)}`, { method: 'POST' });
-        const d = await res.json();
-        if (!res.ok || d.status === 'failed') {
-          this.igwAttachError = d.error || 'Attach failed';
-          return;
-        }
-
-        this.showAttachIGW = false;
-        await this.loadInternetGateways();
-      } catch {
-        this.igwAttachError = 'Failed to attach Internet Gateway';
-      }
-    },
-
-    promptDetachIGW(igw) {
-      this.selectedIGWId = igw.internet_gateway_id;
-      this.selectedVpcForIGWDetach = '';
-      this.selectedVpcForIGWDetachManual = '';
-      this.igwDetachError = '';
-      this.showDetachIGWConfirm = true;
-    },
-
-    closeDetachIGWModal() {
-      this.showDetachIGWConfirm = false;
-      this.selectedIGWId = null;
-    },
-
-    async submitDetachIGW() {
-      const vpcId = this.selectedVpcForIGWDetach || this.selectedVpcForIGWDetachManual;
-      if (!this.selectedIGWId || !vpcId) {
-        this.igwDetachError = 'VPC is required to detach';
-        return;
-      }
-
-      try {
-        const res = await fetch(`/api/v1/aws/internet-gateways/${this.selectedIGWId}/detach?vpc_id=${encodeURIComponent(vpcId)}`, { method: 'POST' });
-        const d = await res.json();
-        if (!res.ok || d.status === 'failed') {
-          this.igwDetachError = d.error || 'Detach failed';
-          return;
-        }
-
-        this.showDetachIGWConfirm = false;
-        await this.loadInternetGateways();
-      } catch {
-        this.igwDetachError = 'Failed to detach Internet Gateway';
-      }
-    },
-
-    async deleteIGW(igwId) {
-      if (!confirm(`Delete Internet Gateway ${igwId}? It must be detached first.`)) return;
-      try {
-        const res = await fetch(`/api/v1/aws/internet-gateways/${igwId}`, { method: 'DELETE' });
-        const d = await res.json();
-        if (!res.ok || d.status === 'failed') return this.showError(d.error || 'Delete failed');
-        await this.loadInternetGateways();
-      } catch {
-        this.showError('Failed to delete Internet Gateway');
-      }
-    },
-
-    // =============================
-    // NAT
-    // =============================
-    natGateways: [],
-    natError: null,
-
-    showCreateNAT: false,
-    newNATSubnetId: '',
-    newNATName: 'NetPilot-NAT',
-    natCreateError: '',
-
-    openCreateNATModal() {
-      this.natCreateError = '';
-      this.newNATSubnetId = '';
-      this.showCreateNAT = true;
-    },
-
-    closeCreateNATModal() {
-      this.showCreateNAT = false;
-      this.natCreateError = '';
-    },
-
-    async submitCreateNAT() {
-      this.natCreateError = '';
-      if (!this.newNATSubnetId) {
-        this.natCreateError = 'Please select a subnet';
-        return;
-      }
-
-      try {
-        const res = await fetch(
-          `/api/v1/aws/nat-gateways?subnet_id=${encodeURIComponent(this.newNATSubnetId)}` +
-          (this.newNATName ? `&name=${encodeURIComponent(this.newNATName)}` : ''),
-          { method: 'POST' }
-        );
-
-        const data = await res.json();
-        if (!res.ok || data.status === 'failed') {
-          this.natCreateError = data.error || 'Failed to create NAT Gateway';
-          return;
-        }
-
-        this.closeCreateNATModal();
-        await this.loadNatGateways();
-      } catch {
-        this.natCreateError = 'Failed to create NAT Gateway';
-      }
-    },
-
-    async deleteNatGateway(ngw) {
-      if (!ngw?.nat_gateway_id) return this.showError('Invalid NAT Gateway');
-      if (!confirm(`Delete NAT Gateway ${ngw.nat_gateway_id}?`)) return;
-
-      try {
-        const res = await fetch(`/api/v1/aws/nat-gateways/${ngw.nat_gateway_id}`, { method: 'DELETE' });
-        const data = await res.json();
-        if (!res.ok || data.status === 'failed') return this.showError(data.error || 'Delete failed');
-        await this.loadNatGateways();
-      } catch {
-        this.showError('Failed to delete NAT Gateway');
-      }
-    },
-
-    // =============================
-    // VALIDATION (kept compatible)
-    // =============================
-    vpcInspectionResult: null,
-    vpcInspectionError: null,
-    inspectingVpc: false,
-
-    internetGatewayInspection: [],
-
-    expandedValidation: {
-      subnets: false,
-      route_tables: false,
-      internet_gateways: false,
-      nat_gateways: false,
-      network_interfaces: false,
-      route_tables_inspection: false,
-      subnets_inspection: false
-    },
-
-    routeTableInspection: null,
-    routeTableLoading: false,
-    routeTableError: null,
-
-    subnetInspection: null,
-    subnetLoading: false,
-    subnetErrorValidation: null,
-
-    async loadRouteTableValidation() {
-      if (!this.selectedVpcId) return;
-      this.routeTableLoading = true;
-      this.routeTableError = null;
-
-      try {
-        const res = await fetch(`/api/v1/aws/route-tables/inspect?vpc_id=${this.selectedVpcId}`);
-        const data = await res.json();
-
-        if (!res.ok) {
-          this.routeTableError = data.error || 'Failed to load route tables';
-          this.routeTableInspection = null;
-          return;
-        }
-
-        this.routeTableInspection = data;
-      } catch {
-        this.routeTableError = 'Failed to contact backend';
-        this.routeTableInspection = null;
-      } finally {
-        this.routeTableLoading = false;
-      }
-    },
-
-    async loadSubnetInspection() {
-      this.subnetLoading = true;
-      this.subnetErrorValidation = null;
-
-      try {
-        const vpcId = this.vpcInspectionResult?.vpc_id;
-        if (!vpcId) return;
-
-        const res = await fetch(`/api/v1/aws/vpcs/${vpcId}/subnets/inspection`);
-        const data = await res.json();
-
-        if (!res.ok) {
-          this.subnetErrorValidation = data.error || 'Failed to load subnet inspection';
-          return;
-        }
-
-        this.subnetInspection = data;
-      } catch {
-        this.subnetErrorValidation = 'Failed to load subnet inspection';
-      } finally {
-        this.subnetLoading = false;
-      }
-    },
-
-    async inspectVpcDependencies() {
-      if (!this.selectedVpcId) return;
-
-      this.inspectingVpc = true;
-      this.vpcInspectionError = null;
-
-      this.vpcInspectionResult = null;
-      this.internetGatewayInspection = [];
-      this.routeTableInspection = null;
-      this.subnetInspection = null;
-
-      const vpcId = this.selectedVpcId;
-
-      try {
-        const res = await fetch(`/api/v1/aws/vpcs/${vpcId}/inspect`);
-        const data = await res.json();
-
-        if (!res.ok) {
-          this.vpcInspectionError = data.error || 'Inspection failed';
-          return;
-        }
-
-        this.vpcInspectionResult = data;
-
-        await this.loadRouteTableValidation();
-        await this.loadSubnetInspection();
-
-        try {
-          const igwRes = await fetch(`/api/v1/aws/internet-gateways/inspect?vpc_id=${vpcId}`);
-          const igwData = await igwRes.json();
-          this.internetGatewayInspection = Array.isArray(igwData.details) ? igwData.details : [];
-        } catch {
-          this.internetGatewayInspection = [];
-        }
-
-      } catch {
-        this.vpcInspectionError = 'Failed to contact backend';
-      } finally {
-        this.inspectingVpc = false;
-        // Refresh inventory so UI stays consistent
-        await this.loadSubnets();
-      }
-    },
-
-    // =============================
-    // HEALTH (unchanged)
-    // =============================
-    backendHealth: null,
-    awsHealth: null,
-    awsLegacyHealth: null,
-    healthError: null,
-    healthCheckedAt: null,
-
-    async checkBackendHealth() {
-      try {
-        const r = await fetch('/api/v1/health');
-        this.backendHealth = await r.json();
-      } catch {
-        this.backendHealth = { status: 'failed' };
-      }
-    },
-
-    async checkAwsHealth() {
-      try {
-        const r = await fetch('/api/v1/aws/health');
-        this.awsHealth = await r.json();
-      } catch {
-        this.awsHealth = { status: 'failed' };
-      }
-    },
-
-    async checkAwsLegacyHealth() {
-      try {
-        const r = await fetch('/api/v1/aws/health/legacy');
-        this.awsLegacyHealth = await r.json();
-      } catch {
-        this.awsLegacyHealth = { status: 'failed' };
-      }
-    },
-
-    async checkAllHealth() {
-      this.healthError = null;
-      this.healthCheckedAt = new Date().toISOString();
-      await Promise.all([this.checkBackendHealth(), this.checkAwsHealth(), this.checkAwsLegacyHealth()]);
-    },
-
-    // =============================
-    // LOADERS (stable + subnet fix)
-    // =============================
-    async loadVPCs() {
-      try {
-        const r = await fetch('/api/v1/aws/vpcs');
-        const d = await r.json();
-        this.vpcs = d.vpcs || [];
-
-        if (this.vpcs.length && !this.selectedVpcId) {
-          this.selectedVpcId = this.vpcs[0].vpc_id;
-        }
-      } catch {
-        this.showError('Failed to load VPCs');
-      }
-    },
-
-    async loadSubnets() {
-      if (!this.selectedVpcId) {
-        this.subnets = [];
-        return;
-      }
-
-      try {
-        const r = await fetch(`/api/v1/aws/subnets?vpc_id=${encodeURIComponent(this.selectedVpcId)}`);
-        const d = await r.json();
-
-        // ✅ FIX: accept both response shapes
-        if (Array.isArray(d)) this.subnets = d;
-        else if (Array.isArray(d.subnets)) this.subnets = d.subnets;
-        else this.subnets = [];
-
-      } catch {
-        this.showError('Failed to load subnets');
-        this.subnets = [];
-      }
-    },
-
-    async loadAZs() {
-      try {
-        const r = await fetch('/api/v1/aws/availability-zones');
-        const d = await r.json();
-        this.availabilityZones = d.availability_zones || d.zones || [];
-      } catch {
-        this.showError('Failed to load Availability Zones');
-        this.availabilityZones = [];
-      }
-    },
-
-    async loadRouteTables() {
-      try {
-        const r = await fetch('/api/v1/aws/route-tables');
-        const d = await r.json();
-        this.routeTables = d.route_tables || [];
-      } catch {
-        this.showError('Failed to load route tables');
-      }
-    },
-
-    async loadInternetGateways() {
-      try {
-        const r = await fetch('/api/v1/aws/internet-gateways');
-        const d = await r.json();
-        this.internetGateways = (d.internet_gateways || []).map(igw => ({
-          ...igw,
-          attached_vpc_ids: igw.attached_vpc_id ? [igw.attached_vpc_id] : []
-        }));
-      } catch {
-        this.showError('Failed to load Internet Gateways');
-      }
-    },
-
-    async loadNatGateways() {
-      try {
-        const r = await fetch('/api/v1/aws/nat-gateways');
-        const d = await r.json();
-        this.natGateways = (d.nat_gateways || []).map(ngw => ({
-          ...ngw,
-          public_ip: ngw.addresses && ngw.addresses.length ? ngw.addresses[0].public_ip : null
-        }));
-      } catch {
-        this.showError('Failed to load NAT Gateways');
-      }
-    },
-  };
-}
+    function networkConsole() {
+        return {
+            // =============================
+            // INIT (ordered, no races)
+            // =============================
+            async init() {
+                await this.loadVPCs();        // sets selectedVpcId safely
+                await this.loadAZs();
+                await this.loadSubnets();     // now selectedVpcId exists
+                await this.loadRouteTables();
+                // Optional: health is user-triggered only
+            },
+
+            // =============================
+            // GLOBAL STATE
+            // =============================
+            activeTab: 'network',
+            globalError: null,
+
+            showError(msg) {
+                this.globalError = msg;
+                setTimeout(() => (this.globalError = null), 6000);
+            },
+
+            // =============================
+            // INFO TOGGLES
+            // =============================
+            showVpcInfo: true,
+            showRoutesInfo: true,
+            showIGWInfo: true,
+            showNatInfo: true,
+
+            // =============================
+            // CORE DATA (single definitions)
+            // =============================
+            vpcs: [],
+            selectedVpcId: '',
+            validationVpcId: "",
+            subnets: [],
+            availabilityZones: [],
+            routeTables: [],
+
+            // =============================
+            // VPC UI
+            // =============================
+            showCreateVPC: false,
+            newVpcCidr: '10.0.0.0/16',
+
+            async createVPC() {
+                if (!this.newVpcCidr) return this.showError('VPC CIDR is required');
+                try {
+                    const res = await fetch(`/api/v1/aws/vpcs?cidr=${encodeURIComponent(this.newVpcCidr)}`, { method: 'POST' });
+                    const data = await res.json();
+                    if (!res.ok || data.status === 'failed') return this.showError(data.error || 'VPC creation failed');
+                    this.showCreateVPC = false;
+                    await this.loadVPCs();
+                    await this.loadSubnets();
+                    await this.loadRouteTables();
+                } catch {
+                    this.showError('Failed to create VPC');
+                }
+            },
+
+            async deleteVPC(vpc) {
+                if (!vpc?.vpc_id) return this.showError('Invalid VPC');
+                if (!confirm(`Delete VPC ${vpc.vpc_id}? This cannot be undone.`)) return;
+                try {
+                    const res = await fetch(`/api/v1/aws/vpc/${vpc.vpc_id}/delete`, { method: 'DELETE' });
+                    const data = await res.json();
+                    if (!res.ok || data.status === 'failed') return this.showError(data.error || 'VPC delete failed');
+                    await this.loadVPCs();
+                    await this.loadSubnets();
+                    await this.loadRouteTables();
+                } catch {
+                    this.showError('Failed to delete VPC');
+                }
+            },
+
+            async safeDeleteVPC(vpc) {
+                if (!vpc?.vpc_id) return this.showError('Invalid VPC');
+                if (!confirm(`Safe delete VPC ${vpc.vpc_id}?\nDependencies will be checked first.`)) return;
+                try {
+                    const res = await fetch(`/api/v1/aws/vpc/${vpc.vpc_id}/safe-delete`, { method: 'DELETE' });
+                    const data = await res.json();
+                    if (!res.ok || data.status === 'failed') return this.showError(data.error || 'Safe delete blocked');
+                    await this.loadVPCs();
+                    await this.loadSubnets();
+                    await this.loadRouteTables();
+                } catch {
+                    this.showError('Failed to safe-delete VPC');
+                }
+            },
+
+            // =============================
+            // SUBNET UI
+            // =============================
+            showCreateSubnet: false,
+            subnetError: '',
+
+            newSubnetVPC: '',
+            newSubnetVPCManual: '',
+            newSubnetCIDR: '',
+            newSubnetAZ: '',
+            newSubnetName: '',
+
+            closeSubnetModal() {
+                this.showCreateSubnet = false;
+                this.newSubnetVPC = '';
+                this.newSubnetVPCManual = '';
+                this.newSubnetCIDR = '';
+                this.newSubnetAZ = '';
+                this.newSubnetName = '';
+                this.subnetError = '';
+            },
+
+            async submitCreateSubnet() {
+                this.subnetError = '';
+                const vpcId = this.newSubnetVPC || this.newSubnetVPCManual;
+
+                if (!vpcId || !this.newSubnetCIDR || !this.newSubnetAZ) {
+                    this.subnetError = 'Missing required subnet fields';
+                    return;
+                }
+
+                try {
+                    const url =
+                        `/api/v1/aws/subnets` +
+                        `?vpc_id=${encodeURIComponent(vpcId)}` +
+                        `&cidr=${encodeURIComponent(this.newSubnetCIDR)}` +
+                        `&availability_zone=${encodeURIComponent(this.newSubnetAZ)}` +
+                        `&name=${encodeURIComponent(this.newSubnetName || 'Subnet')}`;
+
+                    const res = await fetch(url, { method: 'POST' });
+                    const data = await res.json();
+
+                    if (!res.ok || data.status === 'failed') {
+                        this.subnetError = data.error || 'Subnet creation failed';
+                        return;
+                    }
+
+                    this.showCreateSubnet = false;
+                    await this.loadSubnets();
+                    await this.loadRouteTables();
+                } catch {
+                    this.subnetError = 'Failed to create subnet';
+                }
+            },
+
+            async deleteSubnet(subnet) {
+                if (!subnet?.subnet_id) return this.showError('Invalid subnet');
+                if (!confirm(`Delete subnet ${subnet.subnet_id}?`)) return;
+
+                try {
+                    const res = await fetch(`/api/v1/aws/subnets/${subnet.subnet_id}`, { method: 'DELETE' });
+                    const data = await res.json();
+                    if (!res.ok || data.status === 'failed') return this.showError(data.error || 'Subnet delete failed');
+                    await this.loadSubnets();
+                    await this.loadRouteTables();
+                } catch {
+                    this.showError('Failed to delete subnet');
+                }
+            },
+
+            // =============================
+            // ROUTE TABLE UI (keep as-is, cleaned)
+            // =============================
+            showCreateRTB: false,
+            showAssociateRTB: false,
+            showAddRoute: false,
+
+            newRTBVPC: '',
+            newRTBName: 'NetPilot-RTB',
+            newRTBDescription: '',
+
+            selectedRTBId: '',
+            selectedSubnetForAssoc: '',
+            candidateSubnetsForRTB: [],
+
+            rtbCreateError: '',
+            rtbAssocError: '',
+
+            addRouteRTBId: '',
+            addRouteDestination: '',
+            addRouteTargetType: 'igw',
+            addRouteTargetId: '',
+            addRouteError: '',
+
+            openCreateRTBModal() {
+                this.showCreateRTB = true;
+                this.rtbCreateError = '';
+                this.newRTBVPC = '';
+                this.newRTBName = 'NetPilot-RTB';
+                this.newRTBDescription = '';
+            },
+
+            closeCreateRTBModal() {
+                this.showCreateRTB = false;
+                this.newRTBVPC = '';
+                this.newRTBName = 'NetPilot-RTB';
+                this.newRTBDescription = '';
+                this.rtbCreateError = '';
+            },
+
+            openAssocModal(rt) {
+                this.selectedRTBId = rt.route_table_id;
+                this.selectedSubnetForAssoc = '';
+                this.candidateSubnetsForRTB = this.subnets.filter(s => s.vpc_id === rt.vpc_id);
+                this.rtbAssocError = '';
+                this.showAssociateRTB = true;
+            },
+
+            closeAssocModal() {
+                this.showAssociateRTB = false;
+                this.selectedRTBId = '';
+                this.selectedSubnetForAssoc = '';
+                this.candidateSubnetsForRTB = [];
+                this.rtbAssocError = '';
+            },
+
+            async associateRouteTable() {
+                this.rtbAssocError = '';
+                if (!this.selectedRTBId || !this.selectedSubnetForAssoc) {
+                    this.rtbAssocError = 'Please select a subnet';
+                    return;
+                }
+
+                try {
+                    const res = await fetch(
+                        `/api/v1/aws/route-tables/${this.selectedRTBId}/associate?subnet_id=${encodeURIComponent(this.selectedSubnetForAssoc)}`,
+                        { method: 'POST' }
+                    );
+                    const data = await res.json();
+                    if (!res.ok || data.status === 'failed') {
+                        this.rtbAssocError = data.error || 'Association failed';
+                        return;
+                    }
+
+                    this.closeAssocModal();
+                    await this.loadRouteTables();
+                } catch {
+                    this.rtbAssocError = 'Failed to associate route table';
+                }
+            },
+
+            async deassociateRouteTable(associationId) {
+                if (!associationId) return;
+                try {
+                    const res = await fetch(`/api/v1/aws/route-tables/${associationId}/disassociate`, { method: 'POST' });
+                    const data = await res.json();
+                    if (!res.ok || data.status === 'failed') return this.showError(data.error || 'Failed to de-associate route table');
+                    await this.loadRouteTables();
+                } catch {
+                    this.showError('Failed to de-associate route table');
+                }
+            },
+
+            async submitCreateRTB() {
+                this.rtbCreateError = '';
+                if (!this.newRTBVPC) {
+                    this.rtbCreateError = 'Please select a VPC';
+                    return;
+                }
+
+                try {
+                    const res = await fetch('/api/v1/aws/route-tables', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            vpc_id: this.newRTBVPC,
+                            name: this.newRTBName,
+                            description: this.newRTBDescription || ''
+                        })
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok || data.status === 'failed') {
+                        this.rtbCreateError = data.error || 'Route table creation failed';
+                        return;
+                    }
+
+                    this.closeCreateRTBModal();
+                    await this.loadRouteTables();
+                } catch {
+                    this.rtbCreateError = 'Failed to create route table';
+                }
+            },
+
+            openAddRouteModal(rt) {
+                this.addRouteRTBId = rt.route_table_id;
+                this.addRouteDestination = '';
+                this.addRouteTargetType = 'igw';
+                this.addRouteTargetId = '';
+                this.addRouteError = '';
+                this.showAddRoute = true;
+            },
+
+            closeAddRouteModal() {
+                this.showAddRoute = false;
+                this.addRouteRTBId = '';
+                this.addRouteDestination = '';
+                this.addRouteTargetType = 'igw';
+                this.addRouteTargetId = '';
+                this.addRouteError = '';
+            },
+
+            async submitAddRoute() {
+                this.addRouteError = '';
+                if (!this.addRouteRTBId || !this.addRouteDestination || !this.addRouteTargetType || !this.addRouteTargetId) {
+                    this.addRouteError = 'All fields are required';
+                    return;
+                }
+
+                try {
+                    const res = await fetch(`/api/v1/aws/route-tables/${this.addRouteRTBId}/routes`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            destination_cidr: this.addRouteDestination,
+                            target_type: this.addRouteTargetType,
+                            target_id: this.addRouteTargetId,
+                        }),
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok || data.status === 'failed') {
+                        this.addRouteError = data.error || 'Failed to add route';
+                        return;
+                    }
+
+                    this.closeAddRouteModal();
+                    await this.loadRouteTables();
+                } catch {
+                    this.addRouteError = 'Failed to add route';
+                }
+            },
+
+            async deleteRouteTable(rt) {
+                if (rt?.is_main) return;
+                try {
+                    const res = await fetch(`/api/v1/aws/route-tables/${rt.route_table_id}`, { method: 'DELETE' });
+                    const data = await res.json();
+                    if (!res.ok || data.status === 'failed') return this.showError(data.error || 'Route table delete failed');
+                    await this.loadRouteTables();
+                } catch {
+                    this.showError('Failed to delete route table');
+                }
+            },
+
+            // =============================
+            // IGW
+            // =============================
+            internetGateways: [],
+            igwError: null,
+
+            showCreateIGW: false,
+            showAttachIGW: false,
+            showDetachIGWConfirm: false,
+
+            igwCreateError: '',
+            igwAttachError: null,
+            igwDetachError: null,
+
+            newIGWName: '',
+            selectedIGWId: null,
+
+            selectedVpcForIGWAttach: '',
+            selectedVpcForIGWAttachManual: '',
+            selectedVpcForIGWDetach: '',
+            selectedVpcForIGWDetachManual: '',
+
+            closeCreateIGWModal() {
+                this.showCreateIGW = false;
+                this.newIGWName = '';
+                this.igwCreateError = '';
+            },
+
+            async submitCreateIGW() {
+                this.igwCreateError = '';
+                try {
+                    const res = await fetch(`/api/v1/aws/internet-gateways?name=${encodeURIComponent(this.newIGWName || '')}`, { method: 'POST' });
+                    const data = await res.json();
+                    if (!res.ok || data.status === 'failed') {
+                        this.igwCreateError = data.error || 'Failed to create Internet Gateway';
+                        return;
+                    }
+                    this.closeCreateIGWModal();
+                    await this.loadInternetGateways();
+                } catch {
+                    this.igwCreateError = 'Failed to create Internet Gateway';
+                }
+            },
+
+            openAttachIGWModal(igwId) {
+                this.selectedIGWId = igwId;
+                this.selectedVpcForIGWAttach = '';
+                this.selectedVpcForIGWAttachManual = '';
+                this.igwAttachError = '';
+                this.showAttachIGW = true;
+            },
+
+            closeAttachIGWModal() {
+                this.showAttachIGW = false;
+                this.selectedIGWId = null;
+            },
+
+            async submitAttachIGW() {
+                const vpcId = this.selectedVpcForIGWAttach || this.selectedVpcForIGWAttachManual;
+                if (!this.selectedIGWId || !vpcId) {
+                    this.igwAttachError = 'IGW and VPC are required';
+                    return;
+                }
+
+                try {
+                    const res = await fetch(`/api/v1/aws/internet-gateways/${this.selectedIGWId}/attach?vpc_id=${encodeURIComponent(vpcId)}`, { method: 'POST' });
+                    const d = await res.json();
+                    if (!res.ok || d.status === 'failed') {
+                        this.igwAttachError = d.error || 'Attach failed';
+                        return;
+                    }
+
+                    this.showAttachIGW = false;
+                    await this.loadInternetGateways();
+                } catch {
+                    this.igwAttachError = 'Failed to attach Internet Gateway';
+                }
+            },
+
+            promptDetachIGW(igw) {
+                this.selectedIGWId = igw.internet_gateway_id;
+                this.selectedVpcForIGWDetach = '';
+                this.selectedVpcForIGWDetachManual = '';
+                this.igwDetachError = '';
+                this.showDetachIGWConfirm = true;
+            },
+
+            closeDetachIGWModal() {
+                this.showDetachIGWConfirm = false;
+                this.selectedIGWId = null;
+            },
+
+            async submitDetachIGW() {
+                const vpcId = this.selectedVpcForIGWDetach || this.selectedVpcForIGWDetachManual;
+                if (!this.selectedIGWId || !vpcId) {
+                    this.igwDetachError = 'VPC is required to detach';
+                    return;
+                }
+
+                try {
+                    const res = await fetch(`/api/v1/aws/internet-gateways/${this.selectedIGWId}/detach?vpc_id=${encodeURIComponent(vpcId)}`, { method: 'POST' });
+                    const d = await res.json();
+                    if (!res.ok || d.status === 'failed') {
+                        this.igwDetachError = d.error || 'Detach failed';
+                        return;
+                    }
+
+                    this.showDetachIGWConfirm = false;
+                    await this.loadInternetGateways();
+                } catch {
+                    this.igwDetachError = 'Failed to detach Internet Gateway';
+                }
+            },
+
+            async deleteIGW(igwId) {
+                if (!confirm(`Delete Internet Gateway ${igwId}? It must be detached first.`)) return;
+                try {
+                    const res = await fetch(`/api/v1/aws/internet-gateways/${igwId}`, { method: 'DELETE' });
+                    const d = await res.json();
+                    if (!res.ok || d.status === 'failed') return this.showError(d.error || 'Delete failed');
+                    await this.loadInternetGateways();
+                } catch {
+                    this.showError('Failed to delete Internet Gateway');
+                }
+            },
+
+            // =============================
+            // NAT
+            // =============================
+            natGateways: [],
+            natError: null,
+
+            showCreateNAT: false,
+            newNATSubnetId: '',
+            newNATName: 'NetPilot-NAT',
+            natCreateError: '',
+
+            openCreateNATModal() {
+                this.natCreateError = '';
+                this.newNATSubnetId = '';
+                this.showCreateNAT = true;
+            },
+
+            closeCreateNATModal() {
+                this.showCreateNAT = false;
+                this.natCreateError = '';
+            },
+
+            async submitCreateNAT() {
+                this.natCreateError = '';
+                if (!this.newNATSubnetId) {
+                    this.natCreateError = 'Please select a subnet';
+                    return;
+                }
+
+                try {
+                    const res = await fetch(
+                        `/api/v1/aws/nat-gateways?subnet_id=${encodeURIComponent(this.newNATSubnetId)}` +
+                        (this.newNATName ? `&name=${encodeURIComponent(this.newNATName)}` : ''),
+                        { method: 'POST' }
+                    );
+
+                    const data = await res.json();
+                    if (!res.ok || data.status === 'failed') {
+                        this.natCreateError = data.error || 'Failed to create NAT Gateway';
+                        return;
+                    }
+
+                    this.closeCreateNATModal();
+                    await this.loadNatGateways();
+                } catch {
+                    this.natCreateError = 'Failed to create NAT Gateway';
+                }
+            },
+
+            async deleteNatGateway(ngw) {
+                if (!ngw?.nat_gateway_id) return this.showError('Invalid NAT Gateway');
+                if (!confirm(`Delete NAT Gateway ${ngw.nat_gateway_id}?`)) return;
+
+                try {
+                    const res = await fetch(`/api/v1/aws/nat-gateways/${ngw.nat_gateway_id}`, { method: 'DELETE' });
+                    const data = await res.json();
+                    if (!res.ok || data.status === 'failed') return this.showError(data.error || 'Delete failed');
+                    await this.loadNatGateways();
+                } catch {
+                    this.showError('Failed to delete NAT Gateway');
+                }
+            },
+
+            // =============================
+            // VALIDATION (kept compatible)
+            // =============================
+            vpcInspectionResult: null,
+            vpcInspectionError: null,
+            inspectingVpc: false,
+
+            internetGatewayInspection: [],
+
+            expandedValidation: {
+                subnets: false,
+                route_tables: false,
+                internet_gateways: false,
+                nat_gateways: false,
+                network_interfaces: false,
+                route_tables_inspection: false,
+                subnets_inspection: false
+            },
+
+            routeTableInspection: null,
+            routeTableLoading: false,
+            routeTableError: null,
+
+            subnetInspection: null,
+            subnetLoading: false,
+            subnetErrorValidation: null,
+
+            async loadRouteTableValidation() {
+                if (!this.selectedVpcId) return;
+                this.routeTableLoading = true;
+                this.routeTableError = null;
+
+                try {
+                    const res = await fetch(`/api/v1/aws/route-tables/inspect?vpc_id=${this.selectedVpcId}`);
+                    const data = await res.json();
+
+                    if (!res.ok) {
+                        this.routeTableError = data.error || 'Failed to load route tables';
+                        this.routeTableInspection = null;
+                        return;
+                    }
+
+                    this.routeTableInspection = data;
+                } catch {
+                    this.routeTableError = 'Failed to contact backend';
+                    this.routeTableInspection = null;
+                } finally {
+                    this.routeTableLoading = false;
+                }
+            },
+
+            async loadSubnetInspection() {
+                this.subnetLoading = true;
+                this.subnetErrorValidation = null;
+
+                try {
+                    const vpcId = this.vpcInspectionResult?.vpc_id;
+                    if (!vpcId) return;
+
+                    const res = await fetch(`/api/v1/aws/vpcs/${vpcId}/subnets/inspection`);
+                    const data = await res.json();
+
+                    if (!res.ok) {
+                        this.subnetErrorValidation = data.error || 'Failed to load subnet inspection';
+                        return;
+                    }
+
+                    this.subnetInspection = data;
+                } catch {
+                    this.subnetErrorValidation = 'Failed to load subnet inspection';
+                } finally {
+                    this.subnetLoading = false;
+                }
+            },
+
+            async inspectVpcDependencies() {
+                if (!this.selectedVpcId) return;
+
+                this.inspectingVpc = true;
+                this.vpcInspectionError = null;
+
+                this.vpcInspectionResult = null;
+                this.internetGatewayInspection = [];
+                this.routeTableInspection = null;
+                this.subnetInspection = null;
+
+                const vpcId = this.selectedVpcId;
+
+                try {
+                    const res = await fetch(`/api/v1/aws/vpcs/${vpcId}/inspect`);
+                    const data = await res.json();
+
+                    if (!res.ok) {
+                        this.vpcInspectionError = data.error || 'Inspection failed';
+                        return;
+                    }
+
+                    this.vpcInspectionResult = data;
+
+                    await this.loadRouteTableValidation();
+                    await this.loadSubnetInspection();
+
+                    try {
+                        const igwRes = await fetch(`/api/v1/aws/internet-gateways/inspect?vpc_id=${vpcId}`);
+                        const igwData = await igwRes.json();
+                        this.internetGatewayInspection = Array.isArray(igwData.details) ? igwData.details : [];
+                    } catch {
+                        this.internetGatewayInspection = [];
+                    }
+
+                } catch {
+                    this.vpcInspectionError = 'Failed to contact backend';
+                } finally {
+                    this.inspectingVpc = false;
+                    // Refresh inventory so UI stays consistent
+                    await this.loadSubnets();
+                }
+            },
+
+            // =============================
+            // HEALTH (unchanged)
+            // =============================
+            backendHealth: null,
+            awsHealth: null,
+            awsLegacyHealth: null,
+            healthError: null,
+            healthCheckedAt: null,
+
+            async checkBackendHealth() {
+                try {
+                    const r = await fetch('/api/v1/health');
+                    this.backendHealth = await r.json();
+                } catch {
+                    this.backendHealth = { status: 'failed' };
+                }
+            },
+
+            async checkAwsHealth() {
+                try {
+                    const r = await fetch('/api/v1/aws/health');
+                    this.awsHealth = await r.json();
+                } catch {
+                    this.awsHealth = { status: 'failed' };
+                }
+            },
+
+            async checkAwsLegacyHealth() {
+                try {
+                    const r = await fetch('/api/v1/aws/health/legacy');
+                    this.awsLegacyHealth = await r.json();
+                } catch {
+                    this.awsLegacyHealth = { status: 'failed' };
+                }
+            },
+
+            async checkAllHealth() {
+                this.healthError = null;
+                this.healthCheckedAt = new Date().toISOString();
+                await Promise.all([this.checkBackendHealth(), this.checkAwsHealth(), this.checkAwsLegacyHealth()]);
+            },
+
+            // =============================
+            // LOADERS (stable + subnet fix)
+            // =============================
+            async loadVPCs() {
+                try {
+                    const r = await fetch('/api/v1/aws/vpcs');
+                    const d = await r.json();
+                    this.vpcs = d.vpcs || [];
+
+                    if (this.vpcs.length && !this.selectedVpcId) {
+                        this.selectedVpcId = this.vpcs[0].vpc_id;
+                    }
+                } catch {
+                    this.showError('Failed to load VPCs');
+                }
+            },
+
+            async loadSubnets() {
+                if (!this.selectedVpcId) {
+                    this.subnets = [];
+                    return;
+                }
+
+                try {
+                    const r = await fetch(`/api/v1/aws/subnets?vpc_id=${encodeURIComponent(this.selectedVpcId)}`);
+                    const d = await r.json();
+
+                    // ✅ FIX: accept both response shapes
+                    if (Array.isArray(d)) this.subnets = d;
+                    else if (Array.isArray(d.subnets)) this.subnets = d.subnets;
+                    else this.subnets = [];
+
+                } catch {
+                    this.showError('Failed to load subnets');
+                    this.subnets = [];
+                }
+            },
+
+            async loadAZs() {
+                try {
+                    const r = await fetch('/api/v1/aws/availability-zones');
+                    const d = await r.json();
+                    this.availabilityZones = d.availability_zones || d.zones || [];
+                } catch {
+                    this.showError('Failed to load Availability Zones');
+                    this.availabilityZones = [];
+                }
+            },
+
+            async loadRouteTables() {
+                try {
+                    const r = await fetch('/api/v1/aws/route-tables');
+                    const d = await r.json();
+                    this.routeTables = d.route_tables || [];
+                } catch {
+                    this.showError('Failed to load route tables');
+                }
+            },
+
+            async loadInternetGateways() {
+                try {
+                    const r = await fetch('/api/v1/aws/internet-gateways');
+                    const d = await r.json();
+                    this.internetGateways = (d.internet_gateways || []).map(igw => ({
+                        ...igw,
+                        attached_vpc_ids: igw.attached_vpc_id ? [igw.attached_vpc_id] : []
+                    }));
+                } catch {
+                    this.showError('Failed to load Internet Gateways');
+                }
+            },
+
+            async loadNatGateways() {
+                try {
+                    const r = await fetch('/api/v1/aws/nat-gateways');
+                    const d = await r.json();
+                    this.natGateways = (d.nat_gateways || []).map(ngw => ({
+                        ...ngw,
+                        public_ip: ngw.addresses && ngw.addresses.length ? ngw.addresses[0].public_ip : null
+                    }));
+                } catch {
+                    this.showError('Failed to load NAT Gateways');
+                }
+            },
+        };
+    }
 </script>
 
 
