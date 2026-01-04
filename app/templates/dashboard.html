@@ -90,11 +90,8 @@
                                 'bg-gray-400': !awsLegacyHealth
                             }" class="w-3 h-3 rounded-full inline-block"></span>
             </div>
-
         </div>
     </div>
-
-
 
     <!-- GLOBAL ERROR BAR -->
     <template x-if="globalError">
@@ -140,11 +137,9 @@
                     : 'px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-800'">
                 📊 Observability
             </button>
-
-
-
         </nav>
     </div>
+
     <div x-show=" activeTab==='network'" x-cloak class=" space-y-6">
         <div class="flex justify-end">
             <button @click="showVpcInfo = !showVpcInfo" class="text-sm text-blue-600 hover:text-blue-800 font-medium">
@@ -152,7 +147,6 @@
                 <span x-show="showVpcInfo">Hide information</span>
             </button>
         </div>
-
 
         <!-- ================= VPC & SUBNETS INFO ================= -->
         <div x-show="showVpcInfo" x-transition class="bg-slate-50 border border-slate-200 rounded-lg p-5">
@@ -662,7 +656,6 @@
                                 </template>
                             </td>
 
-
                             <td class="px-4 py-2 border text-xs">
                                 <ul class="list-disc list-inside space-y-1">
                                     <template x-for="r in rt.routes" :key="r.cidr + r.target">
@@ -764,7 +757,6 @@
                 </button>
             </div>
         </div>
-
 
         <!-- ATTACH IGW MODAL -->
         <div x-show="showAttachIGW" x-cloak
@@ -1011,7 +1003,6 @@
             </ul>
         </div>
 
-
         <!-- ACTION BAR -->
         <div class="flex space-x-3">
             <button @click="openCreateNATModal()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
@@ -1092,7 +1083,6 @@
                                             ? 'bg-yellow-100 text-yellow-800'
                                             : 'bg-slate-100 text-slate-700')" x-text="ngw.state"></span>
                             </td>
-
                             <td class="px-3 py-2 border font-mono" x-text="ngw.subnet_id || '—'"></td>
 
                             <td class="px-3 py-2 border font-mono" x-text="ngw.vpc_id || '—'"></td>
@@ -1110,7 +1100,6 @@
                 </tbody>
             </table>
         </div>
-
     </div>
 
     <!-- ================= VALIDATION TAB ================= -->
@@ -1137,7 +1126,6 @@
             </div>
         </div>
 
-
         <!-- ================= VPC DEPENDENCY INSPECTION (UI ONLY) ================= -->
         <div class="bg-slate-50 border border-slate-200 rounded-lg p-5 space-y-4">
             <!-- ================= BLOCKING SUMMARY ================= -->
@@ -1159,10 +1147,8 @@
                         </template>
                     </li>
 
-
                     <!-- WHY BLOCKING -->
                     <div class="mt-2 ml-4 text-sm text-slate-700 space-y-1">
-
                         <div>
                             ❌ <span class="text-amber-700 font-medium">Cannot delete</span> because this
                             <span class="text-indigo-700 font-medium">Internet Gateway</span> is
@@ -1188,8 +1174,6 @@
                         </div>
 
                     </div>
-
-
 
                     <!-- NAT Gateways -->
                     <li x-show="vpcInspectionResult.details.nat_gateways?.length">
@@ -1445,10 +1429,8 @@
                     </div>
                 </div>
 
-
                 <!-- ROUTE TABLES (INSPECTION) -->
                 <div x-show="vpcInspectionResult">
-
 
                     <button
                         @click="expandedValidation.route_tables_inspection = !expandedValidation.route_tables_inspection"
@@ -1596,7 +1578,6 @@
                             </template>
                         </ul>
                     </div>
-
 
                     <!-- INTERNET GATEWAYS -->
                     <div>
@@ -1774,14 +1755,9 @@
                                                 Read-only guidance. Commands are not executed automatically.
                                             </div>
                                         </div>
-
-
                                     </div>
-
                                 </div>
-
                             </template>
-
                             <template x-if="internetGatewayInspection.length === 0">
                                 <div class="italic text-slate-400">
                                     No Internet Gateways found.
@@ -1790,8 +1766,6 @@
 
                         </div>
                     </div>
-
-
 
                     <!-- NAT GATEWAYS -->
                     <div>
@@ -1812,7 +1786,6 @@
                             </template>
                         </ul>
                     </div>
-
 
                     <!-- NETWORK INTERFACES -->
                     <div>
@@ -1839,7 +1812,6 @@
             </div>
         </div>
     </div>
-
 
     <!-- ============================================================= -->
     <!-- TAB 6: OBSERVABILITY - LOGS (LOCAL DEV) -->
@@ -1900,11 +1872,7 @@
                 </div>
             </template>
         </div>
-
     </div>
-
-
-
 
     <!-- ============================================================= -->
     <!-- ALPINE.JS LOGIC (Single Source of Truth) -->
@@ -1922,7 +1890,6 @@
                     await this.loadRouteTables(); // Loads Route Tables
                     await this.loadLogs();        // OBSERVABILITY – LOG INIT (STEP 1c)
                     await this.loadBackendHealth(); // Loads Health status
-
                 },
 
                 // =============================
@@ -1938,7 +1905,6 @@
                 lastKnownLogs: [],
                 logWindowMinutes: 15,
                 fallbackWindowMinutes: 30,
-
 
                 onVpcSelected() {
                     if (!this.selectedVpcId) {
@@ -2541,7 +2507,6 @@
                     }
                 },
 
-
                 async inspectVpcDependencies() {
                     if (!this.selectedVpcId) return;
 
@@ -2554,8 +2519,6 @@
                     this.subnetInspection = null;
 
                     const vpcId = this.selectedVpcId;
-
-
 
                     try {
                         const res = await fetch(`/api/v1/aws/vpcs/${vpcId}/inspect`);
@@ -2588,7 +2551,6 @@
                     }
 
                 },
-
 
                 // =============================
                 // HEALTH (unchanged)
@@ -2730,7 +2692,6 @@
                     }
                 },
 
-
                 async loadNatGateways() {
                     try {
                         const r = await fetch('/api/v1/aws/nat-gateways');
@@ -2756,6 +2717,5 @@
             };
         }
     </script>
-
 
     {% endblock %}
