@@ -13,6 +13,7 @@ from app.api.v1.routers.dashboard import router as dashboard_router
 from app.api.v1.routers.aws import router as aws_router
 from app.api.v1.routers.health import router as health_router
 from app.api.v1.routers.ops_docs import router as ops_docs_router
+from app.api.v1.routers.logs import router as logs_router
 
 from app.db.init_db import init_db
 
@@ -41,6 +42,9 @@ app = FastAPI(
 app.include_router(health_router, prefix="/api/v1")
 app.include_router(aws_router, prefix="/api/v1/aws")
 app.include_router(dashboard_router, prefix="/api/v1/dashboard")
+
+app.include_router(logs_router, prefix="/api/v1")
+
 app.include_router(ops_docs_router, prefix="/api/v1/ops", tags=["validation", "operations"])
 
 # ----------------------------
