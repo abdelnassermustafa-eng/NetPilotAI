@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Query
 from datetime import datetime, timedelta
+from app.core.memory_log_handler import memory_logs
 import boto3
 import os
 
 router = APIRouter(prefix="/logs", tags=["Logs"])
 
-# -----------------------------
-# Local-dev fallback logs
-# -----------------------------
+# -------------------------------------------------
+# Local-dev fallback logs (safe, deterministic)
+# -------------------------------------------------
 _LOCAL_DEV_LOGS = [
     {
         "timestamp": datetime.utcnow().isoformat() + "Z",
@@ -21,6 +22,7 @@ _LOCAL_DEV_LOGS = [
     },
 ]
 
+
 @router.get("/recent")
 def get_recent_logs(
     window: int = Query(15, ge=1, le=120),
@@ -28,25 +30,38 @@ def get_recent_logs(
 ):
     """
     Return recent backend logs.
-    CloudWatch in AWS, safe local fallback in dev.
-    Read-only, bounded, UI-safe.
+
+    Priority order:
+    1. In-memory live backend logs
+    2. Local-dev fallback logs
+    3. CloudWatch (AWS only)
     """
 
-    # ----------------------------------
-    # If not running in AWS, fallback
-    # ----------------------------------
+    # -------------------------------------------------
+    # Phase 5.3 — ALWAYS return in-memory logs first
+    # -------------------------------------------------
+    if memory_logs:
+        return {
+            "status": "ok",
+            "source": "memory",
+            "count": min(len(memory_logs), limit),
+            "logs": list(memory_logs)[-limit:],
+        }
+
+    # -------------------------------------------------
+    # Local-dev fallback (no AWS)
+    # -------------------------------------------------
     if os.getenv("AWS_EXECUTION_ENV") is None:
         return {
             "status": "ok",
             "source": "local-dev",
-            "window_minutes": window,
             "count": len(_LOCAL_DEV_LOGS),
-            "logs": _LOCAL_DEV_LOGS[:limit],
+            "logs": _LOCAL_DEV_LOGS[-limit:],
         }
 
-    # ----------------------------------
-    # CloudWatch Logs (AWS)
-    # ----------------------------------
+    # -------------------------------------------------
+    # CloudWatch (AWS only)
+    # -------------------------------------------------
     logs_client = boto3.client("logs")
     start_time = int(
         (datetime.utcnow() - timedelta(minutes=window)).timestamp() * 1000
@@ -64,7 +79,7 @@ def get_recent_logs(
                 "timestamp": datetime.utcfromtimestamp(
                     e["timestamp"] / 1000
                 ).isoformat() + "Z",
-                "level": "INFO",  # CloudWatch does not guarantee level parsing
+                "level": "INFO",
                 "message": e.get("message", "").strip(),
             }
             for e in response.get("events", [])
@@ -73,13 +88,11 @@ def get_recent_logs(
         return {
             "status": "ok",
             "source": "cloudwatch",
-            "window_minutes": window,
             "count": len(events),
             "logs": events,
         }
 
     except Exception as exc:
-        # Never break UI
         return {
             "status": "error",
             "source": "cloudwatch",

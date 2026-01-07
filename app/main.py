@@ -5,6 +5,9 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+import logging
+from app.core.memory_log_handler import MemoryLogHandler
+
 
 # ----------------------------
 # Core Routers (VALID)
@@ -35,6 +38,16 @@ app = FastAPI(
     description="Multi-cloud & Network Automation Platform",
     version="1.0.0",
 )
+
+# ==================================================
+# Phase 5.3 — MemoryLogHandler wiring (safe mode)
+# ==================================================
+root_logger = logging.getLogger()
+
+if not any(isinstance(h, MemoryLogHandler) for h in root_logger.handlers):
+    root_logger.addHandler(MemoryLogHandler())
+    root_logger.setLevel(logging.INFO)
+
 
 # ----------------------------
 # Routers

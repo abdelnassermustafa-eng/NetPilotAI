@@ -1829,13 +1829,177 @@
                 <li>Access safe, read-only operational tools and playbooks</li>
                 <li>Preview operational commands with full audit visibility</li>
             </ul>
-        </div>
-
-        <!-- ================= BACKEND HEALTH INDICATOR ================= -->
+        </div> <!-- ================= BACKEND HEALTH INDICATOR ================= -->
         {% include "observability/_root.html" %}
 
+        <!-- ================= OBSERVABILITY SECTION SWITCHER ================= -->
+        <div class="flex gap-2 mb-4 border-b pb-2">
+
+            <button @click="observabilitySection = 'logs'" :class="observabilitySection === 'logs'
+                    ? 'bg-slate-800 text-white'
+                    : 'bg-slate-100 text-slate-700'" class="px-3 py-1 rounded text-sm font-medium">
+                Logs
+            </button>
+
+            <button @click="observabilitySection = 'metrics'" :class="observabilitySection === 'metrics'
+                    ? 'bg-slate-800 text-white'
+                    : 'bg-slate-100 text-slate-700'" class="px-3 py-1 rounded text-sm font-medium">
+                Metrics
+            </button>
+
+            <button @click="observabilitySection = 'alerts'" :class="observabilitySection === 'alerts'
+                    ? 'bg-slate-800 text-white'
+                    : 'bg-slate-100 text-slate-700'" class="px-3 py-1 rounded text-sm font-medium">
+                Alerts
+            </button>
+
+            <button @click="observabilitySection = 'events'" :class="observabilitySection === 'events'
+                    ? 'bg-slate-800 text-white'
+                    : 'bg-slate-100 text-slate-700'" class="px-3 py-1 rounded text-sm font-medium">
+                Events
+            </button>
+
+            <button @click="observabilitySection = 'tools'" :class="observabilitySection === 'tools'
+                    ? 'bg-slate-800 text-white'
+                    : 'bg-slate-100 text-slate-700'" class="px-3 py-1 rounded text-sm font-medium">
+                Tools
+            </button>
+
+        </div>
+
+
         <!-- ================= LOGS ================= -->
-        {% include "observability/_logs.html" %}<!-- logs / metrics / alerts / etc continue below --></div>
+        <div x-show="observabilitySection === 'logs'" x-cloak>
+            {% include "observability/_logs.html" %}
+        </div>
+
+        <div x-show="observabilitySection === 'metrics'" x-cloak>
+            <div class="space-y-4">
+                <h3 class="text-base font-semibold text-slate-800">📈 Metrics</h3>
+
+                <p class="text-sm text-slate-600">
+                    Resource utilization and performance metrics. Metrics are read-only and will be enabled in a future
+                    phase.
+                </p>
+
+                <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+                    <li>
+                        <div class="flex items-center justify-between cursor-pointer select-none"
+                            @click="expandedMetrics.cloudwatch = !expandedMetrics.cloudwatch">
+
+                            <strong>CloudWatch Metrics</strong>
+                            <span class="text-xs text-slate-500"
+                                x-text="expandedMetrics.cloudwatch ? 'Hide' : 'Show'"></span>
+                        </div>
+
+                        <div x-show="expandedMetrics.cloudwatch" x-cloak
+                            class="mt-2 ml-4 space-y-1 text-sm text-slate-700">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div class="flex justify-between"><span>CPU Utilization</span><span class="font-mono">—
+                                        %</span></div>
+                                <div class="flex justify-between"><span>Memory Utilization</span><span
+                                        class="font-mono">— %</span></div>
+                                <div class="flex justify-between"><span>Network In</span><span class="font-mono">—
+                                        bytes</span></div>
+                                <div class="flex justify-between"><span>Network Out</span><span class="font-mono">—
+                                        bytes</span></div>
+                                <div class="flex justify-between"><span>4xx Errors</span><span
+                                        class="font-mono">—</span></div>
+                                <div class="flex justify-between"><span>5xx Errors</span><span
+                                        class="font-mono">—</span></div>
+                            </div>
+                        </div>
+                    </li>
+                    <li>CPU / Memory</li>
+                    <li>Network</li>
+                    <li>Errors &amp; Throttles</li>
+                    <li>Lambda Metrics</li>
+                    <li>Load Balancer Metrics</li>
+                    <li class="italic text-slate-500">Custom Metrics (future)</li>
+                </ul>
+
+
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+                <div class="bg-white border border-slate-200 rounded-lg p-4">
+                    <div class="text-xs text-slate-500">Backend Status</div>
+                    <div class="text-sm font-semibold text-slate-800">Running</div>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-lg p-4">
+                    <div class="text-xs text-slate-500">Request Volume</div>
+                    <div class="text-sm font-semibold text-slate-800">—</div>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-lg p-4">
+                    <div class="text-xs text-slate-500">Error Rate</div>
+                    <div class="text-sm font-semibold text-slate-800">—</div>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-lg p-4">
+                    <div class="text-xs text-slate-500">Avg Latency</div>
+                    <div class="text-sm font-semibold text-slate-800">—</div>
+                </div>
+            </div>
+        </div>
+
+        <div x-show="observabilitySection === 'alerts'" x-cloak>
+            <div class="space-y-4">
+                <h3 class="text-base font-semibold text-slate-800">🚨 Alerts</h3>
+
+                <p class="text-sm text-slate-600">
+                    Active alerts and health warnings. Alerts are read-only and will be enabled in a future phase.
+                </p>
+
+                <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+                    <li>
+                        <div class="flex items-center justify-between cursor-pointer select-none"
+                            @click="expandedAlerts.cloudwatch = !expandedAlerts.cloudwatch">
+                            <strong>CloudWatch Alarms</strong>
+                            <span class="text-xs text-slate-500"
+                                x-text="expandedAlerts.cloudwatch ? 'Hide' : 'Show'"></span>
+                        </div>
+
+                        <div x-show="expandedAlerts.cloudwatch" x-cloak
+                            class="mt-2 ml-4 space-y-1 text-sm text-slate-700">
+                            <div>High CPU Utilization</div>
+                            <div>High Error Rate</div>
+                            <div>Unhealthy Targets</div>
+                            <div>Billing Threshold</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div x-show="observabilitySection === 'events'" x-cloak>
+        <div class="space-y-4">
+            <h3 class="text-base font-semibold text-slate-800">📡 Events</h3>
+
+            <p class="text-sm text-slate-600">
+                System and infrastructure events timeline. Events are read-only and will be enabled in a future phase.
+            </p>
+
+            <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+                <li>
+                    <div class="flex items-center justify-between cursor-pointer select-none"
+                        @click="expandedEvents.cloudwatch = !expandedEvents.cloudwatch">
+                        <strong>CloudWatch / EventBridge Events</strong>
+                        <span class="text-xs text-slate-500"
+                            x-text="expandedEvents.cloudwatch ? 'Hide' : 'Show'"></span>
+                    </div>
+
+                    <div x-show="expandedEvents.cloudwatch" x-cloak class="mt-2 ml-4 space-y-1 text-sm text-slate-700">
+                        <div>EC2 State Changes</div>
+                        <div>Auto Scaling Events</div>
+                        <div>Deployment Events</div>
+                        <div>Scheduled Events</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div x-show="observabilitySection === 'tools'" x-cloak></div>
 
 
     <!-- ============================================================= -->
@@ -1844,6 +2008,47 @@
     <script>
         function networkConsole() {
             return {
+                // =============================
+                // LOG POLLING STATE (Phase 5.2)
+                // =============================
+
+                logPollingIntervalMs: 4000,
+
+                logPollTimer: null,
+
+                // =============================
+                // TIMESTAMP FORMATTER (LOGS)
+                // =============================
+                formatTimestamp(ts) {
+                    if (!ts) return "—";
+                    try {
+                        const d = new Date(ts);
+                        return d.toISOString()
+                            .replace("T", " ")
+                            .replace("Z", " UTC")
+                            .split(".")[0];
+                    } catch {
+                        return ts;
+                    }
+                },
+
+                // =============================
+                // LOG LEVEL COLORIZATION
+                // =============================
+                levelClass(level) {
+                    switch ((level || "").toUpperCase()) {
+                        case "ERROR":
+                            return "bg-red-600 text-white";
+                        case "WARN":
+                        case "WARNING":
+                            return "bg-yellow-500 text-black";
+                        case "INFO":
+                            return "bg-blue-600 text-white";
+                        default:
+                            return "bg-slate-400 text-white";
+                    }
+                },
+
                 // =============================
                 // INIT (ordered, no races)
                 // =============================
@@ -1861,6 +2066,10 @@
                 // GLOBAL STATE
                 // =============================
                 activeTab: 'network',
+                observabilitySection: 'logs',
+                expandedMetrics: { cloudwatch: false },
+                expandedAlerts: { cloudwatch: false },
+                expandedEvents: { cloudwatch: false },
                 globalError: null,
 
                 // =============================
@@ -1870,7 +2079,6 @@
                 lastKnownLogs: [],
                 logWindowMinutes: 15,
                 fallbackWindowMinutes: 30,
-
 
                 onVpcSelected() {
                     if (!this.selectedVpcId) {
@@ -1887,6 +2095,23 @@
 
                 // =============================
                 // LOGS AUTO-REFRESH (PHASE 1.3)
+                // =============================
+                startLogPolling() {
+                    if (this.logPollTimer) return;
+                    this.logPollTimer = setInterval(() => {
+                        if (this.autoRefreshLogs) {
+                            this.fetchRecentLogs();
+                        }
+                    }, this.logPollingIntervalMs);
+                },
+
+                stopLogPolling() {
+                    if (this.logPollTimer) {
+                        clearInterval(this.logPollTimer);
+                        this.logPollTimer = null;
+                    }
+                },
+
                 // =============================
                 autoRefreshLogs: false,
                 _logsTimer: null,
@@ -1976,7 +2201,6 @@
                 // =============================
                 showCreateSubnet: false,
                 subnetError: '',
-
                 newSubnetVPC: '',
                 newSubnetVPCManual: '',
                 newSubnetCIDR: '',
@@ -2001,7 +2225,6 @@
                         this.subnetError = 'Missing required subnet fields';
                         return;
                     }
-
                     try {
                         const url =
                             `/api/v1/aws/subnets` +
@@ -2017,7 +2240,6 @@
                             this.subnetError = data.error || 'Subnet creation failed';
                             return;
                         }
-
                         this.showCreateSubnet = false;
                         await this.loadSubnets();
                         await this.loadRouteTables();
