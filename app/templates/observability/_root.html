@@ -1,0 +1,153 @@
+<!-- ============================================================= -->
+<!-- OBSERVABILITY ROOT -->
+<!-- Skeleton Only — No Backend Dependency -->
+<!-- ============================================================= -->
+
+<div class="space-y-8">
+
+    <!-- ========================================================= -->
+    <!-- 🟢 BACKEND HEALTH (ALWAYS VISIBLE) -->
+    <!-- ========================================================= -->
+    {% include "observability/_health.html" %}
+
+    <!-- ========================================================= -->
+    <!-- 📜 LOGS -->
+    <!-- ========================================================= -->
+    <section class="space-y-4">
+
+        <h2 class="text-xl font-semibold text-slate-800 flex items-center gap-2">
+            📜 Logs
+        </h2>
+
+        <p class="text-sm text-slate-600">
+            Application and infrastructure logs from AWS services.
+        </p>
+
+        <ul class="list-disc list-inside text-sm text-slate-700 space-y-1">
+            <li>Application Logs (CloudWatch Logs)</li>
+            <li>Lambda Logs</li>
+            <li>ECS / EC2 Logs</li>
+            <li>Kubernetes Logs <span class="italic text-slate-400">(future)</span></li>
+            <li>Log Stream Viewer</li>
+        </ul>
+
+
+
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- 📈 METRICS -->
+    <!-- ========================================================= -->
+    <section class="space-y-4">
+
+        <h2 class="text-xl font-semibold text-slate-800 flex items-center gap-2">
+            📈 Metrics
+        </h2>
+
+        <p class="text-sm text-slate-600">
+            Resource utilization and performance metrics.
+        </p>
+
+        <ul class="list-disc list-inside text-sm text-slate-700 space-y-1">
+            <li>CloudWatch Metrics
+                <ul class="list-disc list-inside ml-5">
+                    <li>CPU / Memory</li>
+                    <li>Network</li>
+                    <li>Errors & Throttles</li>
+                </ul>
+            </li>
+            <li>Lambda Metrics</li>
+            <li>Load Balancer Metrics</li>
+            <li>Custom Metrics <span class="italic text-slate-400">(future)</span></li>
+        </ul>
+
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- 🚨 ALERTS -->
+    <!-- ========================================================= -->
+    <section class="space-y-4">
+
+        <h2 class="text-xl font-semibold text-slate-800 flex items-center gap-2">
+            🚨 Alerts
+        </h2>
+
+        <p class="text-sm text-slate-600">
+            Active alerts and health warnings.
+        </p>
+
+        <ul class="list-disc list-inside text-sm text-slate-700 space-y-1">
+            <li>CloudWatch Alarms</li>
+            <li>Threshold-based Alerts</li>
+            <li>Health Warnings</li>
+        </ul>
+
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- 📡 EVENTS -->
+    <!-- ========================================================= -->
+    <section class="space-y-4">
+
+        <h2 class="text-xl font-semibold text-slate-800 flex items-center gap-2">
+            📡 Events
+        </h2>
+
+        <p class="text-sm text-slate-600">
+            System and infrastructure events timeline.
+        </p>
+
+        <ul class="list-disc list-inside text-sm text-slate-700 space-y-1">
+            <li>CloudWatch Events / EventBridge</li>
+            <li>SQS Events</li>
+            <li>SNS Notifications</li>
+            <li>System Events Timeline</li>
+        </ul>
+
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- 🛠 TOOLS -->
+    <!-- ========================================================= -->
+    <section class="space-y-4">
+
+        <h2 class="text-xl font-semibold text-slate-800 flex items-center gap-2">
+            🛠 Tools
+        </h2>
+
+        <p class="text-sm text-slate-600">
+            Operational tools and safe, read-only playbooks.
+        </p>
+
+        <ul class="list-disc list-inside text-sm text-slate-700 space-y-1">
+            <li>AWS CLI <span class="italic text-slate-400">(read-only examples)</span></li>
+            <li>Bash Scripts</li>
+            <li>Ansible Playbooks</li>
+            <li>Terraform Modules</li>
+            <li>Doctor-generated Safe Playbooks</li>
+        </ul>
+
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- 🖥 TERMINAL (ADVANCED / OPTIONAL) -->
+    <!-- ========================================================= -->
+    <section class="space-y-4">
+
+        <h2 class="text-xl font-semibold text-slate-800 flex items-center gap-2">
+            🖥 Terminal
+        </h2>
+
+        <p class="text-sm text-slate-600">
+            Advanced command interaction and auditing.
+        </p>
+
+        <ul class="list-disc list-inside text-sm text-slate-700 space-y-1">
+            <li>Read-only command preview <span class="italic text-slate-400">(default)</span></li>
+            <li>User-executed commands <span class="italic text-slate-400">(explicit consent)</span></li>
+            <li>Session audit log</li>
+        </ul>
+
+    </section>
+
+</div>

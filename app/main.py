@@ -7,7 +7,8 @@ from fastapi.templating import Jinja2Templates
 
 import logging
 from app.core.memory_log_handler import MemoryLogHandler
-
+from app.api.v1.routers.metrics import router as metrics_router
+from app.api.v1.routers.alerts import router as alerts_router
 
 # ----------------------------
 # Core Routers (VALID)
@@ -55,10 +56,12 @@ if not any(isinstance(h, MemoryLogHandler) for h in root_logger.handlers):
 app.include_router(health_router, prefix="/api/v1")
 app.include_router(aws_router, prefix="/api/v1/aws")
 app.include_router(dashboard_router, prefix="/api/v1/dashboard")
-
 app.include_router(logs_router, prefix="/api/v1")
-
 app.include_router(ops_docs_router, prefix="/api/v1/ops", tags=["validation", "operations"])
+app.include_router(metrics_router, prefix="/api/v1")
+app.include_router(alerts_router, prefix="/api/v1")
+
+
 
 # ----------------------------
 # Future / Not-present Routers (COMMENTED)
