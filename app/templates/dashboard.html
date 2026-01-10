@@ -2048,6 +2048,31 @@
             </ul>
         </div>
     </div>
+
+    <!-- ================= EVENTS ================= -->
+    <div x-show="observabilitySection === 'events'" x-cloak>
+        <div class="space-y-4">
+            <h3 class="text-base font-semibold text-slate-800">📡 Events</h3>
+
+            <p class="text-sm text-slate-600">
+                System and infrastructure events timeline. Events are read-only and will be enabled in a future phase.
+            </p>
+
+            <p class="text-sm text-slate-700">
+                Displayed events are informational only. Live event timelines, filtering,
+                correlation, and automated responses are planned for a future release.
+            </p>
+
+            <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+                <li>CloudWatch / EventBridge events</li>
+                <li>EC2 state changes</li>
+                <li>Auto Scaling events</li>
+                <li>Scheduled events</li>
+                <li class="italic text-slate-500">SQS / SNS notifications (planned)</li>
+            </ul>
+        </div>
+    </div>
+
 </div>
 
 <div x-show="observabilitySection === 'tools'" x-cloak></div>
