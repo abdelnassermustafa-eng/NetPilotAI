@@ -1,136 +1,97 @@
-# Observability Roadmap — NetPilot AI
+# NetPilot AI — Observability Roadmap (Priority + Truth-Based)
 
-This document defines the Observability architecture for NetPilot AI.
-It is a **design contract**, not an implementation file.
+## Phase 0 — Scope guardrails (NOW)
+- Observability is read-only (no infrastructure modifications).
+- UI text must never imply delivery beyond what exists.
+- Anything not implemented is labeled: Planned / Under construction.
 
----
+## Phase 1 — Logs (ship-quality baseline)
+Goal: Logs are the first vendor-trust deliverable.
 
-## 📊 Observability (Parent Page)
-
-Observability is the **user-facing operational insight layer**.
-It aggregates health, logs, metrics, alerts, events, and tooling.
-
-CloudWatch and other AWS services are **data providers**, not the UI.
-
----
-
-## 🟢 Always Visible (Top Section)
-
-- Backend Health Status
-  - Service name (e.g. netpilot-backend)
-  - Status: healthy / degraded / unreachable
-  - Source: `/api/v1/health`
-
-This block is always visible when Observability is active.
-
----
-
-## 📜 Logs
-
-Purpose: inspect application and infrastructure logs.
-
-### Subsections
+### ✅ Ready to ship (completed)
 - Application Logs (CloudWatch Logs)
-- Lambda Logs
-- ECS / EC2 Logs
-- Kubernetes Logs (future)
 - Log Stream Viewer
+- Auto-refresh logs (working)
 
-Notes:
-- Read-only by default
-- Local development shows placeholder state
-- CloudWatch becomes active only when deployed to AWS
+### ⚠️ Partial (ship as partial with labels)
+- Lambda Logs (limited coverage / not fully wired)
+- ECS / EC2 Logs (subset of sources / not fully wired)
 
----
+### 🚧 Not yet (do not claim delivered)
+- Kubernetes Logs (future)
 
-## 📈 Metrics
+Exit criteria:
+- Logs tab stable, no UI bleed into other pages
+- Clear labels: implemented vs partial vs planned
 
-Purpose: visualize performance and capacity.
+## Phase 2 — Metrics (minimum useful, honest)
+Goal: Situational awareness without fake precision.
 
-### Subsections
-- CloudWatch Metrics
-  - CPU / Memory
-  - Network
-  - Errors & Throttles
-- Lambda Metrics
-- Load Balancer Metrics
-- Custom Metrics (future)
+### ✅ Ready to ship (acceptable baseline)
+- Metrics UI present + auto-refresh control
+- Backend Status cards (Running, etc.) as informational
 
----
+### ⚠️ Partial
+- CloudWatch metrics basics (CPU/Memory where available; others may show —)
+- Errors/Throttles placeholders acceptable if labeled partial
 
-## 🚨 Alerts
+### 🚧 Not yet
+- Full Lambda metrics coverage
+- Load Balancer metrics coverage
+- Custom metrics
 
-Purpose: proactive issue detection.
+Exit criteria:
+- Partial metrics labeled clearly
+- No implied completeness
 
-### Subsections
-- CloudWatch Alarms
-- Threshold-based Alerts
-- Health Warnings
+## Phase 3 — Alerts (status-only, read-only)
+Goal: Awareness only, no actions.
 
-Notes:
-- Advisory only (no auto-remediation)
-- Linked to Metrics and Events
+### ✅ Ready to ship
+- Display current alerts list (read-only)
 
----
+### ⚠️ Partial
+- If alerts are limited/hardcoded/not fully sourced, label as partial
 
-## 📡 Events
+### 🚧 Not yet
+- Alert configuration, creation, suppression, remediation workflows
 
-Purpose: understand system behavior and triggers.
+Exit criteria:
+- Alerts are “awareness only”
+- No operational actions
 
-### Subsections
-- CloudWatch Events / EventBridge
-- SQS Events
-- SNS Notifications
-- System Events Timeline
+## Phase 4 — Events (informational, not wired)
+Goal: Keep scope visible, avoid false claims.
 
----
+### 🚧 Not yet (informational only)
+- CloudWatch Events / EventBridge timeline
+- SQS events
+- SNS notifications
+- System events timeline
 
-## 🛠 Tools
+Exit criteria:
+- Events tab clearly marked planned or hidden until wired
 
-Purpose: operational support and reproducibility.
+## Phase 5 — Tools (read-only playbooks only)
+Goal: Guidance, not execution.
 
-### Subsections
-- AWS CLI (read-only examples)
-- Bash Scripts
-- Ansible Playbooks
-- Terraform Modules
-- NetPilot-Doctor generated safe playbooks
+### 🚧 Not yet (scope only until implemented)
+- AWS CLI read-only examples
+- Bash scripts
+- Ansible playbooks
+- Terraform modules
+- Doctor-generated safe playbooks
 
-Notes:
-- Tools are curated
-- All destructive actions documented, not auto-executed
+Exit criteria:
+- If shown: examples only / no execution in app
 
----
+## Phase 6 — Terminal (advanced, last)
+Goal: Auditable and consent-based.
 
-## 🖥 Terminal (Advanced)
-
-Purpose: expert-level execution surface.
-
-### Subsections
+### 🚧 Not yet
 - Read-only command preview (default)
 - User-executed commands (explicit consent)
 - Session audit log
 
-Notes:
-- User responsibility
-- Explicit warnings required
-- Full audit trail
-
----
-
-## Design Principles
-
-- Observability is the parent UI
-- CloudWatch is a provider, not a page
-- Everything is safe-by-default
-- Read-only first, opt-in execution
-- Scalable to new AWS services
-
----
-
-## Status
-
-- Design approved
-- Implementation pending
-- Protected by NetPilot-Doctor intent checks
-
+Exit criteria:
+- Only after security + audit model is complete

@@ -19,21 +19,55 @@
             📜 Logs
         </h2>
 
-        <p class="text-sm text-slate-600">
-            Application and infrastructure logs from AWS services.
-        </p>
+        <!-- ================= LOGS OVERVIEW (COLLAPSIBLE) ================= -->
+        <details class="bg-amber-50 border border-amber-200 rounded-md p-3 text-sm">
+            <summary class="cursor-pointer font-medium text-amber-800">
+                Show Logs capabilities & status
+            </summary>
 
-        <ul class="list-disc list-inside text-sm text-slate-700 space-y-1">
-            <li>Application Logs (CloudWatch Logs)</li>
-            <li>Lambda Logs</li>
-            <li>ECS / EC2 Logs</li>
-            <li>Kubernetes Logs <span class="italic text-slate-400">(future)</span></li>
-            <li>Log Stream Viewer</li>
-        </ul>
+            <div class="mt-3 space-y-3 text-slate-700 leading-relaxed">
 
+                <p>
+                    Application and infrastructure logs collected from AWS services and the
+                    NetPilot AI backend. All logs are presented in a read-only manner to support
+                    troubleshooting, auditing, and operational visibility.
+                </p>
 
+                <!-- IMPLEMENTED -->
+                <p class="font-semibold">✅ Implemented</p>
+                <ul class="list-disc list-inside ml-4 space-y-1">
+                    <li>
+                        <strong>Application Logs (CloudWatch Logs)</strong>
+                    </li>
+                    <li>
+                        <strong>Log Stream Viewer</strong>
+                    </li>
+                </ul>
+
+                <!-- PARTIALLY IMPLEMENTED -->
+                <p class="font-semibold">⚠️ Partially implemented</p>
+                <ul class="list-disc list-inside ml-4 space-y-1">
+                    <li>
+                        <strong>Lambda Logs</strong>
+                    </li>
+                    <li>
+                        <strong>ECS / EC2 Logs</strong>
+                    </li>
+                </ul>
+
+                <!-- UNDER CONSTRUCTION -->
+                <p class="font-semibold">🚧 Under construction</p>
+                <ul class="list-disc list-inside ml-4 space-y-1">
+                    <li>
+                        <strong>Kubernetes Logs</strong>
+                    </li>
+                </ul>
+
+            </div>
+        </details>
 
     </section>
+
 
     <!-- ========================================================= -->
     <!-- 📈 METRICS -->
