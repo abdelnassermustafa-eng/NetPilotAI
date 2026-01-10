@@ -1971,37 +1971,35 @@
                 <li class="italic text-slate-500">Custom Metrics (future)</li>
             </ul>
 
+            <!-- Metrics explanations (OUTSIDE the grid) -->
+            <p class="text-sm text-slate-700 mt-3 mb-2">
+                <strong>Backend status:</strong>
+                Service status reflects basic health and availability only.
+                Request volume, error rate, and latency metrics require additional instrumentation
+                and are not yet available in this version.
+            </p>
 
-        </div>
+            <!-- Metrics cards (GRID ONLY CONTAINS CARDS) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white border border-slate-200 rounded-lg p-4">
+                    <div class="text-xs text-slate-500">Backend Status</div>
+                    <div class="text-sm font-semibold text-slate-800">Running</div>
+                </div>
 
-        <!-- Metrics explanations (OUTSIDE the grid) -->
-        <p class="text-sm text-slate-700 mt-3 mb-2">
-            <strong>Backend status:</strong>
-            Service status reflects basic health and availability only.
-            Request volume, error rate, and latency metrics require additional instrumentation
-            and are not yet available in this version.
-        </p>
+                <div class="bg-white border border-slate-200 rounded-lg p-4">
+                    <div class="text-xs text-slate-500">Request Volume</div>
+                    <div class="text-sm font-semibold text-slate-800">—</div>
+                </div>
 
-        <!-- Metrics cards (GRID ONLY CONTAINS CARDS) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-white border border-slate-200 rounded-lg p-4">
-                <div class="text-xs text-slate-500">Backend Status</div>
-                <div class="text-sm font-semibold text-slate-800">Running</div>
-            </div>
+                <div class="bg-white border border-slate-200 rounded-lg p-4">
+                    <div class="text-xs text-slate-500">Error Rate</div>
+                    <div class="text-sm font-semibold text-slate-800">—</div>
+                </div>
 
-            <div class="bg-white border border-slate-200 rounded-lg p-4">
-                <div class="text-xs text-slate-500">Request Volume</div>
-                <div class="text-sm font-semibold text-slate-800">—</div>
-            </div>
-
-            <div class="bg-white border border-slate-200 rounded-lg p-4">
-                <div class="text-xs text-slate-500">Error Rate</div>
-                <div class="text-sm font-semibold text-slate-800">—</div>
-            </div>
-
-            <div class="bg-white border border-slate-200 rounded-lg p-4">
-                <div class="text-xs text-slate-500">Avg Latency</div>
-                <div class="text-sm font-semibold text-slate-800">—</div>
+                <div class="bg-white border border-slate-200 rounded-lg p-4">
+                    <div class="text-xs text-slate-500">Avg Latency</div>
+                    <div class="text-sm font-semibold text-slate-800">—</div>
+                </div>
             </div>
         </div>
     </div>
@@ -2013,6 +2011,12 @@
             <p class="text-sm text-slate-600">
                 Active alerts and health warnings. Alerts are read-only and will be enabled in a future phase.
             </p>
+
+            <p class="text-sm text-slate-700">
+                Displayed alerts reflect current state only. Alert configuration, notification routing,
+                and automated remediation are not available in this version.
+            </p>
+
 
             <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
                 <li>
