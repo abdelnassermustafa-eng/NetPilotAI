@@ -2014,33 +2014,6 @@
     </div>
 </div>
 
-<div x-show="observabilitySection === 'events'" x-cloak>
-    <div class="space-y-4">
-        <h3 class="text-base font-semibold text-slate-800">📡 Events</h3>
-
-        <p class="text-sm text-slate-600">
-            System and infrastructure events timeline. Events are read-only and will be enabled in a future phase.
-        </p>
-
-        <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
-            <li>
-                <div class="flex items-center justify-between cursor-pointer select-none"
-                    @click="expandedEvents.cloudwatch = !expandedEvents.cloudwatch">
-                    <strong>CloudWatch / EventBridge Events</strong>
-                    <span class="text-xs text-slate-500" x-text="expandedEvents.cloudwatch ? 'Hide' : 'Show'"></span>
-                </div>
-
-                <div x-show="expandedEvents.cloudwatch" x-cloak class="mt-2 ml-4 space-y-1 text-sm text-slate-700">
-                    <div>EC2 State Changes</div>
-                    <div>Auto Scaling Events</div>
-                    <div>Deployment Events</div>
-                    <div>Scheduled Events</div>
-                </div>
-            </li>
-        </ul>
-    </div>
-</div>
-
 <div x-show="observabilitySection === 'tools'" x-cloak></div>
 
 
