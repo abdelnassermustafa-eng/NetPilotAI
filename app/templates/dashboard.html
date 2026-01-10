@@ -2073,6 +2073,31 @@
         </div>
     </div>
 
+    <!-- ================= TOOLS ================= -->
+    <div x-show="observabilitySection === 'tools'" x-cloak>
+        <div class="space-y-4">
+            <h3 class="text-base font-semibold text-slate-800">🛠 Tools</h3>
+
+            <p class="text-sm text-slate-600">
+                Operational tools and safe, read-only playbooks. Tools are informational
+                and will be enabled in a future phase.
+            </p>
+
+            <p class="text-sm text-slate-700">
+                Listed tools represent planned operational guidance and examples only.
+                No commands are executed, and no infrastructure changes are performed
+                from this interface in the current version.
+            </p>
+
+            <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+                <li>AWS CLI (read-only examples)</li>
+                <li>Bash scripts (operational reference)</li>
+                <li>Ansible playbooks (planned)</li>
+                <li>Terraform modules (planned)</li>
+                <li>Doctor-generated safe playbooks (planned)</li>
+            </ul>
+        </div>
+    </div>
 </div>
 
 <div x-show="observabilitySection === 'tools'" x-cloak></div>
