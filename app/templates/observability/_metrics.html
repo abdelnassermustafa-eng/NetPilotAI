@@ -1,0 +1,128 @@
+        <div x-show="observabilitySection === 'metrics'" x-cloak>
+            <div class="flex items-center justify-between">
+                <h3 class="text-base font-semibold text-slate-800">📈 Metrics</h3>
+
+                <button @click="toggleAutoRefreshMetrics" class="text-xs px-3 py-1 rounded font-medium" :class="autoRefreshMetrics
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-slate-200 text-slate-700'">
+                    Auto-refresh
+                    <span x-text="autoRefreshMetrics ? 'ON' : 'OFF'"></span>
+                    · every 10s
+                </button>
+            </div>
+            <p class="text-sm text-slate-600">
+                Resource utilization and performance metrics. Metrics are read-only and will be enabled in a future
+                phase.
+            </p>
+
+            <p class="text-sm text-slate-700 mt-2">
+                <strong>Read-only metrics (informational):</strong>
+                Metrics shown here provide a limited, read-only view of backend resource utilization and health signals.
+                Data may be incomplete and is intended for situational awareness only.
+                Metrics are not suitable for SLA validation, billing, or capacity planning.
+            </p>
+
+            <p class="text-sm text-slate-700">
+                <strong>Current scope (partial):</strong>
+                CPU, memory, network, and error indicators reflect basic runtime signals where available.
+                Some values may appear as <span class="font-mono">—</span> when data is not yet collected or exposed.
+            </p>
+
+
+            <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+                <li>
+                    <div class="flex items-center justify-between cursor-pointer select-none"
+                        @click="expandedMetrics.cloudwatch = !expandedMetrics.cloudwatch">
+
+                        <strong>CloudWatch Metrics</strong>
+                        <span class="text-xs text-slate-500"
+                            x-text="expandedMetrics.cloudwatch ? 'Hide' : 'Show'"></span>
+                    </div>
+
+                    <div x-show="expandedMetrics.cloudwatch" x-cloak class="mt-2 ml-4 space-y-1 text-sm text-slate-700">
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+
+                            <div class="flex justify-between">
+                                <span>CPU Utilization</span>
+                                <span class="font-mono"
+                                    x-text="runtimeMetrics ? runtimeMetrics.cpu_percent + ' %' : '—'">
+                                </span>
+                            </div>
+
+                            <div class="flex justify-between">
+                                <span>Memory Utilization</span>
+                                <span class="font-mono"
+                                    x-text="runtimeMetrics ? runtimeMetrics.memory_mb + ' MB' : '—'">
+                                </span>
+                            </div>
+
+                            <div class="flex justify-between">
+                                <span>Network In</span>
+                                <span class="font-mono">— bytes</span>
+                            </div>
+
+                            <div class="flex justify-between">
+                                <span>Network Out</span>
+                                <span class="font-mono">— bytes</span>
+                            </div>
+
+                            <div class="flex justify-between">
+                                <span>4xx Errors</span>
+                                <span class="font-mono">—</span>
+                            </div>
+
+                            <div class="flex justify-between">
+                                <span>5xx Errors</span>
+                                <span class="font-mono">—</span>
+                            </div>
+
+                        </div>
+                    </div>
+                </li>
+
+                <p class="text-sm text-slate-700 mt-3 mb-2 ml-1">
+                    <strong>Planned metrics (future phases):</strong>
+                    Expanded Lambda metrics, load balancer metrics, and custom application metrics
+                    will be added in a future release.
+                </p>
+
+                <li>CPU / Memory</li>
+                <li>Network</li>
+                <li>Errors &amp; Throttles</li>
+                <li>Lambda Metrics</li>
+                <li>Load Balancer Metrics</li>
+                <li class="italic text-slate-500">Custom Metrics (future)</li>
+            </ul>
+
+            <!-- Metrics explanations (OUTSIDE the grid) -->
+            <p class="text-sm text-slate-700 mt-3 mb-2">
+                <strong>Backend status:</strong>
+                Service status reflects basic health and availability only.
+                Request volume, error rate, and latency metrics require additional instrumentation
+                and are not yet available in this version.
+            </p>
+
+            <!-- Metrics cards (GRID ONLY CONTAINS CARDS) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white border border-slate-200 rounded-lg p-4">
+                    <div class="text-xs text-slate-500">Backend Status</div>
+                    <div class="text-sm font-semibold text-slate-800">Running</div>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-lg p-4">
+                    <div class="text-xs text-slate-500">Request Volume</div>
+                    <div class="text-sm font-semibold text-slate-800">—</div>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-lg p-4">
+                    <div class="text-xs text-slate-500">Error Rate</div>
+                    <div class="text-sm font-semibold text-slate-800">—</div>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-lg p-4">
+                    <div class="text-xs text-slate-500">Avg Latency</div>
+                    <div class="text-sm font-semibold text-slate-800">—</div>
+                </div>
+            </div>
+        </div>

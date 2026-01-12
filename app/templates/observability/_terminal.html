@@ -1,0 +1,80 @@
+<!-- ================= TERMINAL ================= -->
+<div x-show="observabilitySection === 'terminal'" x-cloak>
+  <div class="space-y-5">
+
+    <!-- TERMINAL HEADER -->
+    <h3 class="text-base font-semibold text-slate-800">
+      💻 Terminal (Read-Only)
+    </h3>
+
+    <!-- TERMINAL DESCRIPTION -->
+    <p class="text-sm text-slate-600">
+      The Terminal panel provides a safe, read-only view of operational
+      command examples used for observability and diagnostics.
+      No commands are executed from this interface, and no infrastructure
+      changes are performed in the current version.
+    </p>
+
+    <p class="text-sm text-slate-700">
+      This view is intended to help operators understand how backend
+      data is inspected and retrieved, while maintaining full audit
+      visibility and operational safety.
+    </p>
+
+    <!-- TERMINAL MOCK DISPLAY -->
+    <div class="bg-slate-900 rounded-lg p-4 font-mono text-sm text-slate-100 shadow-inner">
+      <div class="text-slate-400 mb-2">
+        netpilot@observability:~$
+      </div>
+
+      <pre class="text-green-400 whitespace-pre-wrap">
+# Example (read-only)
+# Inspect existing VPCs without modification
+
+aws ec2 describe-vpcs \
+  --query 'Vpcs[*].VpcId' \
+  --output table
+      </pre>
+
+      <p class="mt-3 text-xs text-slate-400">
+        Read-only reference. Commands shown here are not executed automatically.
+      </p>
+    </div>
+
+    <!-- ADVANCED CAPABILITIES INTRO -->
+    <p class="text-sm text-slate-600">
+      Advanced command interaction and auditing.
+    </p>
+
+    <!-- ADVANCED CAPABILITIES LIST -->
+    <ul class="list-disc list-inside text-sm text-slate-700 space-y-1">
+      <li>
+        Read-only command preview
+        <span class="italic text-slate-400">(default)</span>
+      </li>
+      <li>
+        User-executed commands
+        <span class="italic text-slate-400">(explicit consent)</span>
+      </li>
+      <li>
+        Session audit log
+      </li>
+    </ul>
+
+    <!-- TERMINAL CAPABILITIES LIST -->
+    <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+      <li>Preview AWS CLI inspection commands</li>
+      <li>Understand how observability data is retrieved</li>
+      <li>Review safe diagnostic workflows</li>
+      <li>Maintain full audit visibility and traceability</li>
+      <li>Prepare for future interactive terminal capabilities</li>
+    </ul>
+
+    <!-- FUTURE NOTE -->
+    <div class="text-xs text-slate-500 italic">
+      Interactive execution, streaming output, and session isolation
+      will be introduced in a future phase.
+    </div>
+
+  </div>
+</div>
