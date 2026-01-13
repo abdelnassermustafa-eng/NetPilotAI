@@ -9,6 +9,8 @@ import logging
 from app.core.memory_log_handler import MemoryLogHandler
 from app.api.v1.routers.metrics import router as metrics_router
 from app.api.v1.routers.alerts import router as alerts_router
+from app.api.v1.routers.observability.events import router as events_router
+
 
 # ----------------------------
 # Core Routers (VALID)
@@ -60,6 +62,10 @@ app.include_router(logs_router, prefix="/api/v1")
 app.include_router(ops_docs_router, prefix="/api/v1/ops", tags=["validation", "operations"])
 app.include_router(metrics_router, prefix="/api/v1")
 app.include_router(alerts_router, prefix="/api/v1")
+app.include_router(events_router, prefix="/api/v1")
+
+
+
 
 
 

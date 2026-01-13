@@ -1,22 +1,98 @@
-    <div x-show="observabilitySection === 'events'" x-cloak>
-        <div class="space-y-4">
-            <h3 class="text-base font-semibold text-slate-800">📡 Events</h3>
+<!-- ================= EVENTS ================= -->
+<div x-show="observabilitySection === 'events'" x-cloak x-data="eventsPanel()" x-init="loadEvents()">
+    <div class="space-y-4">
 
-            <p class="text-sm text-slate-600">
-                System and infrastructure events timeline. Events are read-only and will be enabled in a future phase.
-            </p>
+        <!-- HEADER -->
+        <h3 class="text-base font-semibold text-slate-800">📡 Events</h3>
 
-            <p class="text-sm text-slate-700">
-                Displayed events are informational only. Live event timelines, filtering,
-                correlation, and automated responses are planned for a future release.
-            </p>
+        <!-- SCOPE NOTE -->
+        <p class="text-sm text-slate-600">
+            System and infrastructure events timeline. Events are read-only and provide
+            an informational view of recent operational activity.
+        </p>
 
-            <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
-                <li>CloudWatch / EventBridge events</li>
-                <li>EC2 state changes</li>
-                <li>Auto Scaling events</li>
-                <li>Scheduled events</li>
-                <li class="italic text-slate-500">SQS / SNS notifications (planned)</li>
-            </ul>
+        <p class="text-sm text-slate-700">
+            Displayed events reflect real AWS activity where available.
+            Filtering, correlation, alerting, and automated responses are planned
+            for a future release.
+        </p>
+
+        <!-- CAPABILITIES / STATUS -->
+        <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li><strong>CloudWatch / EventBridge events</strong> <span class="text-green-600">✓ Implemented (EC2)</span>
+            </li>
+            <li><strong>EC2 state changes</strong> <span class="text-green-600">✓ Implemented</span></li>
+            <li class="italic text-slate-500">Auto Scaling events (planned)</li>
+            <li class="italic text-slate-500">Scheduled events (planned)</li>
+            <li class="italic text-slate-500">SQS / SNS notifications (planned)</li>
+        </ul>
+
+        <!-- EVENTS LIST -->
+        <div class="space-y-3 mt-4">
+
+            <!-- Loading -->
+            <div x-show="loading" class="text-sm text-slate-500">
+                Loading events…
+            </div>
+
+            <!-- Error -->
+            <div x-show="error" class="text-sm text-red-600" x-text="error"></div>
+
+            <!-- Events -->
+            <template x-for="event in events" :key="event.event_id">
+                <div class="border border-slate-200 rounded-md p-3 bg-white">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-slate-800" x-text="event.summary"></span>
+                        <span class="text-xs text-slate-500 font-mono" x-text="event.event_time_utc"></span>
+                    </div>
+
+                    <div class="mt-1 text-xs text-slate-600">
+                        <span x-text="event.service"></span> ·
+                        <span x-text="event.resource_type"></span> ·
+                        <span class="font-mono" x-text="event.resource_id"></span>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Empty -->
+            <div x-show="!loading && events.length === 0" class="text-sm text-slate-500">
+                No events found.
+            </div>
+
         </div>
     </div>
+
+    <!-- EVENTS ALPINE LOGIC -->
+    <script>
+        function eventsPanel() {
+            return {
+                loading: false,
+                error: null,
+                events: [],
+
+                async loadEvents() {
+                    this.loading = true;
+                    this.error = null;
+
+                    try {
+                        const res = await fetch(
+                            "/api/v1/observability/events?account_id=269196137183&region=us-east-1"
+                        );
+
+                        if (!res.ok) {
+                            throw new Error(`HTTP ${res.status}`);
+                        }
+
+                        const data = await res.json();
+                        this.events = data.items || [];
+                    } catch (e) {
+                        this.error = "Failed to load events";
+                        console.error(e);
+                    } finally {
+                        this.loading = false;
+                    }
+                }
+            };
+        }
+    </script>
+</div>
