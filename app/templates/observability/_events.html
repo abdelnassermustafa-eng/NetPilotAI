@@ -40,7 +40,8 @@
 
             <!-- Events -->
             <template x-for="event in events" :key="event.event_id">
-                <div class="border border-slate-200 rounded-md p-3 bg-white">
+                <div class="border border-slate-200 rounded-md p-3 bg-white cursor-pointer hover:bg-slate-50"
+                    @click="loadEventDetails(event.event_id)">
                     <div class="flex justify-between items-center">
                         <span class="text-sm font-medium text-slate-800" x-text="event.summary"></span>
                         <span class="text-xs text-slate-500 font-mono" x-text="event.event_time_utc"></span>
@@ -53,6 +54,50 @@
                     </div>
                 </div>
             </template>
+
+            <!-- Load more events -->
+            <div class="pt-4" x-show="!selectedEvent && nextCursor && !loading">
+                <button @click="loadEvents(true)" class="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                    Load more events
+                </button>
+            </div>
+
+
+            <!-- EVENT DETAILS -->
+            <div x-show="selectedEvent || detailsLoading || detailsError"
+                class="mt-5 border border-slate-300 rounded-md p-4 bg-slate-50">
+
+                <h4 class="text-sm font-semibold text-slate-800 mb-2">
+                    Event Details
+                </h4>
+
+                <!-- Loading -->
+                <div x-show="detailsLoading" class="text-sm text-slate-500">
+                    Loading event details…
+                </div>
+
+                <!-- Error -->
+                <div x-show="detailsError" class="text-sm text-red-600" x-text="detailsError"></div>
+
+                <!-- Details -->
+                <div x-show="selectedEvent" class="text-xs text-slate-700 space-y-2">
+                    <button @click="selectedEvent = null"
+                        class="text-sm text-blue-600 hover:text-blue-800 font-medium mb-3">
+                        ← Back to events
+                    </button>
+                    <div><strong>Event ID:</strong> <span x-text="selectedEvent.event_id"></span></div>
+                    <div><strong>Service:</strong> <span x-text="selectedEvent.service"></span></div>
+                    <div><strong>Resource:</strong> <span x-text="selectedEvent.resource_type"></span></div>
+                    <div><strong>Resource ID:</strong> <span class="font-mono"
+                            x-text="selectedEvent.resource_id"></span></div>
+                    <div><strong>Event Type:</strong> <span x-text="selectedEvent.event_type"></span></div>
+                    <div><strong>Severity:</strong> <span x-text="selectedEvent.severity"></span></div>
+                    <div><strong>Event Time (UTC):</strong> <span x-text="selectedEvent.event_time_utc"></span></div>
+                    <div><strong>Received At:</strong> <span x-text="selectedEvent.received_at_utc"></span></div>
+                    <div><strong>Source:</strong> <span x-text="selectedEvent.source"></span></div>
+                </div>
+            </div>
+
 
             <!-- Empty -->
             <div x-show="!loading && events.length === 0" class="text-sm text-slate-500">
@@ -70,29 +115,78 @@
                 error: null,
                 events: [],
 
-                async loadEvents() {
+                selectedEvent: null,
+                detailsLoading: false,
+                detailsError: null,
+
+                nextCursor: null,
+
+                async loadEvents(loadMore = false) {
                     this.loading = true;
                     this.error = null;
 
                     try {
-                        const res = await fetch(
-                            "/api/v1/observability/events?account_id=269196137183&region=us-east-1"
-                        );
+                        let url =
+                            "/api/v1/observability/events" +
+                            "?account_id=269196137183" +
+                            "&region=us-east-1" +
+                            "&limit=3";
+
+                        // 👉 Append cursor only when loading more
+                        if (loadMore && this.nextCursor) {
+                            url += "&cursor=" + encodeURIComponent(this.nextCursor);
+                        }
+
+                        const res = await fetch(url);
 
                         if (!res.ok) {
                             throw new Error(`HTTP ${res.status}`);
                         }
 
                         const data = await res.json();
-                        this.events = data.items || [];
+
+                        // 👉 Replace or append events
+                        if (loadMore) {
+                            this.events.push(...(data.items || []));
+                        } else {
+                            this.events = data.items || [];
+                        }
+
+                        // 👉 Store next cursor
+                        this.nextCursor = data.next_cursor || null;
+
                     } catch (e) {
                         this.error = "Failed to load events";
                         console.error(e);
                     } finally {
                         this.loading = false;
                     }
+                },
+
+                async loadEventDetails(eventId) {
+                    this.detailsLoading = true;
+                    this.detailsError = null;
+                    this.selectedEvent = null;
+
+                    try {
+                        const res = await fetch(
+                            `/api/v1/observability/events/${eventId}?account_id=269196137183&region=us-east-1`
+                        );
+
+                        if (!res.ok) {
+                            throw new Error(`HTTP ${res.status}`);
+                        }
+
+                        this.selectedEvent = await res.json();
+                    } catch (e) {
+                        this.detailsError = "Failed to load event details";
+                        console.error(e);
+                    } finally {
+                        this.detailsLoading = false;
+                    }
                 }
             };
         }
     </script>
+
 </div>
