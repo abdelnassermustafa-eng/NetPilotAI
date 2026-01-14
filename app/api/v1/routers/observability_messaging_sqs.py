@@ -29,17 +29,31 @@ def get_messaging_events(
     events: List[Dict[str, Any]] = []
 
     for m in messages:
-        body = m.get("Body")
+        body = m.get("Body")  # ALWAYS bind first
         if not body:
             continue
 
+        # Try to parse as JSON (SNS envelope)
         try:
-            sns_envelope = json.loads(body)
+            parsed = json.loads(body)
         except Exception:
+            parsed = None
+
+        # Case 1: SNS → SQS
+        if isinstance(parsed, dict) and parsed.get("Type") == "Notification":
+            events.append(normalize_sns_sqs_event(parsed))
             continue
 
-        if sns_envelope.get("Type") == "Notification":
-            events.append(normalize_sns_sqs_event(sns_envelope))
+        # Case 2: Direct SQS message
+        events.append(
+            normalize_sns_sqs_event(
+                {
+                    "Body": body,
+                    "MessageId": m.get("MessageId"),
+                }
+            )
+        )
+
 
     return {
         "ok": True,
@@ -48,3 +62,5 @@ def get_messaging_events(
         "count": len(events),
         "events": events,
     }
+
+    body = m.get("Body")
