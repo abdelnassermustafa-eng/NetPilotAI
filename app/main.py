@@ -10,7 +10,8 @@ from app.core.memory_log_handler import MemoryLogHandler
 from app.api.v1.routers.metrics import router as metrics_router
 from app.api.v1.routers.alerts import router as alerts_router
 from app.api.v1.routers.observability.events import router as events_router
-
+from app.api.v1.routers.observability_autoscaling_events import router as autoscaling_router
+from app.api.v1.routers.observability_scheduled_events import router as scheduled_router
 
 # ----------------------------
 # Core Routers (VALID)
@@ -20,17 +21,7 @@ from app.api.v1.routers.aws import router as aws_router
 from app.api.v1.routers.health import router as health_router
 from app.api.v1.routers.ops_docs import router as ops_docs_router
 from app.api.v1.routers.logs import router as logs_router
-
 from app.db.init_db import init_db
-
-# ----------------------------
-# Future / Not-present Routers (COMMENTED)
-# ----------------------------
-# from app.api.v1.routers.aws_subnet_inspect import router as aws_subnet_inspect_router
-# from app.api.v1.routers.aws_vpcs import router as aws_vpcs_router
-# from app.api.v1.routers.aws_route_tables import router as aws_route_tables_router
-# from app.api.v1.routers.aws_internet_gateways import router as aws_igw_router
-# from app.api.v1.routers.aws_nat_gateways import router as aws_nat_router
 
 
 templates = Jinja2Templates(directory="app/templates")
@@ -63,22 +54,8 @@ app.include_router(ops_docs_router, prefix="/api/v1/ops", tags=["validation", "o
 app.include_router(metrics_router, prefix="/api/v1")
 app.include_router(alerts_router, prefix="/api/v1")
 app.include_router(events_router, prefix="/api/v1")
-
-
-
-
-
-
-# ----------------------------
-# Future / Not-present Routers (COMMENTED)
-# ----------------------------
-# app.include_router(aws_subnet_inspect_router, prefix="/api/v1")
-# app.include_router(aws_vpcs_router, prefix="/api/v1")
-# app.include_router(aws_route_tables_router, prefix="/api/v1")
-# app.include_router(aws_igw_router, prefix="/api/v1")
-# app.include_router(aws_nat_router, prefix="/api/v1")
-
-
+app.include_router(autoscaling_router)
+app.include_router(scheduled_router)
 
 # ----------------------------
 # Dashboard (Root UI)
