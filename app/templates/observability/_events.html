@@ -5,6 +5,35 @@
         <!-- HEADER -->
         <h3 class="text-base font-semibold text-slate-800">📡 Events</h3>
 
+        <!-- ================= EVENTS TABS ================= -->
+        <div class="flex gap-2 border-b border-slate-200 mb-4">
+            <button @click="activeEventTab = 'ec2'; loadEvents()"
+              :class="activeEventTab === 'ec2'
+                ? 'border-b-2 border-blue-600 text-blue-600'
+                : 'text-slate-600'"
+              class="px-3 py-2 text-sm font-medium">
+                EC2
+            </button>
+
+            <button @click="activeEventTab = 'autoscaling'; loadAutoScaling()" :class="activeEventTab === 'autoscaling'
+                    ? 'border-b-2 border-blue-600 text-blue-600'
+                    : 'text-slate-600'" class="px-3 py-2 text-sm font-medium">
+                Auto Scaling
+            </button>
+
+            <button @click="activeEventTab = 'scheduled'" :class="activeEventTab === 'scheduled'
+          ? 'border-b-2 border-blue-600 text-blue-600'
+          : 'text-slate-600'" class="px-3 py-2 text-sm font-medium">
+                Scheduled
+            </button>
+
+            <button @click="activeEventTab = 'messaging'" :class="activeEventTab === 'messaging'
+          ? 'border-b-2 border-blue-600 text-blue-600'
+          : 'text-slate-600'" class="px-3 py-2 text-sm font-medium">
+                Messaging (SQS)
+            </button>
+        </div>
+
         <!-- SCOPE NOTE -->
         <p class="text-sm text-slate-600">
             System and infrastructure events timeline. Events are read-only and provide
@@ -17,18 +46,42 @@
             for a future release.
         </p>
 
-        <!-- CAPABILITIES / STATUS -->
-        <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
-            <li><strong>CloudWatch / EventBridge events</strong> <span class="text-green-600">✓ Implemented (EC2)</span>
-            </li>
-            <li><strong>EC2 state changes</strong> <span class="text-green-600">✓ Implemented</span></li>
-            <li class="italic text-slate-500">Auto Scaling events (planned)</li>
-            <li class="italic text-slate-500">Scheduled events (planned)</li>
-            <li class="italic text-slate-500">SQS / SNS notifications (planned)</li>
-        </ul>
+        <!-- ================= AUTO SCALING EVENTS ================= -->
+        <div x-show="activeEventTab === 'autoscaling'" class="space-y-3">
+
+            <div class="text-xs text-slate-600">
+                Recent Auto Scaling activity (launch/terminate, read-only).
+            </div>
+
+            <!-- Loading -->
+            <div x-show="asLoading" class="text-sm text-slate-500">
+                Loading Auto Scaling events…
+            </div>
+
+            <!-- Error -->
+            <div x-show="asError" class="text-sm text-red-600" x-text="asError"></div>
+
+            <!-- List -->
+            <template x-for="e in asEvents" :key="e.timestamp + e.event_type">
+                <div class="border border-slate-200 rounded-md p-3 bg-white">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-slate-800" x-text="e.event_type"></span>
+                        <span class="text-xs font-mono text-slate-500" x-text="e.timestamp"></span>
+                    </div>
+                    <div class="mt-1 text-xs text-slate-600" x-text="e.message"></div>
+                </div>
+            </template>
+
+            <!-- Empty -->
+            <div x-show="!asLoading && asEvents.length === 0" class="text-sm text-slate-500">
+                No Auto Scaling events found.
+            </div>
+
+        </div>
+
 
         <!-- EVENTS LIST -->
-        <div class="space-y-3 mt-4">
+        <div x-show="activeEventTab === 'ec2'" class="space-y-3 mt-4">
 
             <!-- Loading -->
             <div x-show="loading" class="text-sm text-slate-500">
@@ -55,49 +108,52 @@
                 </div>
             </template>
 
-            <!-- Load more events -->
+            <!-- Load more -->
             <div class="pt-4" x-show="!selectedEvent && nextCursor && !loading">
                 <button @click="loadEvents(true)" class="text-sm text-blue-600 hover:text-blue-800 font-medium">
                     Load more events
                 </button>
             </div>
 
-
             <!-- EVENT DETAILS -->
             <div x-show="selectedEvent || detailsLoading || detailsError"
                 class="mt-5 border border-slate-300 rounded-md p-4 bg-slate-50">
-
                 <h4 class="text-sm font-semibold text-slate-800 mb-2">
                     Event Details
                 </h4>
 
-                <!-- Loading -->
                 <div x-show="detailsLoading" class="text-sm text-slate-500">
                     Loading event details…
                 </div>
 
-                <!-- Error -->
                 <div x-show="detailsError" class="text-sm text-red-600" x-text="detailsError"></div>
 
-                <!-- Details -->
                 <div x-show="selectedEvent" class="text-xs text-slate-700 space-y-2">
                     <button @click="selectedEvent = null"
                         class="text-sm text-blue-600 hover:text-blue-800 font-medium mb-3">
                         ← Back to events
                     </button>
+
                     <div><strong>Event ID:</strong> <span x-text="selectedEvent.event_id"></span></div>
                     <div><strong>Service:</strong> <span x-text="selectedEvent.service"></span></div>
                     <div><strong>Resource:</strong> <span x-text="selectedEvent.resource_type"></span></div>
-                    <div><strong>Resource ID:</strong> <span class="font-mono"
-                            x-text="selectedEvent.resource_id"></span></div>
+                    <div>
+                        <strong>Resource ID:</strong>
+                        <span class="font-mono" x-text="selectedEvent.resource_id"></span>
+                    </div>
                     <div><strong>Event Type:</strong> <span x-text="selectedEvent.event_type"></span></div>
                     <div><strong>Severity:</strong> <span x-text="selectedEvent.severity"></span></div>
-                    <div><strong>Event Time (UTC):</strong> <span x-text="selectedEvent.event_time_utc"></span></div>
-                    <div><strong>Received At:</strong> <span x-text="selectedEvent.received_at_utc"></span></div>
+                    <div>
+                        <strong>Event Time (UTC):</strong>
+                        <span x-text="selectedEvent.event_time_utc"></span>
+                    </div>
+                    <div>
+                        <strong>Received At:</strong>
+                        <span x-text="selectedEvent.received_at_utc"></span>
+                    </div>
                     <div><strong>Source:</strong> <span x-text="selectedEvent.source"></span></div>
                 </div>
             </div>
-
 
             <!-- Empty -->
             <div x-show="!loading && events.length === 0" class="text-sm text-slate-500">
@@ -111,6 +167,14 @@
     <script>
         function eventsPanel() {
             return {
+                /* =====================
+                   UI STATE
+                   ===================== */
+                activeEventTab: 'autoscaling',
+
+                /* =====================
+                   EC2 EVENTS (existing)
+                   ===================== */
                 loading: false,
                 error: null,
                 events: [],
@@ -118,9 +182,18 @@
                 selectedEvent: null,
                 detailsLoading: false,
                 detailsError: null,
-
                 nextCursor: null,
 
+                /* =====================
+                   AUTO SCALING STATE
+                   ===================== */
+                asEvents: [],
+                asLoading: false,
+                asError: null,
+
+                /* =====================
+                   METHODS
+                   ===================== */
                 async loadEvents(loadMore = false) {
                     this.loading = true;
                     this.error = null;
@@ -132,27 +205,21 @@
                             "&region=us-east-1" +
                             "&limit=3";
 
-                        // 👉 Append cursor only when loading more
                         if (loadMore && this.nextCursor) {
                             url += "&cursor=" + encodeURIComponent(this.nextCursor);
                         }
 
                         const res = await fetch(url);
-
-                        if (!res.ok) {
-                            throw new Error(`HTTP ${res.status}`);
-                        }
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
                         const data = await res.json();
 
-                        // 👉 Replace or append events
                         if (loadMore) {
                             this.events.push(...(data.items || []));
                         } else {
                             this.events = data.items || [];
                         }
 
-                        // 👉 Store next cursor
                         this.nextCursor = data.next_cursor || null;
 
                     } catch (e) {
@@ -172,17 +239,32 @@
                         const res = await fetch(
                             `/api/v1/observability/events/${eventId}?account_id=269196137183&region=us-east-1`
                         );
-
-                        if (!res.ok) {
-                            throw new Error(`HTTP ${res.status}`);
-                        }
-
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
                         this.selectedEvent = await res.json();
                     } catch (e) {
                         this.detailsError = "Failed to load event details";
                         console.error(e);
                     } finally {
                         this.detailsLoading = false;
+                    }
+                },
+
+                async loadAutoScaling() {
+                    this.asLoading = true;
+                    this.asError = null;
+
+                    try {
+                        const res = await fetch(
+                            "/api/v1/observability/autoscaling/events?minutes=1440&limit=20"
+                        );
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        const data = await res.json();
+                        this.asEvents = data.events || [];
+                    } catch (e) {
+                        this.asError = "Failed to load Auto Scaling events";
+                        console.error(e);
+                    } finally {
+                        this.asLoading = false;
                     }
                 }
             };
