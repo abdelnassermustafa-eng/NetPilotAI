@@ -1,5 +1,5 @@
 <!-- ================= EVENTS ================= -->
-<div x-show="observabilitySection === 'events'" x-cloak x-data="eventsPanel()" x-init="loadEvents()">
+<div x-show="observabilitySection === 'events'" x-cloak x-data="eventsPanel()" x-init="init()">
     <div class="space-y-4">
 
         <!-- HEADER -->
@@ -7,11 +7,9 @@
 
         <!-- ================= EVENTS TABS ================= -->
         <div class="flex gap-2 border-b border-slate-200 mb-4">
-            <button @click="activeEventTab = 'ec2'; loadEvents()"
-              :class="activeEventTab === 'ec2'
+            <button @click="activeEventTab = 'ec2'; loadEvents()" :class="activeEventTab === 'ec2'
                 ? 'border-b-2 border-blue-600 text-blue-600'
-                : 'text-slate-600'"
-              class="px-3 py-2 text-sm font-medium">
+                : 'text-slate-600'" class="px-3 py-2 text-sm font-medium">
                 EC2
             </button>
 
@@ -27,7 +25,7 @@
                 Scheduled
             </button>
 
-            <button @click="activeEventTab = 'messaging'" :class="activeEventTab === 'messaging'
+            <button @click="activeEventTab = 'messaging'; loadMessaging()" :class="activeEventTab === 'messaging'
           ? 'border-b-2 border-blue-600 text-blue-600'
           : 'text-slate-600'" class="px-3 py-2 text-sm font-medium">
                 Messaging (SQS)
@@ -50,6 +48,14 @@
 
         <!-- ================= SCHEDULED EVENTS ================= -->
         <div x-show="activeEventTab === 'scheduled'" class="space-y-3 mt-4">
+<div
+  x-show="!scheduledLoading && scheduledEvents.length === 0"
+  class="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-md p-3"
+>
+  No scheduled EventBridge activity detected.
+  Events appear only when a rule is triggered.
+</div>
+
 
             <div class="text-xs text-slate-600">
                 Scheduled EventBridge activity (read-only).
@@ -73,10 +79,21 @@
 
             <div x-show="!scheduledLoading && scheduledEvents.length === 0" class="text-sm text-slate-500">
                 No scheduled events found.
+                <div class="text-xs text-slate-400 mt-1">
+                    No EventBridge scheduled rules were triggered in this time window.
+                </div>
             </div>
 
         </div>
         <div x-show="activeEventTab === 'autoscaling'" class="space-y-3">
+<div
+  x-show="!asLoading && asEvents.length === 0"
+  class="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-md p-3"
+>
+  No Auto Scaling activity detected.
+  Events appear only when an Auto Scaling Group launches or terminates instances.
+</div>
+
 
             <div class="text-xs text-slate-600">
                 Recent Auto Scaling activity (launch/terminate, read-only).
@@ -104,7 +121,12 @@
             <!-- Empty -->
             <div x-show="!asLoading && asEvents.length === 0" class="text-sm text-slate-500">
                 No Auto Scaling events found.
+                <div class="text-xs text-slate-400 mt-1">
+                    This usually means no scale-in or scale-out activity occurred.
+                    Auto Scaling events only appear when capacity actually changes.
+                </div>
             </div>
+
 
         </div>
 
@@ -112,7 +134,43 @@
         <!-- EVENTS LIST -->
 
         <!-- ================= EC2 EVENTS ================= -->
-        <div x-show="activeEventTab === 'ec2'" class="space-y-3 mt-4">
+        
+<!-- ================= MESSAGING (SQS) EVENTS ================= -->
+<div x-show="activeEventTab === 'messaging'" class="space-y-3 mt-4">
+    <div
+      x-show="!msgLoading && msgEvents.length === 0"
+      class="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-md p-3"
+    >
+      No messaging events detected.
+      <div class="text-xs text-slate-400 mt-1">
+        Messages appear only when an SQS queue receives messages.
+        This view is read-only and does not poll unless selected.
+      </div>
+    </div>
+
+
+    <div class="text-xs text-slate-600">
+        SQS / SNS messaging events (read-only).
+    </div>
+
+    <div x-show="msgLoading" class="text-sm text-slate-500">
+        Loading messaging events…
+    </div>
+
+
+    <template x-for="m in msgEvents" :key="m.message_id">
+        <div class="border border-slate-200 rounded-md p-3 bg-white">
+            <div class="flex justify-between items-center">
+                <span class="text-sm font-medium text-slate-800">Message</span>
+                <span class="text-xs font-mono text-slate-500" x-text="m.timestamp"></span>
+            </div>
+            <div class="mt-1 text-xs text-slate-600 font-mono" x-text="m.message?.raw_message || m.message?.raw || m.raw?.Body || '[message received]'"></div>
+        </div>
+    </template>
+
+</div>
+
+<div x-show="activeEventTab === 'ec2'" class="space-y-3 mt-4">
 
             <!-- Loading -->
             <div x-show="loading" class="text-sm text-slate-500">
@@ -147,179 +205,229 @@
             </div>
 
         </div>
-            <!-- EVENT DETAILS -->
-            <div x-show="selectedEvent || detailsLoading || detailsError"
-                class="mt-5 border border-slate-300 rounded-md p-4 bg-slate-50">
-                <h4 class="text-sm font-semibold text-slate-800 mb-2">
-                    Event Details
-                </h4>
+        <!-- EVENT DETAILS -->
+        <div x-show="selectedEvent || detailsLoading || detailsError"
+            class="mt-5 border border-slate-300 rounded-md p-4 bg-slate-50">
+            <h4 class="text-sm font-semibold text-slate-800 mb-2">
+                Event Details
+            </h4>
 
-                <div x-show="detailsLoading" class="text-sm text-slate-500">
-                    Loading event details…
-                </div>
-
-                <div x-show="detailsError" class="text-sm text-red-600" x-text="detailsError"></div>
-
-                <div x-show="selectedEvent" class="text-xs text-slate-700 space-y-2">
-                    <button @click="selectedEvent = null"
-                        class="text-sm text-blue-600 hover:text-blue-800 font-medium mb-3">
-                        ← Back to events
-                    </button>
-
-                    <div><strong>Event ID:</strong> <span x-text="selectedEvent.event_id"></span></div>
-                    <div><strong>Service:</strong> <span x-text="selectedEvent.service"></span></div>
-                    <div><strong>Resource:</strong> <span x-text="selectedEvent.resource_type"></span></div>
-                    <div>
-                        <strong>Resource ID:</strong>
-                        <span class="font-mono" x-text="selectedEvent.resource_id"></span>
-                    </div>
-                    <div><strong>Event Type:</strong> <span x-text="selectedEvent.event_type"></span></div>
-                    <div><strong>Severity:</strong> <span x-text="selectedEvent.severity"></span></div>
-                    <div>
-                        <strong>Event Time (UTC):</strong>
-                        <span x-text="selectedEvent.event_time_utc"></span>
-                    </div>
-                    <div>
-                        <strong>Received At:</strong>
-                        <span x-text="selectedEvent.received_at_utc"></span>
-                    </div>
-                    <div><strong>Source:</strong> <span x-text="selectedEvent.source"></span></div>
-                </div>
+            <div x-show="detailsLoading" class="text-sm text-slate-500">
+                Loading event details…
             </div>
 
-            <!-- Empty -->
-            <div x-show="!loading && events.length === 0" class="text-sm text-slate-500">
-                No events found.
-            </div>
+            <div x-show="detailsError" class="text-sm text-red-600" x-text="detailsError"></div>
 
+            <div x-show="selectedEvent" class="text-xs text-slate-700 space-y-2">
+                <button @click="selectedEvent = null"
+                    class="text-sm text-blue-600 hover:text-blue-800 font-medium mb-3">
+                    ← Back to events
+                </button>
+
+                <div><strong>Event ID:</strong> <span x-text="selectedEvent.event_id"></span></div>
+                <div><strong>Service:</strong> <span x-text="selectedEvent.service"></span></div>
+                <div><strong>Resource:</strong> <span x-text="selectedEvent.resource_type"></span></div>
+                <div>
+                    <strong>Resource ID:</strong>
+                    <span class="font-mono" x-text="selectedEvent.resource_id"></span>
+                </div>
+                <div><strong>Event Type:</strong> <span x-text="selectedEvent.event_type"></span></div>
+                <div><strong>Severity:</strong> <span x-text="selectedEvent.severity"></span></div>
+                <div>
+                    <strong>Event Time (UTC):</strong>
+                    <span x-text="selectedEvent.event_time_utc"></span>
+                </div>
+                <div>
+                    <strong>Received At:</strong>
+                    <span x-text="selectedEvent.received_at_utc"></span>
+                </div>
+                <div><strong>Source:</strong> <span x-text="selectedEvent.source"></span></div>
+            </div>
         </div>
+
+        <!-- Empty -->
+        <div x-show="!loading && events.length === 0" class="text-sm text-slate-500">
+            No events found.
+                <div class="text-xs text-slate-400 mt-1">
+                    No EC2 state-change events occurred during the selected time window.
+                </div>
+        </div>
+
     </div>
+</div>
 
-    <!-- EVENTS ALPINE LOGIC -->
-    <script>
-        function eventsPanel() {
-            return {
-                /* =====================
-                   UI STATE
-                   ===================== */
-                activeEventTab: 'autoscaling',
+<!-- EVENTS ALPINE LOGIC -->
+<script>
+    function eventsPanel() {
+        return {
+            /* =====================
+               UI STATE
+               ===================== */
+            activeEventTab: 'autoscaling',
 
-                /* =====================
-                   EC2 EVENTS (existing)
-                   ===================== */
-                loading: false,
-                error: null,
-                events: [],
+            init() {
+                /* initial load */
+                this.loadEvents();
 
-                selectedEvent: null,
-                detailsLoading: false,
-                detailsError: null,
-                nextCursor: null,
+                /* react to tab changes */
+                this.$watch("activeEventTab", (value) => {
+                    if (value === "ec2") this.loadEvents();
+                    if (value === "autoscaling") this.loadAutoScaling();
+                    if (value === "scheduled") this.loadScheduled();
+                    if (value === "messaging") this.loadMessaging();
+                });
+            },
 
-                /* =====================
-                   AUTO SCALING STATE
-                   ===================== */
-                asEvents: [],
 
-                scheduledEvents: [],
-                scheduledLoading: false,
-                scheduledError: null,
-                asLoading: false,
-                asError: null,
+            /* =====================
+               EC2 EVENTS (existing)
+               ===================== */
+            loading: false,
+            error: null,
+            events: [],
 
-                /* =====================
-                   METHODS
-                   ===================== */
-                async loadEvents(loadMore = false) {
-                    this.loading = true;
-                    this.error = null;
+            selectedEvent: null,
+            detailsLoading: false,
+            detailsError: null,
+            nextCursor: null,
 
-                    try {
-                        let url =
-                            "/api/v1/observability/events" +
-                            "?account_id=269196137183" +
-                            "&region=us-east-1" +
-                            "&limit=3";
+            /* =====================
+               AUTO SCALING STATE
+               ===================== */
+            asEvents: [],
 
-                        if (loadMore && this.nextCursor) {
-                            url += "&cursor=" + encodeURIComponent(this.nextCursor);
-                        }
+            scheduledEvents: [],
+            scheduledLoading: false,
+            scheduledError: null,
+            asLoading: false,
+            asError: null,
 
-                        const res = await fetch(url);
-                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-                        const data = await res.json();
+            msgEvents: [],
+            msgLoading: false,
+            msgError: null,
+            /* =====================
+                               METHODS
+                               ===================== */
+            async loadEvents(loadMore = false) {
+                this.loading = true;
+                this.error = null;
 
-                        if (loadMore) {
-                            this.events.push(...(data.items || []));
-                        } else {
-                            this.events = data.items || [];
-                        }
+                try {
+                    let url =
+                        "/api/v1/observability/events" +
+                        "?account_id=269196137183" +
+                        "&region=us-east-1" +
+                        "&limit=3";
 
-                        this.nextCursor = data.next_cursor || null;
-
-                    } catch (e) {
-                        this.error = "Failed to load events";
-                        console.error(e);
-                    } finally {
-                        this.loading = false;
+                    if (loadMore && this.nextCursor) {
+                        url += "&cursor=" + encodeURIComponent(this.nextCursor);
                     }
-                },
 
-                async loadEventDetails(eventId) {
-                    this.detailsLoading = true;
-                    this.detailsError = null;
-                    this.selectedEvent = null;
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-                    try {
-                        const res = await fetch(
-                            `/api/v1/observability/events/${eventId}?account_id=269196137183&region=us-east-1`
-                        );
-                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                        this.selectedEvent = await res.json();
-                    } catch (e) {
-                        this.detailsError = "Failed to load event details";
-                        console.error(e);
-                    } finally {
-                        this.detailsLoading = false;
+                    const data = await res.json();
+
+                    if (loadMore) {
+                        this.events.push(...(data.items || []));
+                    } else {
+                        this.events = data.items || [];
                     }
-                },
 
-                async loadAutoScaling() {
-                    this.asLoading = true;
-                    this.asError = null;
+                    this.nextCursor = data.next_cursor || null;
 
-                    try {
-                        const res = await fetch("/api/v1/observability/autoscaling/events?minutes=1440&limit=20");
-                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                        const data = await res.json();
-                        this.asEvents = data.events || [];
-                    } catch (e) {
-                        this.asError = "Failed to load Auto Scaling events";
-                        console.error(e);
-                    } finally {
-                        this.asLoading = false;
-                    }
-                },
-
-                async loadScheduled() {
-                    this.scheduledLoading = true;
-                    this.scheduledError = null;
-
-                    try {
-                        const res = await fetch("/api/v1/observability/scheduled/events?minutes=120&limit=20");
-                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                        const data = await res.json();
-                        this.scheduledEvents = data.events || [];
-                    } catch (e) {
-                        this.scheduledError = "Failed to load scheduled events";
-                        console.error(e);
-                    } finally {
-                        this.scheduledLoading = false;
-                    }
+                } catch (e) {
+                    this.error = "Failed to load events";
+                    console.error(e);
+                } finally {
+                    this.loading = false;
                 }
-            };
-        }
-    </script>
+            },
+
+            async loadEventDetails(eventId) {
+                this.detailsLoading = true;
+                this.detailsError = null;
+                this.selectedEvent = null;
+
+                try {
+                    const res = await fetch(
+                        `/api/v1/observability/events/${eventId}?account_id=269196137183&region=us-east-1`
+                    );
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    this.selectedEvent = await res.json();
+                } catch (e) {
+                    this.detailsError = "Failed to load event details";
+                    console.error(e);
+                } finally {
+                    this.detailsLoading = false;
+                }
+            },
+
+            async loadAutoScaling() {
+                this.asLoading = true;
+                this.asError = null;
+
+                try {
+                    const res = await fetch("/api/v1/observability/autoscaling/events?minutes=1440&limit=20");
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const data = await res.json();
+                    this.asEvents = data.events || [];
+                } catch (e) {
+                    this.asError = "Failed to load Auto Scaling events";
+                    console.error(e);
+                } finally {
+                    this.asLoading = false;
+                }
+            },
+
+            async loadScheduled() {
+                this.scheduledLoading = true;
+                this.scheduledError = null;
+
+                try {
+                    const res = await fetch("/api/v1/observability/scheduled/events?minutes=120&limit=20");
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const data = await res.json();
+                    this.scheduledEvents = data.events || [];
+                } catch (e) {
+                    this.scheduledError = "Failed to load scheduled events";
+                    console.error(e);
+                } finally {
+                    this.scheduledLoading = false;
+                }
+            },
+
+            async loadMessaging() {
+                console.log('[UI] loadMessaging() called');
+                this.msgLoading = true;
+                this.msgError = null;
+
+                try {
+                    const res = await fetch(
+                        "/api/v1/observability/messaging/sqs/events" +
+                        "?queue_url=https://sqs.us-east-1.amazonaws.com/269196137183/netpilot-sqs-verification" +
+                        "&limit=20"
+                    );
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                    const data = await res.json();
+                    if (data && data.ok === true) {
+                        this.msgEvents = data.events || [];
+                        this.msgError = null;
+                    } else {
+                        this.msgEvents = [];
+                        this.msgError = null;
+                    }
+                } catch (e) {
+                    console.error(e);
+                    this.msgError = "Failed to load messaging events";
+                } finally {
+                    this.msgLoading = false;
+                }
+            }
+        };
+    }
+</script>
 
 </div>
