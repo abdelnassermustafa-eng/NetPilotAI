@@ -6,14 +6,18 @@
 
   <!-- DESCRIPTION -->
   <p class="text-sm text-slate-600">
-    Operational tools and safe, read-only playbooks. Tools are informational
-    and will be enabled in a future phase.
+    Operational playbooks and automation references for safe infrastructure operations.
   </p>
 
   <p class="text-sm text-slate-700">
-    Listed tools represent planned operational guidance and examples only.
-    No commands are executed, and no infrastructure changes are performed
-    from this interface in the current version.
+    The Tools panel provides structured, read-only guidance for operational workflows
+    such as validation, remediation, and controlled infrastructure changes.
+    In the current version, all tools are documentation-only and non-executable.
+  </p>
+
+  <p class="text-sm text-slate-700 italic">
+    NetPilot philosophy: A platform that teaches correct operations first,
+    and earns the right to execute later.
   </p>
 
   <!-- CAPABILITIES / STATUS -->
@@ -35,6 +39,858 @@
 
     </div>
   </details>
+
+
+  <!-- ================= TOOLS CATEGORIES ================= -->
+  <div class="pt-2 space-y-4" x-data="{ toolsTab: 'cli' }">
+
+    <div class="flex flex-wrap gap-2">
+      <button
+        class="px-3 py-1 rounded-md text-xs font-medium border border-slate-200"
+        :class="toolsTab === 'cli' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-700 hover:bg-slate-50'"
+        @click="toolsTab = 'cli'"
+      >
+        📟 CLI &amp; Scripting
+      </button>
+
+      <button
+        class="px-3 py-1 rounded-md text-xs font-medium border border-slate-200"
+        :class="toolsTab === 'iac' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-700 hover:bg-slate-50'"
+        @click="toolsTab = 'iac'"
+      >
+        🤖 Automation (IaC)
+      </button>
+
+      <button
+        class="px-3 py-1 rounded-md text-xs font-medium border border-slate-200"
+        :class="toolsTab === 'doctor' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-700 hover:bg-slate-50'"
+        @click="toolsTab = 'doctor'"
+      >
+        🩺 Doctor / Safety
+      </button>
+    </div>
+
+    <!-- ================= CATEGORY: CLI & SCRIPTING ================= -->
+    <div x-show="toolsTab === 'cli'" x-cloak class="border border-slate-200 rounded-lg p-4 space-y-3">
+      <div class="flex items-center justify-between">
+        <h4 class="text-sm font-semibold text-slate-800">📟 CLI &amp; Scripting</h4>
+        <span class="text-xs px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">🚧 Planned — Reference Only</span>
+      </div>
+
+      <p class="text-sm text-slate-600">
+        Manual, operator-driven workflows and diagnostics using familiar tools such as AWS CLI and shell scripting.
+      </p>
+
+      <div class="text-sm text-slate-700">
+        <div class="font-medium text-slate-800 mb-1">What lives here</div>
+        <ul class="list-disc list-outside pl-5 space-y-1">
+          <li>AWS CLI inspection &amp; validation sequences (read → verify → act)</li>
+          <li>Bash operational references for repeatable diagnostics</li>
+          <li>Copy–paste friendly workflows (documentation-only in this phase)</li>
+        </ul>
+      </div>
+
+
+
+      <!-- ================= NETWORKING DOMAIN (TOOLS-STYLE) ================= -->
+
+      <div class="border-t border-slate-200 pt-4 space-y-4">
+
+        <div>
+          <h5 class="text-sm font-semibold text-slate-800">🌐 Networking (AWS) — Operational Handbook</h5>
+          <p class="text-sm text-slate-600 mt-1">
+            This section teaches dependency-first networking operations. It is intentionally broader than UI validation
+            and focuses on reasoning, safe order, and blast radius awareness.
+          </p>
+        </div>
+
+        <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
+          <div class="text-sm font-semibold text-slate-800">🧭 Mental model (safe order)</div>
+          <ol class="list-decimal list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Identity &amp; scope (where am I operating?)</li>
+            <li>Network boundary (VPC)</li>
+            <li>Segmentation (subnets &amp; AZs)</li>
+            <li>Traffic intent (route tables)</li>
+            <li>Egress/ingress (IGW, NAT)</li>
+            <li>Attachments (ENIs)</li>
+            <li>Policy enforcement (security groups)</li>
+          </ol>
+          <div class="text-xs text-slate-500 italic">
+            Tools teaches how to operate safely. Terminal is reserved for UI-aligned verification commands.
+          </div>
+        </div>
+
+        <!-- 1) VPC -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">1) VPC — Network boundary reasoning</h6>
+          <p class="text-sm text-slate-600">
+            A VPC is a dependency root. Treat it as a failure domain and a routing universe—not just a container.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Never plan a VPC deletion until you have mapped dependent subnets, gateways, ENIs, and route tables.</li>
+            <li>Prefer dependency discovery via ENIs when deletion/cleanup is involved.</li>
+          </ul>
+        </div>
+
+        <!-- 2) Subnets -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">2) Subnets — Segmentation &amp; AZ awareness</h6>
+          <p class="text-sm text-slate-600">
+            Subnets are placement contracts. Removing a subnet can break workloads indirectly via ENIs and managed services.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Confirm AZ impact and workload placement before modifying subnet routing or deleting subnets.</li>
+            <li>Check subnet route table associations and ENI presence before any change.</li>
+          </ul>
+        </div>
+
+        <!-- 3) Route tables -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">3) Route Tables — Traffic intent</h6>
+          <p class="text-sm text-slate-600">
+            Route tables encode intent. A single default route (0.0.0.0/0) can change exposure and egress behavior.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Identify main vs associated route tables and confirm which subnets inherit routes.</li>
+            <li>Never remove a route table until all subnet associations are understood and cleared.</li>
+          </ul>
+        </div>
+
+        <!-- 4) IGW / NAT -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">4) IGW vs NAT — Exposure boundaries</h6>
+          <p class="text-sm text-slate-600">
+            IGW enables public reachability. NAT enables private outbound access. Confusing the two creates security risk.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Before detaching an IGW, confirm which subnets/routes depend on it for public access.</li>
+            <li>Before deleting a NAT gateway, confirm private route targets and update route tables first.</li>
+          </ul>
+        </div>
+
+        <!-- 5) ENIs -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">5) ENIs — The silent dependency</h6>
+          <p class="text-sm text-slate-600">
+            ENIs are the true attachment points. They often block deletions and reveal hidden dependencies from managed services.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Inspect ENIs before attempting to modify/delete subnets, gateways, or route tables.</li>
+            <li>When something “won’t delete”, ENIs are usually the reason.</li>
+          </ul>
+        </div>
+
+        <!-- 6) Security groups -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">6) Security Groups — Attachment context</h6>
+          <p class="text-sm text-slate-600">
+            In networking operations, security groups matter most as relationship objects: what is attached, and what is exposed.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Do not delete security groups until you have verified all ENI attachments.</li>
+            <li>Exposure is a function of rules + routing + gateway paths—not security groups alone.</li>
+          </ul>
+        </div>
+
+        <!-- 7) Safe operational order -->
+        <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
+          <div class="text-sm font-semibold text-slate-800">🧯 Canonical safe order (network teardown concept)</div>
+          <ol class="list-decimal list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Inspect ENIs (dependency truth source)</li>
+            <li>Detach/adjust dependent workloads (compute, managed services)</li>
+            <li>Update route tables (remove/replace targets)</li>
+            <li>Remove NAT gateways after routes are updated</li>
+            <li>Detach Internet Gateways after public routes are removed</li>
+            <li>Remove subnets (only when ENI-free)</li>
+            <li>Remove route tables (only when unassociated)</li>
+            <li>Remove VPC (last)</li>
+          </ol>
+          <div class="text-xs text-slate-500 italic">
+            This is conceptual guidance. Exact order varies by workload and attachments.
+          </div>
+        </div>
+
+        
+
+        <!-- 8) VPC Endpoints -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">7) VPC Endpoints — Private access to AWS services</h6>
+          <p class="text-sm text-slate-600">
+            VPC Endpoints reduce exposure by keeping traffic to AWS services on private paths.
+            They are about <span class="font-medium">routing intent + policy</span>, not convenience.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li><span class="font-medium">Gateway endpoints</span>: route-table based (commonly S3/DynamoDB).</li>
+            <li><span class="font-medium">Interface endpoints</span>: ENI-based (PrivateLink), require DNS and security group thinking.</li>
+            <li>Verify endpoint routes/ENIs and DNS behavior before assuming “private”.</li>
+          </ul>
+
+          <div class="text-xs text-slate-500 italic">
+            Operator mindset: “Does traffic still have a path to the public internet, or is it truly private by design?”
+          </div>
+        </div>
+
+        <!-- 9) Transit Gateway -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">8) Transit Gateway — Hub-and-spoke at scale</h6>
+          <p class="text-sm text-slate-600">
+            Transit Gateway (TGW) is the control plane for multi-VPC connectivity. It introduces
+            <span class="font-medium">central routing</span> and <span class="font-medium">propagation rules</span>.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Understand attachments (VPC/VPN/Direct Connect) and route propagation before changing TGW routes.</li>
+            <li>Treat TGW route tables as “global intent”—one change can impact many VPCs.</li>
+            <li>Prefer incremental changes: add route → validate → propagate → verify.</li>
+          </ul>
+
+          <div class="text-xs text-slate-500 italic">
+            Operator mindset: “If I change TGW routing, which VPCs become reachable that weren’t before?”
+          </div>
+        </div>
+
+        <!-- 10) VPC Peering -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">9) VPC Peering — Direct VPC-to-VPC routing</h6>
+          <p class="text-sm text-slate-600">
+            VPC Peering is point-to-point connectivity. It does not provide transitive routing and it requires
+            <span class="font-medium">explicit route updates</span> in both VPCs.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Verify CIDR overlap and route intent before creating or modifying peering.</li>
+            <li>Connectivity depends on: routes + NACLs + security groups (not peering alone).</li>
+            <li>Document “who is allowed to reach whom” before enabling routes.</li>
+          </ul>
+
+          <div class="text-xs text-slate-500 italic">
+            Operator mindset: “Peering is a routing relationship—routes are the real switch.”
+          </div>
+        </div>
+
+        <!-- 11) NACLs -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">10) Network ACLs (NACLs) — Stateless subnet guardrails</h6>
+          <p class="text-sm text-slate-600">
+            NACLs operate at the subnet boundary and are <span class="font-medium">stateless</span>.
+            They can break traffic unexpectedly when rule ordering or ephemeral ports are misunderstood.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Always consider return traffic: stateless rules require explicit inbound/outbound allowance.</li>
+            <li>Rule order matters. Denies can shadow allows depending on sequence.</li>
+            <li>Use NACLs for coarse subnet boundaries; use security groups for workload-level control.</li>
+          </ul>
+
+          <div class="text-xs text-slate-500 italic">
+            Operator mindset: “If this subnet loses access, did NACLs block return traffic?”
+          </div>
+        </div>
+
+        <!-- 12) DNS / Route 53 -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">11) DNS &amp; Name Resolution — Route 53 and resolver thinking</h6>
+          <p class="text-sm text-slate-600">
+            DNS is part of networking. Many “network outages” are actually name resolution failures.
+            Operators should treat DNS as a dependency with visibility and intent.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Public vs private hosted zones: ensure you know which VPCs a private zone is associated with.</li>
+            <li>Resolver behavior matters: endpoints/private DNS can change how names resolve inside VPCs.</li>
+            <li>Verify name resolution from the workload context, not from your laptop.</li>
+          </ul>
+
+          <div class="text-xs text-slate-500 italic">
+            Operator mindset: “Can the workload resolve the name and reach the target on the intended path?”
+          </div>
+        </div>
+
+
+        
+
+        <!-- 12) Load Balancer Networking -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">12) Load Balancer Networking — ALB/NLB attachment &amp; blast radius</h6>
+          <p class="text-sm text-slate-600">
+            Load balancers are networking resources with compute dependencies. They attach to subnets,
+            create ENIs, and define traffic paths that can silently block subnet or VPC changes.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li><span class="font-medium">ALB</span>: Layer 7, requires subnets in ≥2 AZs; creates managed ENIs.</li>
+            <li><span class="font-medium">NLB</span>: Layer 4, preserves source IP; attaches ENIs per subnet.</li>
+            <li><span class="font-medium">Target groups</span>: Bind compute to networking; health checks affect routing.</li>
+          </ul>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Before deleting subnets/VPCs, confirm no ALB/NLB ENIs remain.</li>
+            <li>Understand listener → target group → compute chains before route changes.</li>
+          </ul>
+          <div class="text-xs text-slate-500 italic">
+            Operator mindset: “Which ENIs did this load balancer create, and where do they anchor routing?”
+          </div>
+        </div>
+
+        <!-- 13) VPC Flow Logs -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">13) VPC Flow Logs — Network visibility (not execution)</h6>
+          <p class="text-sm text-slate-600">
+            VPC Flow Logs provide traffic metadata to explain reachability issues. They do not fix problems,
+            but they can confirm whether traffic was accepted, rejected, or never routed.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Enable at the right scope: VPC, subnet, or ENI—depending on the question.</li>
+            <li>Use Flow Logs to validate NACL/security-group effects and asymmetric routing.</li>
+            <li>Absence of records can indicate routing gaps, not just denies.</li>
+          </ul>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Flow Logs are diagnostic aids—pair them with route and ENI inspection.</li>
+            <li>Interpretation requires context (AZs, subnets, gateways).</li>
+          </ul>
+          <div class="text-xs text-slate-500 italic">
+            Operator mindset: “Did the packet reach this point, and what decision was made?”
+          </div>
+        </div>
+
+
+        
+
+      <!-- ================= COMPUTE DOMAIN (TOOLS-STYLE) ================= -->
+
+      <div class="border-t border-slate-200 pt-4 space-y-4">
+
+        <div>
+          <h5 class="text-sm font-semibold text-slate-800">🖥️ Compute (AWS) — Operational Handbook</h5>
+          <p class="text-sm text-slate-600 mt-1">
+            This section teaches lifecycle-first compute operations. It focuses on attachments,
+            reconciliation behavior, and safe termination order—not instance creation.
+          </p>
+        </div>
+
+        <!-- Mental model -->
+        <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
+          <div class="text-sm font-semibold text-slate-800">🧭 Mental model (compute dependencies)</div>
+          <ol class="list-decimal list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Compute owns ENIs</li>
+            <li>Compute anchors load balancers</li>
+            <li>Auto Scaling reconciles desired state</li>
+            <li>Termination ≠ deletion if reconciliation exists</li>
+          </ol>
+          <div class="text-xs text-slate-500 italic">
+            Tools teaches why instances come back after you delete them.
+          </div>
+        </div>
+
+        <!-- EC2 -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">1) EC2 instances — Lifecycle &amp; attachments</h6>
+          <p class="text-sm text-slate-600">
+            EC2 instances are attachment hubs. They bind networking, storage, security groups,
+            and IAM identity into a single lifecycle unit.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Every instance owns at least one ENI.</li>
+            <li>Instance deletion affects subnets, route dependencies, and load balancers.</li>
+            <li>Stopping vs terminating has different dependency impact.</li>
+          </ul>
+        </div>
+
+        <!-- ASG -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">2) Auto Scaling Groups — Reconciliation logic</h6>
+          <p class="text-sm text-slate-600">
+            Auto Scaling Groups (ASGs) enforce desired state. Manual instance deletion
+            is treated as drift and corrected automatically.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>If an instance reappears, look for ASG ownership.</li>
+            <li>Scaling policies and health checks influence replacement behavior.</li>
+            <li>Disable or scale down ASGs before attempting teardown.</li>
+          </ul>
+        </div>
+
+        <!-- Launch templates -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">3) Launch Templates — Source of truth</h6>
+          <p class="text-sm text-slate-600">
+            Launch Templates define how compute is recreated. They are the real “configuration”
+            behind ASGs and Spot fleets.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Changes to instances do not persist if templates differ.</li>
+            <li>Networking, IAM roles, and user data are all encoded here.</li>
+          </ul>
+        </div>
+
+        <!-- LB coupling -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">4) Load Balancer coupling — Compute attachment</h6>
+          <p class="text-sm text-slate-600">
+            Load balancers bind compute to networking. Target groups and health checks
+            influence instance lifecycle decisions.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Deregister targets before terminating instances.</li>
+            <li>Health check failures can trigger replacement.</li>
+          </ul>
+        </div>
+
+        <!-- Termination protection -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">5) Termination protection &amp; scale-in behavior</h6>
+          <p class="text-sm text-slate-600">
+            Termination protection and scale-in policies prevent accidental disruption.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Protection must be disabled before safe teardown.</li>
+            <li>Scale-in protection overrides manual actions.</li>
+          </ul>
+        </div>
+
+        <!-- Safe order -->
+        <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
+          <div class="text-sm font-semibold text-slate-800">🧯 Canonical safe order (compute teardown)</div>
+          <ol class="list-decimal list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Identify ASG ownership</li>
+            <li>Disable or scale ASGs to zero</li>
+            <li>Deregister from load balancers</li>
+            <li>Disable termination protection</li>
+            <li>Terminate instances</li>
+            <li>Verify ENIs are released</li>
+          </ol>
+          <div class="text-xs text-slate-500 italic">
+            Exact order varies by workload and coupling.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- =============== END COMPUTE DOMAIN (TOOLS-STYLE) =============== -->
+
+
+        
+
+      <!-- ================= SECURITY DOMAIN (TOOLS-STYLE) ================= -->
+
+      <div class="border-t border-slate-200 pt-4 space-y-4">
+
+        <div>
+          <h5 class="text-sm font-semibold text-slate-800">🔐 Security (AWS) — Operational Handbook</h5>
+          <p class="text-sm text-slate-600 mt-1">
+            This section teaches authorization-first security operations. It focuses on identity,
+            attachment, and blast radius—not rule syntax.
+          </p>
+        </div>
+
+        <!-- Mental model -->
+        <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
+          <div class="text-sm font-semibold text-slate-800">🧭 Mental model (authorization & blast radius)</div>
+          <ol class="list-decimal list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Identity answers “who”</li>
+            <li>Policy answers “what is allowed”</li>
+            <li>Attachment answers “where it applies”</li>
+            <li>Blast radius answers “what can break”</li>
+          </ol>
+          <div class="text-xs text-slate-500 italic">
+            Tools teaches why permissions behave differently than expected.
+          </div>
+        </div>
+
+        <!-- IAM identities -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">1) IAM identities — Users, roles, and trust</h6>
+          <p class="text-sm text-slate-600">
+            IAM identities define *who* can act. Roles are preferred because they are assumable,
+            temporary, and attachable to services.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Users are long-lived; roles are ephemeral.</li>
+            <li>Trust policies control who can assume a role.</li>
+            <li>Deleting a role can silently break compute and automation.</li>
+          </ul>
+        </div>
+
+        <!-- Policies -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">2) IAM policies — Permission scope</h6>
+          <p class="text-sm text-slate-600">
+            Policies define *what* actions are allowed. Effective permissions are the union
+            of all attached policies minus explicit denies.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Explicit deny always wins.</li>
+            <li>Resource policies can grant access outside the account.</li>
+            <li>Least privilege must consider service behavior, not just API calls.</li>
+          </ul>
+        </div>
+
+        <!-- Attachments -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">3) Policy attachment — Where permissions apply</h6>
+          <p class="text-sm text-slate-600">
+            Attachment determines blast radius. A policy attached at the wrong level
+            can grant far more access than intended.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Identity-based vs resource-based policies behave differently.</li>
+            <li>Instance profiles attach roles to compute.</li>
+            <li>Cross-account access often comes from resource policies.</li>
+          </ul>
+        </div>
+
+        <!-- Security groups vs IAM -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">4) IAM vs network security — Control plane vs data plane</h6>
+          <p class="text-sm text-slate-600">
+            IAM controls *who can call APIs*. Network controls *who can send packets*.
+            Confusing the two leads to incorrect conclusions during incidents.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>IAM allows the action; security groups allow the traffic.</li>
+            <li>A successful API call does not imply network reachability.</li>
+          </ul>
+        </div>
+
+        <!-- Permission failures -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">5) Permission failures — “Why is this denied?”</h6>
+          <p class="text-sm text-slate-600">
+            Most access issues are caused by missing permissions, wrong role assumption,
+            or an unexpected explicit deny.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Verify caller identity and assumed role first.</li>
+            <li>Check for SCPs or permission boundaries.</li>
+            <li>Remember that organizations can override local intent.</li>
+          </ul>
+        </div>
+
+        <!-- Safe order -->
+        <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
+          <div class="text-sm font-semibold text-slate-800">🧯 Canonical safe order (security changes)</div>
+          <ol class="list-decimal list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Identify affected identities and services</li>
+            <li>Inspect current effective permissions</li>
+            <li>Apply changes at the narrowest scope</li>
+            <li>Validate access with non-destructive actions</li>
+            <li>Monitor for unintended access or breakage</li>
+          </ol>
+          <div class="text-xs text-slate-500 italic">
+            Security changes should always be reversible and observable.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- =============== END SECURITY DOMAIN (TOOLS-STYLE) =============== -->
+
+
+        
+
+      <!-- ================= STORAGE DOMAIN (TOOLS-STYLE) ================= -->
+
+      <div class="border-t border-slate-200 pt-4 space-y-4">
+
+        <div>
+          <h5 class="text-sm font-semibold text-slate-800">🗄️ Storage (AWS) — Operational Handbook</h5>
+          <p class="text-sm text-slate-600 mt-1">
+            This section teaches attachment-aware storage operations. It focuses on dependencies,
+            encryption, and safe teardown order—not provisioning.
+          </p>
+        </div>
+
+        <!-- Mental model -->
+        <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
+          <div class="text-sm font-semibold text-slate-800">🧭 Mental model (storage dependencies)</div>
+          <ol class="list-decimal list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Storage attaches to compute (volumes / mounts)</li>
+            <li>Storage inherits encryption &amp; identity (KMS, policies)</li>
+            <li>Lifecycle ≠ durability (snapshots, versions, replication)</li>
+            <li>Deletion is blocked by attachments and lineage</li>
+            <li>“Unused” ≠ “safe to delete”</li>
+          </ol>
+          <div class="text-xs text-slate-500 italic">
+            Tools teaches why storage deletions fail—or succeed when they shouldn’t.
+          </div>
+        </div>
+
+        <!-- EBS volumes -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">1) EBS Volumes — Block storage attachments</h6>
+          <p class="text-sm text-slate-600">
+            EBS volumes are attachment objects. Root volumes, data volumes, and multi-step detach flows
+            require careful lifecycle thinking.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Always identify attachment state and owning instance.</li>
+            <li>Understand delete-on-termination for root volumes.</li>
+            <li>Detached volumes can remain as cost + risk (stale data).</li>
+          </ul>
+          <div class="text-xs text-slate-500 italic">
+            Operator mindset: “What instance owns this volume, and what breaks if it disappears?”
+          </div>
+        </div>
+
+        <!-- Snapshots -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">2) Snapshots — Lineage and hidden dependencies</h6>
+          <p class="text-sm text-slate-600">
+            Snapshots are lineage artifacts. They can be depended on by AMIs, copy jobs, and cross-account sharing.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Never delete snapshots blindly—verify AMI linkage first.</li>
+            <li>Sprawl increases blast radius and recovery ambiguity.</li>
+            <li>Permissions and sharing can create non-obvious dependencies.</li>
+          </ul>
+          <div class="text-xs text-slate-500 italic">
+            Operator mindset: “Who still depends on this snapshot—even indirectly?”
+          </div>
+        </div>
+
+        <!-- AMIs -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">3) AMIs — Compute recreation contract</h6>
+          <p class="text-sm text-slate-600">
+            AMIs bind compute to storage lineage. ASGs and launch templates may rely on AMIs for replacement.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>AMI deletion can break scaling or disaster recovery.</li>
+            <li>Trace AMI → snapshot → volume lineage before cleanup.</li>
+            <li>Validate launch templates reference the intended AMI.</li>
+          </ul>
+          <div class="text-xs text-slate-500 italic">
+            Operator mindset: “If something scales right now, what image will it use?”
+          </div>
+        </div>
+
+        <!-- S3 -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">4) S3 Buckets — Policy gravity &amp; lifecycle</h6>
+          <p class="text-sm text-slate-600">
+            S3 is storage + access control. Policies, versioning, replication, and lifecycle rules change deletion semantics.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Empty ≠ deletable (versioning, delete markers, replication).</li>
+            <li>Bucket policy + IAM policy jointly control access.</li>
+            <li>Lifecycle rules can delete data silently—treat as operational code.</li>
+          </ul>
+          <div class="text-xs text-slate-500 italic">
+            Operator mindset: “Who can read, write, replicate, or delete objects here?”
+          </div>
+        </div>
+
+        <!-- Object Lock -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">5) S3 Object Lock — Retention overrides intent</h6>
+          <p class="text-sm text-slate-600">
+            Object Lock changes deletion by design. Retention rules can override admin actions.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Governance vs Compliance modes have different bypass behavior.</li>
+            <li>Retention can block deletes even with full IAM permissions.</li>
+            <li>Treat locked buckets as immutable systems with explicit expiry.</li>
+          </ul>
+          <div class="text-xs text-slate-500 italic">
+            Operator mindset: “Even if I want to delete this, am I allowed to?”
+          </div>
+        </div>
+
+        <!-- EFS -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">6) EFS — Shared filesystem dependencies</h6>
+          <p class="text-sm text-slate-600">
+            EFS introduces shared state across workloads. Mount targets create ENIs and anchor dependencies in subnets.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Map mount targets and subnets before network changes.</li>
+            <li>Identify all clients; shared state increases blast radius.</li>
+            <li>Deletion can break many workloads at once—treat as high-risk.</li>
+          </ul>
+          <div class="text-xs text-slate-500 italic">
+            Operator mindset: “How many workloads share this state, and where are the mount anchors?”
+          </div>
+        </div>
+
+        <!-- KMS -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">7) Encryption &amp; KMS — Key availability is data availability</h6>
+          <p class="text-sm text-slate-600">
+            Encryption is a hard dependency. Key policy, grants, and key deletion can render data unreadable.
+          </p>
+          <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Never delete a key without mapping dependent resources.</li>
+            <li>Verify key policy + grants: access failures often originate here.</li>
+            <li>Plan reversibility and observability for key changes.</li>
+          </ul>
+          <div class="text-xs text-slate-500 italic">
+            Operator mindset: “If this key disappears, what becomes unreadable?”
+          </div>
+        </div>
+
+        <!-- Safe order -->
+        <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
+          <div class="text-sm font-semibold text-slate-800">🧯 Canonical safe order (storage teardown concept)</div>
+          <ol class="list-decimal list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Identify compute attachments (instances, ASGs, mounts)</li>
+            <li>Identify AMI + snapshot lineage dependencies</li>
+            <li>Identify shared state (EFS clients) and replication</li>
+            <li>Verify versioning / retention / object lock where applicable</li>
+            <li>Verify encryption &amp; KMS key dependencies</li>
+            <li>Detach / unmount safely</li>
+            <li>Remove dependent configurations</li>
+            <li>Delete storage last</li>
+          </ol>
+          <div class="text-xs text-slate-500 italic">
+            Exact order varies by workload and compliance constraints.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- =============== END STORAGE DOMAIN (TOOLS-STYLE) =============== -->
+
+
+        <!-- 8) Reference scripts -->
+        <div class="space-y-2">
+          <h6 class="text-sm font-semibold text-slate-800">📜 Reference scripts (read-only examples)</h6>
+          <p class="text-sm text-slate-600">
+            Scripts are documentation artifacts that chain inspection steps with guardrails. They are not executed from this interface.
+          </p>
+
+          <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+#!/usr/bin/env bash
+# inspect_network_dependencies.sh (reference only)
+set -euo pipefail
+
+echo "Inspecting VPCs, subnets, routes, gateways, and ENIs..."
+echo "This script is documentation-only. Review before running externally."
+
+# Example pattern (choose explicit region/profile externally)
+# aws ec2 describe-vpcs --output table
+# aws ec2 describe-subnets --output table
+# aws ec2 describe-route-tables --output table
+# aws ec2 describe-internet-gateways --output table
+# aws ec2 describe-nat-gateways --output table
+# aws ec2 describe-network-interfaces --output table
+
+echo "Done."
+          </pre>
+
+          <div class="text-xs text-slate-500 italic">
+            Use scripts externally only under approved change procedures.
+          </div>
+        </div>
+
+      </div>
+      <!-- =============== END NETWORKING DOMAIN (TOOLS-STYLE) =============== -->
+
+      <div class="text-xs text-slate-500 italic">
+        Reference-only. No commands are executed and no credentials are used from this interface.
+      </div>
+    
+
+      <!-- ================= CLI OPERATIONS GUIDE ================= -->
+
+      <div class="border-t border-slate-200 pt-3 space-y-3">
+
+        <h5 class="text-sm font-semibold text-slate-800">
+          🔍 Inspection First (Read-only)
+        </h5>
+
+        <p class="text-sm text-slate-600">
+          Always begin with inspection commands to understand current state
+          before considering any operational action.
+        </p>
+
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-vpcs --output table
+aws ec2 describe-subnets --output table
+aws ec2 describe-route-tables --output table
+        </pre>
+
+        <h5 class="text-sm font-semibold text-slate-800">
+          🛡 Verification & Safety Checks
+        </h5>
+
+        <p class="text-sm text-slate-600">
+          Verification commands help confirm dependencies, associations,
+          and potential blast radius before any change is made.
+        </p>
+
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-internet-gateways --output table
+aws ec2 describe-nat-gateways --output table
+aws ec2 describe-network-interfaces --output table
+        </pre>
+
+        <h5 class="text-sm font-semibold text-slate-800">
+          🚦 Action Guidance (External Execution Only)
+        </h5>
+
+        <p class="text-sm text-slate-600">
+          Any create, modify, or delete action must be executed
+          externally using approved tooling and change procedures.
+          This interface intentionally does not execute commands.
+        </p>
+
+        <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+          <li>Confirm inspection and verification outputs</li>
+          <li>Validate dependencies and associations</li>
+          <li>Execute changes externally using approved workflows</li>
+          <li>Re-run inspection commands to verify outcome</li>
+        </ul>
+
+      </div>
+</div>
+
+    <!-- ================= CATEGORY: AUTOMATION (IAC) ================= -->
+    <div x-show="toolsTab === 'iac'" x-cloak class="border border-slate-200 rounded-lg p-4 space-y-3">
+      <div class="flex items-center justify-between">
+        <h4 class="text-sm font-semibold text-slate-800">🤖 Automation &amp; Infrastructure-as-Code (IaC)</h4>
+        <span class="text-xs px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">🚧 Planned — Reference Only</span>
+      </div>
+
+      <p class="text-sm text-slate-600">
+        Repeatable, controlled automation patterns intended for consistent operations at scale.
+      </p>
+
+      <div class="text-sm text-slate-700">
+        <div class="font-medium text-slate-800 mb-1">What lives here</div>
+        <ul class="list-disc list-outside pl-5 space-y-1">
+          <li>Ansible playbooks for idempotent operational workflows</li>
+          <li>Terraform module references for infrastructure lifecycle patterns</li>
+          <li>Guarded create/update/destroy guidance (documentation-only in this phase)</li>
+        </ul>
+      </div>
+
+      <div class="text-xs text-slate-500 italic">
+        Reference-only. Execution will require explicit consent and additional safeguards in a future phase.
+      </div>
+    </div>
+
+    <!-- ================= CATEGORY: DOCTOR / SAFETY ================= -->
+    <div x-show="toolsTab === 'doctor'" x-cloak class="border border-slate-200 rounded-lg p-4 space-y-3">
+      <div class="flex items-center justify-between">
+        <h4 class="text-sm font-semibold text-slate-800">🩺 Doctor / Safety Playbooks</h4>
+        <span class="text-xs px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">🚧 Planned — Reference Only</span>
+      </div>
+
+      <p class="text-sm text-slate-600">
+        Guardrails and playbooks designed to reduce risk, make dependencies visible, and teach safe operational order.
+      </p>
+
+      <div class="text-sm text-slate-700">
+        <div class="font-medium text-slate-800 mb-1">What lives here</div>
+        <ul class="list-disc list-outside pl-5 space-y-1">
+          <li>Doctor-generated pre-flight validation guidance</li>
+          <li>Dependency-aware safe teardown ordering</li>
+          <li>“Before you do this, verify that” checklists</li>
+        </ul>
+      </div>
+
+      <div class="text-xs text-slate-500 italic">
+        Reference-only. This category focuses on teaching and safety, not execution.
+      </div>
+    </div>
+
+  </div>
+  <!-- =============== END TOOLS CATEGORIES =============== -->
+
 
 </div>
 <!-- =============== END TOOLS SECTION =============== -->
