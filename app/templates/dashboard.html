@@ -1981,7 +1981,7 @@
                     // =============================
                     activeTab: 'network',
                     observabilitySection: 'logs',
-                    expandedMetrics: { cloudwatch: false },
+                    expandedMetrics: { cloudwatch: true },
                     runtimeMetrics: null,
                     metricsError: null,
                     metricsPollTimer: null,
@@ -2091,7 +2091,7 @@
                     // =============================
                     async fetchMetrics() {
                         try {
-                            const res = await fetch("/metrics/summary");
+                            const res = await fetch("/api/v1/metrics/summary");
                             const data = await res.json();
                             this.runtimeMetrics = data.metrics;
                             this.metricsError = null;

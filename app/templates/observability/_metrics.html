@@ -1,136 +1,143 @@
-        <div x-show="observabilitySection === 'metrics'" x-cloak>
-            <div class="flex items-center justify-between">
-                <h3 class="text-base font-semibold text-slate-800">📈 Metrics</h3></div>
+<div x-show="observabilitySection === 'metrics'" x-cloak>
+    <div class="flex items-center justify-between">
+        <h3 class="text-base font-semibold text-slate-800">📈 Metrics</h3>
 
-<!-- METRICS SCOPE NOTICE -->
-<div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800 mt-2">
-  <strong>Scope notice:</strong>
-  Metrics shown here provide a limited, informational view only.
-  Coverage may vary by service, and some values may be unavailable
-  or displayed as <span class="font-mono">—</span>.
-</div>
+        <button @click="toggleAutoRefreshMetrics"
+            class="text-xs px-3 py-1 rounded font-medium"
+            :class="autoRefreshMetrics
+                ? 'bg-emerald-600 text-white'
+                : 'bg-slate-200 text-slate-700'">
+            Auto-refresh
+            <span x-text="autoRefreshMetrics ? 'ON' : 'OFF'"></span>
+            · every 10s
+        </button>
+    </div>
 
-                <button @click="toggleAutoRefreshMetrics" class="text-xs px-3 py-1 rounded font-medium" :class="autoRefreshMetrics
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-slate-200 text-slate-700'">
-                    Auto-refresh
-                    <span x-text="autoRefreshMetrics ? 'ON' : 'OFF'"></span>
-                    · every 10s
-                </button>
+    <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800 mt-2">
+        <strong>Scope notice:</strong>
+        Metrics shown here provide a limited, informational view only.
+        Coverage may vary by service, and some values may be unavailable
+        or displayed as <span class="font-mono">—</span>.
+    </div>
+
+    <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1 mt-3">
+        <li>
+            <div class="flex items-center justify-between cursor-pointer select-none"
+                 @click="expandedMetrics.cloudwatch = !expandedMetrics.cloudwatch">
+                <strong>CloudWatch Metrics</strong>
+                <span class="text-xs text-slate-500"
+                      x-text="expandedMetrics.cloudwatch ? 'Hide' : 'Show'"></span>
             </div>
-            <p class="text-sm text-slate-600">
-                Resource utilization and performance metrics. Metrics are read-only and will be enabled in a future
-                phase.
-            </p>
 
-            <p class="text-sm text-slate-700 mt-2">
-                <strong>Read-only metrics (informational):</strong>
-                Metrics shown here provide a limited, read-only view of backend resource utilization and health signals.
-                Data may be incomplete and is intended for situational awareness only.
-                Metrics are not suitable for SLA validation, billing, or capacity planning.
-            </p>
+            <div x-show="expandedMetrics.cloudwatch" x-cloak class="mt-2 ml-4 space-y-1 text-sm text-slate-700">
+                <div class="flex flex-col gap-2">
 
-            <p class="text-sm text-slate-700">
-                <strong>Current scope (partial):</strong>
-                CPU, memory, network, and error indicators reflect basic runtime signals where available.
-                Some values may appear as <span class="font-mono">—</span> when data is not yet collected or exposed.
-            </p>
-
-
-            <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
-                <li>
-                    <div class="flex items-center justify-between cursor-pointer select-none"
-                        @click="expandedMetrics.cloudwatch = !expandedMetrics.cloudwatch">
-
-                        <strong>CloudWatch Metrics</strong>
-                        <span class="text-xs text-slate-500"
-                            x-text="expandedMetrics.cloudwatch ? 'Hide' : 'Show'"></span>
+                    <div class="flex justify-between">
+                        <span>CPU Utilization</span>
+                        <span class="font-mono"
+                              x-text="runtimeMetrics?.cpu_percent != null
+                                ? runtimeMetrics.cpu_percent + ' %'
+                                : '—'">
+                        </span>
                     </div>
 
-                    <div x-show="expandedMetrics.cloudwatch" x-cloak class="mt-2 ml-4 space-y-1 text-sm text-slate-700">
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-
-                            <div class="flex justify-between">
-                                <span>CPU Utilization</span>
-                                <span class="font-mono"
-                                    x-text="runtimeMetrics ? runtimeMetrics.cpu_percent + ' %' : '—'">
-                                </span>
-                            </div>
-
-                            <div class="flex justify-between">
-                                <span>Memory Utilization</span>
-                                <span class="font-mono"
-                                    x-text="runtimeMetrics ? runtimeMetrics.memory_mb + ' MB' : '—'">
-                                </span>
-                            </div>
-
-                            <div class="flex justify-between">
-                                <span>Network In</span>
-                                <span class="font-mono">— bytes</span>
-                            </div>
-
-                            <div class="flex justify-between">
-                                <span>Network Out</span>
-                                <span class="font-mono">— bytes</span>
-                            </div>
-
-                            <div class="flex justify-between">
-                                <span>4xx Errors</span>
-                                <span class="font-mono">—</span>
-                            </div>
-
-                            <div class="flex justify-between">
-                                <span>5xx Errors</span>
-                                <span class="font-mono">—</span>
-                            </div>
-
-                        </div>
+                    <div class="flex justify-between">
+                        <span>Memory Utilization</span>
+                        <span class="font-mono"
+                              x-text="runtimeMetrics?.memory_mb != null
+                                ? runtimeMetrics.memory_mb + ' MB'
+                                : '—'">
+                        </span>
                     </div>
-                </li>
 
-                <p class="text-sm text-slate-700 mt-3 mb-2 ml-1">
-                    <strong>Planned metrics (future phases):</strong>
-                    Expanded Lambda metrics, load balancer metrics, and custom application metrics
-                    will be added in a future release.
-                </p>
+                    <div class="flex justify-between">
+                        <span>Network In</span>
+                        <span class="font-mono"
+                              x-text="
+                                runtimeMetrics?.network_in_bytes?.length
+                                  ? runtimeMetrics.network_in_bytes.at(-1).value + ' bytes'
+                                  : '—'
+                              ">
+                        </span>
+                    </div>
 
-                <li>CPU / Memory</li>
-                <li>Network</li>
-                <li>Errors &amp; Throttles</li>
-                <li>Lambda Metrics</li>
-                <li>Load Balancer Metrics</li>
-                <li class="italic text-slate-500">Custom Metrics (future)</li>
-            </ul>
+                    <div class="flex justify-between">
+                        <span>Network Out</span>
+                        <span class="font-mono"
+                              x-text="
+                                runtimeMetrics?.network_out_bytes?.length
+                                  ? runtimeMetrics.network_out_bytes.at(-1).value + ' bytes'
+                                  : '—'
+                              ">
+                        </span>
+                    </div>
 
-            <!-- Metrics explanations (OUTSIDE the grid) -->
-            <p class="text-sm text-slate-700 mt-3 mb-2">
-                <strong>Backend status:</strong>
-                Service status reflects basic health and availability only.
-                Request volume, error rate, and latency metrics require additional instrumentation
-                and are not yet available in this version.
-            </p>
+                    <div class="flex justify-between">
+                        <span>4xx Errors</span>
+                        <span class="font-mono">—</span>
+                    </div>
 
-            <!-- Metrics cards (GRID ONLY CONTAINS CARDS) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-white border border-slate-200 rounded-lg p-4">
-                    <div class="text-xs text-slate-500">Backend Status</div>
-                    <div class="text-sm font-semibold text-slate-800">Running</div>
+                    <div class="flex justify-between">
+                        <span>5xx Errors</span>
+                        <span class="font-mono">—</span>
+                    </div>
+
                 </div>
+            </div>
+        </li>
+    </ul>
 
-                <div class="bg-white border border-slate-200 rounded-lg p-4">
-                    <div class="text-xs text-slate-500">Request Volume</div>
-                    <div class="text-sm font-semibold text-slate-800">—</div>
-                </div>
+    <p class="text-sm text-slate-700 mt-3 mb-2">
+        <strong>Backend status:</strong>
 
-                <div class="bg-white border border-slate-200 rounded-lg p-4">
-                    <div class="text-xs text-slate-500">Error Rate</div>
-                    <div class="text-sm font-semibold text-slate-800">—</div>
-                </div>
+    <div class="mt-4 space-y-3 text-sm text-slate-700">
 
-                <div class="bg-white border border-slate-200 rounded-lg p-4">
-                    <div class="text-xs text-slate-500">Avg Latency</div>
-                    <div class="text-sm font-semibold text-slate-800">—</div>
+        <!-- CPU BAR -->
+        <div>
+            <div class="flex justify-between">
+                <span>CPU Utilization</span>
+                <span x-text="runtimeMetrics?.cpu_percent + ' %'"></span>
+            </div>
+            <div class="w-full bg-slate-200 rounded h-2 mt-1">
+                <div class="bg-emerald-600 h-2 rounded"
+                     :style="`width: ${Math.min(100, runtimeMetrics?.cpu_percent ?? 0)}%`">
                 </div>
             </div>
         </div>
+
+        <!-- MEMORY BAR -->
+        <div>
+            <div class="flex justify-between">
+                <span>Memory Usage</span>
+                <span x-text="runtimeMetrics?.memory_mb + ' MB'"></span>
+            </div>
+            <div class="w-full bg-slate-200 rounded h-2 mt-1">
+                <div class="bg-blue-600 h-2 rounded"
+                     :style="`width: ${Math.min(100, (runtimeMetrics?.memory_mb ?? 0) / 1024 * 100)}%`">
+                </div>
+            </div>
+        </div>
+
+        <!-- NETWORK TRENDS -->
+        <div class="flex justify-between">
+            <span>Network In Trend</span>
+            <span class="font-mono"
+                  x-text="runtimeMetrics?.network_in_bytes?.length >= 2
+                    ? (runtimeMetrics.network_in_bytes.at(-1).value > runtimeMetrics.network_in_bytes.at(-2).value ? '↑' : '↓')
+                    : '—'">
+            </span>
+        </div>
+
+        <div class="flex justify-between">
+            <span>Network Out Trend</span>
+            <span class="font-mono"
+                  x-text="runtimeMetrics?.network_out_bytes?.length >= 2
+                    ? (runtimeMetrics.network_out_bytes.at(-1).value > runtimeMetrics.network_out_bytes.at(-2).value ? '↑' : '↓')
+                    : '—'">
+            </span>
+        </div>
+
+    </div>
+        Service health only. No SLA, billing, or alert guarantees.
+    </p>
+</div>
