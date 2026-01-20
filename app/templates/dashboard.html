@@ -47,6 +47,8 @@
         </div>
     </div>
 
+    {% include "observability/_alerts.html" %}
+
     <!-- ============================= -->
     <!-- GLOBAL HEALTH TOOLBAR -->
     <!-- ============================= -->
@@ -1871,10 +1873,6 @@
                 {% include "observability/_metrics.html" %}
             </div>
 
-            <div x-show="observabilitySection === 'alerts'" x-cloak>
-                {% include "observability/_alerts.html" %}
-            </div>
-
             <div x-show="observabilitySection === 'events'" x-cloak>
                 {% include "observability/_events.html" %}
             </div>
@@ -1893,6 +1891,25 @@
         <script>
             function networkConsole() {
                 return {
+
+                    // =============================
+                    // ALERT SEVERITY ICON (SAFE)
+                    // =============================
+                    alertSeverityIcon(severity) {
+                        switch ((severity || "").toLowerCase()) {
+                            case "critical":
+                            case "high":
+                                return "🔴";
+                            case "warning":
+                            case "medium":
+                                return "🟡";
+                            case "info":
+                            case "low":
+                                return "🟢";
+                            default:
+                                return "⚪";
+                        }
+                    },
                     // =============================
                     // LOG POLLING STATE (Phase 5.2)
                     // =============================
@@ -1916,6 +1933,113 @@
                             return ts;
                         }
                     },
+                    // =============================
+                    // BYTE FORMATTER (SAFE)
+                    // =============================
+                    formatBytes(bytes) {
+                        if (bytes === null || bytes === undefined) return "—";
+                        const units = ["B", "KB", "MB", "GB", "TB"];
+                        let i = 0;
+                        let val = Number(bytes);
+                        while (val >= 1024 && i < units.length - 1) {
+                            val /= 1024;
+                            i++;
+                        }
+                        return `${val.toFixed(1)} ${units[i]}`;
+                    },
+
+                    // =============================
+                    // RATE CALCULATION (SAFE)
+                    // =============================
+                    ratePerSecond(series) {
+                        if (!Array.isArray(series) || series.length < 2) return "—";
+                        const a = series[series.length - 2];
+                        const b = series[series.length - 1];
+                        if (!a?.timestamp || !b?.timestamp) return "—";
+
+                        const dt = (new Date(b.timestamp) - new Date(a.timestamp)) / 1000;
+                        if (dt <= 0) return "—";
+
+                        const rate = (b.value - a.value) / dt;
+                        return this.formatBytes(rate) + "/s";
+                    },
+
+                    // =============================
+
+                    // RATE FORMATTER (SAFE)
+                    ratePerSecond(series) {
+                        try {
+                            if (!series || series.length < 2) return "—";
+                            const a = series.at(-2);
+                            const b = series.at(-1);
+                            if (!a?.timestamp || !b?.timestamp) return "—";
+
+                            const t1 = new Date(a.timestamp).getTime();
+                            const t2 = new Date(b.timestamp).getTime();
+                            const dt = (t2 - t1) / 1000;
+                            if (!dt || dt <= 0) return "—";
+
+                            const dv = b.value - a.value;
+                            if (dv < 0) return "—";
+
+                            const rate = dv / dt;
+                            return this.formatBytes(rate) + "/s";
+                        } catch {
+                            return "—";
+                        }
+                    },
+                    // BYTE FORMATTER (SAFE)
+                    // =============================
+                    formatBytes(bytes) {
+                        if (bytes == null || isNaN(bytes)) return "—";
+                        if (bytes < 1024) return bytes + " B";
+                        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+                        if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+                        return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+                    },
+
+
+                    // =============================
+                    // METRICS HELPERS (SAFE)
+                    // =============================
+                    sparkline(series) {
+                        try {
+                            if (!Array.isArray(series) || series.length === 0) return "—";
+                            const values = series
+                                .map(p => Number(p?.value))
+                                .filter(v => Number.isFinite(v));
+                            if (values.length === 0) return "—";
+
+                            const bars = ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"];
+                            const min = Math.min(...values);
+                            const max = Math.max(...values);
+                            if (max === min) return "▅".repeat(Math.min(8, values.length));
+
+                            // last up to 8 points
+                            const slice = values.slice(-8);
+                            return slice.map(v => {
+                                const idx = Math.max(0, Math.min(7, Math.round(((v - min) / (max - min)) * 7)));
+                                return bars[idx];
+                            }).join("");
+                        } catch {
+                            return "—";
+                        }
+                    },
+
+                    metricTrend(series) {
+                        try {
+                            if (!Array.isArray(series) || series.length < 2) return "—";
+                            const a = Number(series.at(-2)?.value);
+                            const b = Number(series.at(-1)?.value);
+                            if (!Number.isFinite(a) || !Number.isFinite(b)) return "—";
+                            if (b > a) return "↑";
+                            if (b < a) return "↓";
+                            return "→";
+                        } catch {
+                            return "—";
+                        }
+                    },
+
 
                     // =============================
                     // LOG LEVEL COLORIZATION

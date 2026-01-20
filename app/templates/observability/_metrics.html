@@ -2,9 +2,7 @@
     <div class="flex items-center justify-between">
         <h3 class="text-base font-semibold text-slate-800">📈 Metrics</h3>
 
-        <button @click="toggleAutoRefreshMetrics"
-            class="text-xs px-3 py-1 rounded font-medium"
-            :class="autoRefreshMetrics
+        <button @click="toggleAutoRefreshMetrics" class="text-xs px-3 py-1 rounded font-medium" :class="autoRefreshMetrics
                 ? 'bg-emerald-600 text-white'
                 : 'bg-slate-200 text-slate-700'">
             Auto-refresh
@@ -17,16 +15,15 @@
         <strong>Scope notice:</strong>
         Metrics shown here provide a limited, informational view only.
         Coverage may vary by service, and some values may be unavailable
-        or displayed as <span class="font-mono">—</span>.
+        or displayed as
     </div>
 
     <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1 mt-3">
         <li>
             <div class="flex items-center justify-between cursor-pointer select-none"
-                 @click="expandedMetrics.cloudwatch = !expandedMetrics.cloudwatch">
+                @click="expandedMetrics.cloudwatch = !expandedMetrics.cloudwatch">
                 <strong>CloudWatch Metrics</strong>
-                <span class="text-xs text-slate-500"
-                      x-text="expandedMetrics.cloudwatch ? 'Hide' : 'Show'"></span>
+                <span class="text-xs text-slate-500" x-text="expandedMetrics.cloudwatch ? 'Hide' : 'Show'"></span>
             </div>
 
             <div x-show="expandedMetrics.cloudwatch" x-cloak class="mt-2 ml-4 space-y-1 text-sm text-slate-700">
@@ -34,8 +31,7 @@
 
                     <div class="flex justify-between">
                         <span>CPU Utilization</span>
-                        <span class="font-mono"
-                              x-text="runtimeMetrics?.cpu_percent != null
+                        <span class="font-mono" x-text="runtimeMetrics?.cpu_percent != null
                                 ? runtimeMetrics.cpu_percent + ' %'
                                 : '—'">
                         </span>
@@ -43,8 +39,7 @@
 
                     <div class="flex justify-between">
                         <span>Memory Utilization</span>
-                        <span class="font-mono"
-                              x-text="runtimeMetrics?.memory_mb != null
+                        <span class="font-mono" x-text="runtimeMetrics?.memory_mb != null
                                 ? runtimeMetrics.memory_mb + ' MB'
                                 : '—'">
                         </span>
@@ -52,8 +47,10 @@
 
                     <div class="flex justify-between">
                         <span>Network In</span>
-                        <span class="font-mono"
-                              x-text="
+                        <span class="ml-2 text-xs font-mono text-slate-500"
+                            x-text="sparkline(runtimeMetrics?.network_in_bytes)">
+                        </span>
+                        <span class="font-mono" x-text="
                                 runtimeMetrics?.network_in_bytes?.length
                                   ? runtimeMetrics.network_in_bytes.at(-1).value + ' bytes'
                                   : '—'
@@ -61,10 +58,14 @@
                         </span>
                     </div>
 
+
                     <div class="flex justify-between">
                         <span>Network Out</span>
-                        <span class="font-mono"
-                              x-text="
+                        <div class="text-xs font-mono text-slate-500 mt-0.5"
+                            x-text="sparkline(runtimeMetrics?.network_out_bytes)">
+                        </div>
+
+                        <span class="font-mono" x-text="
                                 runtimeMetrics?.network_out_bytes?.length
                                   ? runtimeMetrics.network_out_bytes.at(-1).value + ' bytes'
                                   : '—'
@@ -100,7 +101,7 @@
             </div>
             <div class="w-full bg-slate-200 rounded h-2 mt-1">
                 <div class="bg-emerald-600 h-2 rounded"
-                     :style="`width: ${Math.min(100, runtimeMetrics?.cpu_percent ?? 0)}%`">
+                    :style="`width: ${Math.min(100, runtimeMetrics?.cpu_percent ?? 0)}%`">
                 </div>
             </div>
         </div>
@@ -113,31 +114,35 @@
             </div>
             <div class="w-full bg-slate-200 rounded h-2 mt-1">
                 <div class="bg-blue-600 h-2 rounded"
-                     :style="`width: ${Math.min(100, (runtimeMetrics?.memory_mb ?? 0) / 1024 * 100)}%`">
+                    :style="`width: ${Math.min(100, (runtimeMetrics?.memory_mb ?? 0) / 1024 * 100)}%`">
                 </div>
             </div>
         </div>
 
         <!-- NETWORK TRENDS -->
         <div class="flex justify-between">
-            <span>Network In Trend</span>
-            <span class="font-mono"
-                  x-text="runtimeMetrics?.network_in_bytes?.length >= 2
-                    ? (runtimeMetrics.network_in_bytes.at(-1).value > runtimeMetrics.network_in_bytes.at(-2).value ? '↑' : '↓')
-                    : '—'">
+            <span class="font-mono" x-text="
+                        runtimeMetrics?.network_in_bytes?.length
+                        ? formatBytes(runtimeMetrics.network_in_bytes.at(-1).value)
+                            + ' (≈ ' + ratePerSecond(runtimeMetrics.network_in_bytes) + ')'
+                        : '—'
+                    ">
             </span>
+
         </div>
 
         <div class="flex justify-between">
             <span>Network Out Trend</span>
-            <span class="font-mono"
-                  x-text="runtimeMetrics?.network_out_bytes?.length >= 2
-                    ? (runtimeMetrics.network_out_bytes.at(-1).value > runtimeMetrics.network_out_bytes.at(-2).value ? '↑' : '↓')
-                    : '—'">
+            <span class="font-mono" x-text="
+                        runtimeMetrics?.network_out_bytes?.length
+                        ? formatBytes(runtimeMetrics.network_out_bytes.at(-1).value)
+                            + ' (≈ ' + ratePerSecond(runtimeMetrics.network_out_bytes) + ')'
+                        : '—'
+                    ">
             </span>
         </div>
 
     </div>
-        Service health only. No SLA, billing, or alert guarantees.
+    Service health only. No SLA, billing, or alert guarantees.
     </p>
 </div>
