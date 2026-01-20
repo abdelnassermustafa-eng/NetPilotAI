@@ -1,0 +1,393 @@
+<!-- ================= TERMINAL SECTION ================= -->
+<div x-show="observabilitySection === 'terminal'" x-cloak class="space-y-4">
+
+  <!-- HEADER -->
+  <h3 class="text-base font-semibold text-slate-800">🖥️ Terminal</h3>
+
+  <!-- DISCLAIMER (ALWAYS SHOWN FIRST) -->
+  <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-slate-800 space-y-3">
+    <div class="flex items-start gap-3">
+      <div class="mt-0.5 text-lg">⚠️</div>
+      <div class="space-y-2">
+        <div class="font-semibold text-amber-900">
+          Responsibility & Production Safety Notice
+        </div>
+
+        <p class="text-slate-800">
+          This Terminal provides an interactive shell. Commands you run here execute using the
+          credentials, permissions, region, and environment currently available to this application.
+        </p>
+
+        <ul class="list-disc list-outside pl-5 space-y-1 text-slate-800">
+          <li>
+            <strong>You are responsible</strong> for every command you execute and the resulting changes.
+          </li>
+          <li>
+            Commands may <strong>modify</strong> or <strong>destroy</strong> AWS resources and can cause outages,
+            data loss, or unexpected costs if used incorrectly.
+          </li>
+          <li>
+            The application does <strong>not</strong> guarantee safety, prevent destructive actions, or validate
+            correctness of your commands.
+          </li>
+          <li>
+            If you are unsure, start with <strong>verification commands</strong> (read-only) before running any
+            change or delete operation.
+          </li>
+        </ul>
+
+        <p class="text-slate-700">
+          <strong>Best practice:</strong> confirm the active AWS account and region before running commands,
+          and prefer read-only inspection during investigations.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= VERIFICATION PLAYBOOKS ================= -->
+  <details class="rounded-lg border border-slate-200 bg-white p-4 text-sm" open>
+    <summary class="cursor-pointer font-semibold text-slate-800">
+      🔍 AWS Verification Playbooks (Read-Only)
+    </summary>
+
+    <div class="mt-4 space-y-6">
+
+      <!-- IDENTITY & CONTEXT -->
+      <div>
+        <h4 class="font-semibold text-slate-800">🧾 Identity & Execution Context</h4>
+        <p class="text-slate-600 text-sm mb-2">
+          Always confirm who you are and where commands will run before doing anything else.
+        </p>
+
+        <table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
+          <thead class="bg-slate-100 text-slate-700">
+            <tr>
+              <th class="px-3 py-2 text-left">Command</th>
+              <th class="px-3 py-2 text-left">Purpose</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y">
+            <tr class="bg-white">
+              <td class="px-3 py-2 font-mono text-indigo-700">
+                aws sts get-caller-identity
+              </td>
+              <td class="px-3 py-2">
+                Shows AWS account ID, user/role, and confirms active credentials.
+              </td>
+            </tr>
+            <tr class="bg-slate-50">
+              <td class="px-3 py-2 font-mono text-indigo-700">
+                aws configure list
+              </td>
+              <td class="px-3 py-2">
+                Displays active region, credentials source, and configuration scope.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ALARMS -->
+      <div>
+        <h4 class="font-semibold text-slate-800">🚨 CloudWatch Alarms</h4>
+        <p class="text-slate-600 text-sm mb-2">
+          Verify alarm states, recent triggers, and whether alarms reflect real issues.
+        </p>
+
+        <table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
+          <thead class="bg-red-50 text-red-700">
+            <tr>
+              <th class="px-3 py-2 text-left">Command</th>
+              <th class="px-3 py-2 text-left">What it tells you</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y">
+            <tr>
+              <td class="px-3 py-2 font-mono text-red-700">
+                aws cloudwatch describe-alarms --output table
+              </td>
+              <td class="px-3 py-2">
+                Lists all alarms and their current states (OK / ALARM / INSUFFICIENT_DATA).
+              </td>
+            </tr>
+            <tr class="bg-red-50">
+              <td class="px-3 py-2 font-mono text-red-700">
+                aws cloudwatch describe-alarms --state-value ALARM --output table
+              </td>
+              <td class="px-3 py-2">
+                Shows only alarms currently firing — useful during incidents.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- LOGS -->
+      <div>
+        <h4 class="font-semibold text-slate-800">📜 Logs</h4>
+        <p class="text-slate-600 text-sm mb-2">
+          Confirm log presence, freshness, and whether applications are emitting data.
+        </p>
+
+        <table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
+          <thead class="bg-emerald-50 text-emerald-700">
+            <tr>
+              <th class="px-3 py-2 text-left">Command</th>
+              <th class="px-3 py-2 text-left">Purpose</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y">
+            <tr>
+              <td class="px-3 py-2 font-mono text-emerald-700">
+                aws logs describe-log-groups --output table
+              </td>
+              <td class="px-3 py-2">
+                Lists available log groups and retention settings.
+              </td>
+            </tr>
+            <tr class="bg-emerald-50">
+              <td class="px-3 py-2 font-mono text-emerald-700">
+                aws logs tail &lt;LOG_GROUP&gt; --since 15m --follow
+              </td>
+              <td class="px-3 py-2">
+                Streams recent logs in real time for live troubleshooting.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- NETWORKING -->
+      <div>
+        <h4 class="font-semibold text-slate-800">🌐 Networking & Routing</h4>
+        <p class="text-slate-600 text-sm mb-2">
+          Validate VPC topology, routing paths, and gateway attachments.
+        </p>
+
+        <table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
+          <thead class="bg-blue-50 text-blue-700">
+            <tr>
+              <th class="px-3 py-2 text-left">Command</th>
+              <th class="px-3 py-2 text-left">Use case</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y">
+            <tr>
+              <td class="px-3 py-2 font-mono text-blue-700">
+                aws ec2 describe-vpcs --output table
+              </td>
+              <td class="px-3 py-2">
+                Confirms VPC existence and CIDR ranges.
+              </td>
+            </tr>
+            <tr class="bg-blue-50">
+              <td class="px-3 py-2 font-mono text-blue-700">
+                aws ec2 describe-subnets --output table
+              </td>
+              <td class="px-3 py-2">
+                Shows subnet CIDRs, AZ placement, and availability.
+              </td>
+            </tr>
+            <tr>
+              <td class="px-3 py-2 font-mono text-blue-700">
+                aws ec2 describe-route-tables --output table
+              </td>
+              <td class="px-3 py-2">
+                Verifies routing paths and default routes.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </details>
+  
+      <!-- METRICS -->
+      <div>
+        <h4 class="font-semibold text-slate-800">📈 Metrics (CloudWatch)</h4>
+        <p class="text-slate-600 text-sm mb-2">
+          Validate that metrics exist, are updating, and represent real system behavior.
+          Metrics can lag, aggregate, or disappear due to permissions or agent issues.
+        </p>
+
+        <table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
+          <thead class="bg-purple-50 text-purple-700">
+            <tr>
+              <th class="px-3 py-2 text-left">Command</th>
+              <th class="px-3 py-2 text-left">What it verifies</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y">
+            <tr>
+              <td class="px-3 py-2 font-mono text-purple-700">
+                aws cloudwatch list-metrics --output table
+              </td>
+              <td class="px-3 py-2">
+                Confirms available metrics and namespaces in the current region.
+              </td>
+            </tr>
+            <tr class="bg-purple-50">
+              <td class="px-3 py-2 font-mono text-purple-700">
+                aws cloudwatch get-metric-statistics \
+                --metric-name CPUUtilization \
+                --namespace AWS/EC2 \
+                --statistics Average \
+                --period 300 \
+                --start-time $(date -u -v-30M +%Y-%m-%dT%H:%M:%SZ) \
+                --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ)
+              </td>
+              <td class="px-3 py-2">
+                Retrieves raw metric data to confirm graphs reflect actual values.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- COMPUTE -->
+      <div>
+        <h4 class="font-semibold text-slate-800">🖥️ Compute (EC2 Instances)</h4>
+        <p class="text-slate-600 text-sm mb-2">
+          Determine whether an issue is AWS-level, OS-level, or application-level by
+          checking instance state and health checks.
+        </p>
+
+        <table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
+          <thead class="bg-cyan-50 text-cyan-700">
+            <tr>
+              <th class="px-3 py-2 text-left">Command</th>
+              <th class="px-3 py-2 text-left">Operational insight</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y">
+            <tr>
+              <td class="px-3 py-2 font-mono text-cyan-700">
+                aws ec2 describe-instances --output table
+              </td>
+              <td class="px-3 py-2">
+                Lists instances, states, AZ placement, and attached networking.
+              </td>
+            </tr>
+            <tr class="bg-cyan-50">
+              <td class="px-3 py-2 font-mono text-cyan-700">
+                aws ec2 describe-instance-status --include-all-instances --output table
+              </td>
+              <td class="px-3 py-2">
+                Shows system and instance status checks — critical for outage diagnosis.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+  
+      <!-- BILLING & COST -->
+      <div>
+        <h4 class="font-semibold text-slate-800">💰 Billing & Cost Awareness</h4>
+        <p class="text-slate-600 text-sm mb-2">
+          Unexpected cost increases often accompany misconfigurations, runaway resources,
+          or forgotten infrastructure. Always validate costs during incidents.
+        </p>
+
+        <table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
+          <thead class="bg-yellow-50 text-yellow-800">
+            <tr>
+              <th class="px-3 py-2 text-left">Command</th>
+              <th class="px-3 py-2 text-left">What it helps detect</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y">
+            <tr>
+              <td class="px-3 py-2 font-mono text-yellow-800">
+                aws ce get-cost-and-usage \
+                --time-period Start=$(date -u -v-7d +%Y-%m-%d),End=$(date -u +%Y-%m-%d) \
+                --granularity DAILY \
+                --metrics BlendedCost
+              </td>
+              <td class="px-3 py-2">
+                Identifies daily cost spikes and abnormal spending patterns.
+              </td>
+            </tr>
+            <tr class="bg-yellow-50">
+              <td class="px-3 py-2 font-mono text-yellow-800">
+                aws ce get-cost-and-usage \
+                --time-period Start=$(date -u -v-30d +%Y-%m-%d),End=$(date -u +%Y-%m-%d) \
+                --granularity MONTHLY \
+                --metrics UnblendedCost
+              </td>
+              <td class="px-3 py-2">
+                Confirms month-level spending trends and baseline costs.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- TROUBLESHOOTING -->
+      <div>
+        <h4 class="font-semibold text-slate-800">🧯 Troubleshooting & Diagnostics</h4>
+        <p class="text-slate-600 text-sm mb-2">
+          Use these commands to investigate permissions issues, failed API calls,
+          and recent infrastructure changes.
+        </p>
+
+        <table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
+          <thead class="bg-rose-50 text-rose-700">
+            <tr>
+              <th class="px-3 py-2 text-left">Command</th>
+              <th class="px-3 py-2 text-left">Diagnostic value</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y">
+            <tr>
+              <td class="px-3 py-2 font-mono text-rose-700">
+                aws cloudtrail lookup-events --max-results 10
+              </td>
+              <td class="px-3 py-2">
+                Reveals recent API calls that may have triggered changes or failures.
+              </td>
+            </tr>
+            <tr class="bg-rose-50">
+              <td class="px-3 py-2 font-mono text-rose-700">
+                aws iam get-account-summary
+              </td>
+              <td class="px-3 py-2">
+                Detects IAM constraints that could block operations or automation.
+              </td>
+            </tr>
+            <tr>
+              <td class="px-3 py-2 font-mono text-rose-700">
+                aws service-quotas list-service-quotas \
+                --service-code ec2
+              </td>
+              <td class="px-3 py-2">
+                Identifies quota limits that can silently block scaling or provisioning.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+  <!-- =============== END VERIFICATION PLAYBOOKS ================= -->
+
+  <!-- SHELL AREA (ALWAYS BELOW DISCLAIMER) -->
+  <div class="rounded-lg border border-slate-200 bg-white">
+    <div class="flex items-center justify-between border-b border-slate-200 px-3 py-2">
+      <div class="text-sm font-medium text-slate-800">Shell</div>
+      <div class="text-xs text-slate-500">
+        Interactive execution — user responsible
+      </div>
+    </div>
+
+    <!-- Placeholder: the actual terminal emulator / shell wiring comes later -->
+    <div class="p-3">
+      <div class="rounded-md border border-dashed border-slate-300 bg-slate-50 p-3 text-sm text-slate-600">
+        Terminal v1 placeholder: the interactive shell UI will be mounted here.
+        (Next steps will define the UI layout and execution wiring.)
+      </div>
+    </div>
+  </div>
+
+</div>
+<!-- =============== END TERMINAL SECTION =============== -->
