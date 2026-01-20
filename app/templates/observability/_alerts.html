@@ -32,7 +32,7 @@
       <!-- IMPLEMENTED -->
       <p class="font-semibold">✅ Implemented</p>
       <ul class="list-disc list-inside ml-4 space-y-1">
-        <li class="list-none"><strong>CloudWatch Alarms (read-only)</strong></li>
+        <li><strong>CloudWatch Alarms (read-only)</strong></li>
         <li><strong>Alert state visibility (OK / ALARM)</strong></li>
       </ul>
 
@@ -54,7 +54,7 @@
   </details>
 
   <!-- ALERT LIST -->
-  <ul class="list-none pl-5 text-sm text-slate-700 space-y-1">
+  <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
     <li>
       <div class="flex items-center justify-between cursor-pointer select-none"
         @click="expandedAlerts.cloudwatch = !expandedAlerts.cloudwatch">
@@ -118,7 +118,6 @@
 
             </div>
           </div>
-
         </template>
 
       </div>

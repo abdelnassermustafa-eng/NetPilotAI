@@ -47,7 +47,6 @@
         </div>
     </div>
 
-    {% include "observability/_alerts.html" %}
 
     <!-- ============================= -->
     <!-- GLOBAL HEALTH TOOLBAR -->
@@ -1876,6 +1875,11 @@
             <div x-show="observabilitySection === 'events'" x-cloak>
                 {% include "observability/_events.html" %}
             </div>
+
+            <div x-show="activeTab === 'observability'">
+                {% include "observability/_alerts.html" %}
+            </div>
+
 
             <!-- ================= OBSERVABILITY : TOOLS ================= -->
             <div x-show="observabilitySection === 'tools'" x-cloak>
