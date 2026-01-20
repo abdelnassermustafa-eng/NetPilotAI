@@ -369,6 +369,141 @@
         </table>
       </div>
 
+  
+      <!-- ANSIBLE VERIFICATION -->
+      <div>
+        <h4 class="font-semibold text-slate-800">🤖 Ansible Verification (Read-Only)</h4>
+        <p class="text-slate-600 text-sm mb-2">
+          Use Ansible in inspection mode to understand inventory, variables, facts,
+          and intended changes <strong>without modifying systems</strong>.
+        </p>
+
+        <!-- INVENTORY -->
+        <div class="mt-3">
+          <h5 class="font-semibold text-slate-700">📦 Inventory Inspection</h5>
+          <table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden mt-2">
+            <thead class="bg-slate-100 text-slate-700">
+              <tr>
+                <th class="px-3 py-2 text-left">Command</th>
+                <th class="px-3 py-2 text-left">What it shows</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y">
+              <tr>
+                <td class="px-3 py-2 font-mono text-indigo-700">
+                  ansible-inventory --list
+                </td>
+                <td class="px-3 py-2">
+                  Full resolved inventory with groups, hosts, and variables.
+                </td>
+              </tr>
+              <tr class="bg-slate-50">
+                <td class="px-3 py-2 font-mono text-indigo-700">
+                  ansible-inventory --graph
+                </td>
+                <td class="px-3 py-2">
+                  Visual group hierarchy — useful for understanding targeting.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- FACTS -->
+        <div class="mt-4">
+          <h5 class="font-semibold text-slate-700">🧠 Facts Gathering</h5>
+          <table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden mt-2">
+            <thead class="bg-emerald-50 text-emerald-700">
+              <tr>
+                <th class="px-3 py-2 text-left">Command</th>
+                <th class="px-3 py-2 text-left">Purpose</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y">
+              <tr>
+                <td class="px-3 py-2 font-mono text-emerald-700">
+                  ansible all -m setup
+                </td>
+                <td class="px-3 py-2">
+                  Collects system facts (OS, CPU, memory, network) for validation.
+                </td>
+              </tr>
+              <tr class="bg-emerald-50">
+                <td class="px-3 py-2 font-mono text-emerald-700">
+                  ansible &lt;group&gt; -m setup -a "filter=ansible_distribution*"
+                </td>
+                <td class="px-3 py-2">
+                  Confirms OS distribution consistency across a group.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- DRY RUN -->
+        <div class="mt-4">
+          <h5 class="font-semibold text-slate-700">🧪 Dry Run (No Changes)</h5>
+          <table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden mt-2">
+            <thead class="bg-blue-50 text-blue-700">
+              <tr>
+                <th class="px-3 py-2 text-left">Command</th>
+                <th class="px-3 py-2 text-left">Operational meaning</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y">
+              <tr>
+                <td class="px-3 py-2 font-mono text-blue-700">
+                  ansible-playbook site.yml --check
+                </td>
+                <td class="px-3 py-2">
+                  Simulates changes and reports what <em>would</em> be modified.
+                </td>
+              </tr>
+              <tr class="bg-blue-50">
+                <td class="px-3 py-2 font-mono text-blue-700">
+                  ansible-playbook site.yml --check --diff
+                </td>
+                <td class="px-3 py-2">
+                  Shows before/after diffs for files and templates.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- TROUBLESHOOTING -->
+        <div class="mt-4">
+          <h5 class="font-semibold text-slate-700">🧯 Ansible Troubleshooting</h5>
+          <table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden mt-2">
+            <thead class="bg-rose-50 text-rose-700">
+              <tr>
+                <th class="px-3 py-2 text-left">Command</th>
+                <th class="px-3 py-2 text-left">Why it helps</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y">
+              <tr>
+                <td class="px-3 py-2 font-mono text-rose-700">
+                  ansible all -m ping
+                </td>
+                <td class="px-3 py-2">
+                  Verifies connectivity, authentication, and Python availability.
+                </td>
+              </tr>
+              <tr class="bg-rose-50">
+                <td class="px-3 py-2 font-mono text-rose-700">
+                  ansible-playbook site.yml -vvv
+                </td>
+                <td class="px-3 py-2">
+                  Provides verbose execution context for diagnosing failures.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
   <!-- =============== END VERIFICATION PLAYBOOKS ================= -->
 
   <!-- SHELL AREA (ALWAYS BELOW DISCLAIMER) -->
