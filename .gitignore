@@ -39,3 +39,4 @@ app-backend/
 
 __pycache__/
 *.pyc
+*.BACKUP.before_restore
