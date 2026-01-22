@@ -1,0 +1,148 @@
+<div x-show="observabilitySection === 'metrics'" x-cloak>
+    <div class="flex items-center justify-between">
+        <h3 class="text-base font-semibold text-slate-800">📈 Metrics</h3>
+
+        <button @click="toggleAutoRefreshMetrics" class="text-xs px-3 py-1 rounded font-medium" :class="autoRefreshMetrics
+                ? 'bg-emerald-600 text-white'
+                : 'bg-slate-200 text-slate-700'">
+            Auto-refresh
+            <span x-text="autoRefreshMetrics ? 'ON' : 'OFF'"></span>
+            · every 10s
+        </button>
+    </div>
+
+    <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800 mt-2">
+        <strong>Scope notice:</strong>
+        Metrics shown here provide a limited, informational view only.
+        Coverage may vary by service, and some values may be unavailable
+        or displayed as
+    </div>
+
+    <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1 mt-3">
+        <li>
+            <div class="flex items-center justify-between cursor-pointer select-none"
+                @click="expandedMetrics.cloudwatch = !expandedMetrics.cloudwatch">
+                <strong>CloudWatch Metrics</strong>
+                <span class="text-xs text-slate-500" x-text="expandedMetrics.cloudwatch ? 'Hide' : 'Show'"></span>
+            </div>
+
+            <div x-show="expandedMetrics.cloudwatch" x-cloak class="mt-2 ml-4 space-y-1 text-sm text-slate-700">
+                <div class="flex flex-col gap-2">
+
+                    <div class="flex justify-between">
+                        <span>CPU Utilization</span>
+                        <span class="font-mono" x-text="runtimeMetrics?.cpu_percent != null
+                                ? runtimeMetrics.cpu_percent + ' %'
+                                : '—'">
+                        </span>
+                    </div>
+
+                    <div class="flex justify-between">
+                        <span>Memory Utilization</span>
+                        <span class="font-mono" x-text="runtimeMetrics?.memory_mb != null
+                                ? runtimeMetrics.memory_mb + ' MB'
+                                : '—'">
+                        </span>
+                    </div>
+
+                    <div class="flex justify-between">
+                        <span>Network In</span>
+                        <span class="ml-2 text-xs font-mono text-slate-500"
+                            x-text="sparkline(runtimeMetrics?.network_in_bytes)">
+                        </span>
+                        <span class="font-mono" x-text="
+                                runtimeMetrics?.network_in_bytes?.length
+                                  ? runtimeMetrics.network_in_bytes.at(-1).value + ' bytes'
+                                  : '—'
+                              ">
+                        </span>
+                    </div>
+
+
+                    <div class="flex justify-between">
+                        <span>Network Out</span>
+                        <div class="text-xs font-mono text-slate-500 mt-0.5"
+                            x-text="sparkline(runtimeMetrics?.network_out_bytes)">
+                        </div>
+
+                        <span class="font-mono" x-text="
+                                runtimeMetrics?.network_out_bytes?.length
+                                  ? runtimeMetrics.network_out_bytes.at(-1).value + ' bytes'
+                                  : '—'
+                              ">
+                        </span>
+                    </div>
+
+                    <div class="flex justify-between">
+                        <span>4xx Errors</span>
+                        <span class="font-mono">—</span>
+                    </div>
+
+                    <div class="flex justify-between">
+                        <span>5xx Errors</span>
+                        <span class="font-mono">—</span>
+                    </div>
+
+                </div>
+            </div>
+        </li>
+    </ul>
+
+    <p class="text-sm text-slate-700 mt-3 mb-2">
+        <strong>Backend status:</strong>
+
+    <div class="mt-4 space-y-3 text-sm text-slate-700">
+
+        <!-- CPU BAR -->
+        <div>
+            <div class="flex justify-between">
+                <span>CPU Utilization</span>
+                <span x-text="runtimeMetrics?.cpu_percent + ' %'"></span>
+            </div>
+            <div class="w-full bg-slate-200 rounded h-2 mt-1">
+                <div class="bg-emerald-600 h-2 rounded"
+                    :style="`width: ${Math.min(100, runtimeMetrics?.cpu_percent ?? 0)}%`">
+                </div>
+            </div>
+        </div>
+
+        <!-- MEMORY BAR -->
+        <div>
+            <div class="flex justify-between">
+                <span>Memory Usage</span>
+                <span x-text="runtimeMetrics?.memory_mb + ' MB'"></span>
+            </div>
+            <div class="w-full bg-slate-200 rounded h-2 mt-1">
+                <div class="bg-blue-600 h-2 rounded"
+                    :style="`width: ${Math.min(100, (runtimeMetrics?.memory_mb ?? 0) / 1024 * 100)}%`">
+                </div>
+            </div>
+        </div>
+
+        <!-- NETWORK TRENDS -->
+        <div class="flex justify-between">
+            <span class="font-mono" x-text="
+                        runtimeMetrics?.network_in_bytes?.length
+                        ? formatBytes(runtimeMetrics.network_in_bytes.at(-1).value)
+                            + ' (≈ ' + ratePerSecond(runtimeMetrics.network_in_bytes) + ')'
+                        : '—'
+                    ">
+            </span>
+
+        </div>
+
+        <div class="flex justify-between">
+            <span>Network Out Trend</span>
+            <span class="font-mono" x-text="
+                        runtimeMetrics?.network_out_bytes?.length
+                        ? formatBytes(runtimeMetrics.network_out_bytes.at(-1).value)
+                            + ' (≈ ' + ratePerSecond(runtimeMetrics.network_out_bytes) + ')'
+                        : '—'
+                    ">
+            </span>
+        </div>
+
+    </div>
+    Service health only. No SLA, billing, or alert guarantees.
+    </p>
+</div>

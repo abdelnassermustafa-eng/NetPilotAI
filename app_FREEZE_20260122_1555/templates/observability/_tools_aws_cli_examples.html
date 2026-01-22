@@ -1,0 +1,4782 @@
+<!-- ============================================================= -->
+<!-- SECTION 0: EXECUTION RESPONSIBILITY & OPERATOR MODEL -->
+<!-- ============================================================= -->
+
+<section class="space-y-4">
+
+  <h3 class="text-base font-semibold text-slate-800">
+    📘 AWS CLI Examples — Execution Responsibility Model
+  </h3>
+
+  <p class="text-sm text-slate-700">
+    This page contains AWS CLI command examples used to inspect, verify,
+    and reason about infrastructure state. It does not execute commands.
+    It does not automate actions.
+  </p>
+
+  <p class="text-sm text-slate-700">
+    All commands shown here are intended to be run manually by an operator
+    in their own terminal, with full awareness of account, region, identity,
+    and permissions.
+  </p>
+
+  <p class="text-sm text-slate-700">
+    NetPilot deliberately separates understanding from execution.
+    This page teaches what to inspect and how to verify,
+    not what to blindly run.
+  </p>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm space-y-3">
+
+    <div class="font-semibold text-slate-800">
+      🔎 Command Responsibility Legend
+    </div>
+
+    <ul class="space-y-2 text-slate-700">
+
+      <li>
+        🟢 <strong>INSPECT</strong> —
+        Read-only commands that query AWS state.
+        These commands do not modify resources.
+      </li>
+
+      <li>
+        🟠 <strong>CONTEXTUAL</strong> —
+        Read-only commands whose output depends on environment
+        (region, account, filters, time range).
+      </li>
+
+      <li>
+        🔴 <strong>EXECUTION — Operator Responsibility</strong> —
+        Commands that can create, modify, or delete resources.
+        These commands are shown for education only.
+        <br />
+        <span class="italic text-slate-600">
+          You are fully responsible for understanding and accepting
+          the impact before running them.
+        </span>
+      </li>
+
+    </ul>
+
+  </div>
+
+  <p class="text-xs text-slate-500 italic">
+    For operational reasoning, see <strong>Operational Philosophy &amp; Guidance</strong>.
+    For automation patterns, see <strong>Automation (IaC)</strong>.
+  </p>
+
+</section>
+
+
+<!-- ============================================================= -->
+<!-- SECTION 1: IDENTITY & ENVIRONMENT CONTEXT -->
+<!-- ============================================================= -->
+
+<section class="space-y-4">
+
+  <h4 class="text-sm font-semibold text-slate-800">
+    🔐 Identity & Environment Context
+  </h4>
+
+  <p class="text-sm text-slate-700">
+    Before running any AWS CLI command, an operator must understand
+    <strong>who they are</strong>, <strong>where they are operating</strong>,
+    and <strong>what scope their credentials allow</strong>.
+  </p>
+
+  <p class="text-sm text-slate-700">
+    Many operational incidents occur not because commands are wrong,
+    but because they are executed in the wrong account, region,
+    or role context.
+  </p>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-4 text-sm">
+
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Verify AWS Caller Identity
+      </div>
+
+      <p class="text-slate-600">
+        Confirms which AWS account and identity (user or role)
+        the CLI is currently using.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws sts get-caller-identity --output table
+      </pre>
+
+      <div class="text-xs text-slate-500">
+        Expected output: Account ID, ARN, and principal type.
+      </div>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        🟠 Verify AWS Region Context
+      </div>
+
+      <p class="text-slate-600">
+        Displays the default region used by the AWS CLI.
+        A common cause of “missing resources” is querying
+        the wrong region.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws configure get region
+      </pre>
+
+      <div class="text-xs text-slate-500">
+        Expected output: Region name (for example, <span class="font-mono">us-east-1</span>).
+      </div>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        🟠 Verify Active AWS Profile
+      </div>
+
+      <p class="text-slate-600">
+        Confirms which named profile is currently active,
+        if profiles are in use.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+echo $AWS_PROFILE
+      </pre>
+
+      <div class="text-xs text-slate-500">
+        Empty output indicates the default profile.
+      </div>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Inspect AWS CLI Version
+      </div>
+
+      <p class="text-slate-600">
+        Ensures feature compatibility and consistent behavior,
+        especially for newer services.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws --version
+      </pre>
+
+      <div class="text-xs text-slate-500">
+        AWS CLI v2 is recommended.
+      </div>
+    </div>
+
+  </div>
+
+  <p class="text-xs text-slate-500 italic">
+    Identity and environment verification should be the
+    <strong>first step</strong> of every operational session,
+    regardless of task size.
+  </p>
+
+</section>
+
+
+<!-- ============================================================= -->
+<!-- SECTION 2: CORE READ-ONLY INFRASTRUCTURE INSPECTION -->
+<!-- ============================================================= -->
+
+<section class="space-y-4">
+
+  <h4 class="text-sm font-semibold text-slate-800">
+    🌐 Core Infrastructure Inspection (Read-Only)
+  </h4>
+
+  <p class="text-sm text-slate-700">
+    These commands allow operators to inspect foundational AWS infrastructure
+    components without modifying state. They form the baseline visibility layer
+    for understanding network topology, routing intent, and attachment relationships.
+  </p>
+
+  <p class="text-sm text-slate-700">
+    All commands in this section are <strong>read-only</strong>. They should be
+    executed freely during investigation, validation, or learning phases.
+  </p>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-6 text-sm">
+
+    <!-- VPCS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 List Virtual Private Clouds (VPCs)
+      </div>
+
+      <p class="text-slate-600">
+        Displays all VPCs in the current region, including CIDR ranges and default status.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-vpcs   --query 'Vpcs[*].[VpcId,CidrBlock,IsDefault,State]'   --output table
+      </pre>
+
+      <div class="text-xs text-slate-500">
+        Use this to confirm VPC existence and scope before deeper inspection.
+      </div>
+    </div>
+
+    <!-- SUBNETS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 List Subnets
+      </div>
+
+      <p class="text-slate-600">
+        Displays all subnets with CIDR blocks and availability zones.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-subnets   --query 'Subnets[*].[SubnetId,VpcId,CidrBlock,AvailabilityZone]'   --output table
+      </pre>
+
+      <div class="text-xs text-slate-500">
+        Useful for understanding AZ distribution and subnet segmentation.
+      </div>
+    </div>
+
+    <!-- ROUTE TABLES -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 List Route Tables
+      </div>
+
+      <p class="text-slate-600">
+        Displays route tables and their associated VPCs.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-route-tables   --query 'RouteTables[*].[RouteTableId,VpcId]'   --output table
+      </pre>
+
+      <div class="text-xs text-slate-500">
+        Identify main vs custom route tables before inspecting routes.
+      </div>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Inspect Routes in a Route Table
+      </div>
+
+      <p class="text-slate-600">
+        Displays detailed routes for a specific route table.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-route-tables   --route-table-ids &lt;ROUTE_TABLE_ID&gt;   --output json
+      </pre>
+
+      <div class="text-xs text-slate-500">
+        Replace <span class="font-mono">&lt;ROUTE_TABLE_ID&gt;</span> with a valid ID.
+      </div>
+    </div>
+
+    <!-- INTERNET GATEWAYS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 List Internet Gateways
+      </div>
+
+      <p class="text-slate-600">
+        Displays Internet Gateways and their VPC attachments.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-internet-gateways   --query 'InternetGateways[*].[InternetGatewayId,Attachments]'   --output table
+      </pre>
+
+      <div class="text-xs text-slate-500">
+        Confirms internet access configuration at the VPC edge.
+      </div>
+    </div>
+
+    <!-- NAT GATEWAYS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 List NAT Gateways
+      </div>
+
+      <p class="text-slate-600">
+        Displays NAT Gateways, subnets, and operational state.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-nat-gateways   --query 'NatGateways[*].[NatGatewayId,VpcId,SubnetId,State]'   --output table
+      </pre>
+
+      <div class="text-xs text-slate-500">
+        Useful for validating outbound internet paths from private subnets.
+      </div>
+    </div>
+
+  </div>
+
+  <p class="text-xs text-slate-500 italic">
+    Core infrastructure inspection establishes situational awareness.
+    No remediation or modification should occur before this visibility is achieved.
+  </p>
+
+</section>
+
+
+<!-- ============================================================= -->
+<!-- SECTION 3: SECURITY BOUNDARIES & VISIBILITY -->
+<!-- ============================================================= -->
+
+<section class="space-y-4">
+
+  <h4 class="text-sm font-semibold text-slate-800">
+    🔐 Security Boundaries & Visibility (Read-Only)
+  </h4>
+
+  <p class="text-sm text-slate-700">
+    Security in AWS is defined by layered boundaries: identity, network controls,
+    and attachment context. This section focuses on <em>visibility only</em> —
+    understanding what is allowed, where, and why.
+  </p>
+
+  <p class="text-sm text-slate-700">
+    No security rules are modified here. These commands help operators reason
+    about exposure, segmentation, and trust boundaries before any change is considered.
+  </p>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-6 text-sm">
+
+    <!-- SECURITY GROUPS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 List Security Groups
+      </div>
+
+      <p class="text-slate-600">
+        Displays all security groups in the current region and their VPC associations.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-security-groups   --query 'SecurityGroups[*].[GroupId,GroupName,VpcId]'   --output table
+      </pre>
+
+      <div class="text-xs text-slate-500">
+        Establishes inventory before inspecting individual rule sets.
+      </div>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Inspect Security Group Rules
+      </div>
+
+      <p class="text-slate-600">
+        Displays inbound and outbound rules for a specific security group.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-security-groups   --group-ids &lt;SECURITY_GROUP_ID&gt;   --output json
+      </pre>
+
+      <div class="text-xs text-slate-500">
+        Replace <span class="font-mono">&lt;SECURITY_GROUP_ID&gt;</span> with a valid ID.
+      </div>
+    </div>
+
+    <!-- NETWORK ACLS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 List Network ACLs (NACLs)
+      </div>
+
+      <p class="text-slate-600">
+        Displays Network ACLs and their associated VPCs.
+        NACLs operate statelessly at the subnet boundary.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-network-acls   --query 'NetworkAcls[*].[NetworkAclId,VpcId,IsDefault]'   --output table
+      </pre>
+
+      <div class="text-xs text-slate-500">
+        Useful for detecting non-default ACLs that may affect traffic flow.
+      </div>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Inspect Network ACL Rules
+      </div>
+
+      <p class="text-slate-600">
+        Displays inbound and outbound rules for a specific Network ACL.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-network-acls   --network-acl-ids &lt;NACL_ID&gt;   --output json
+      </pre>
+
+      <div class="text-xs text-slate-500">
+        Replace <span class="font-mono">&lt;NACL_ID&gt;</span> with a valid ACL ID.
+      </div>
+    </div>
+
+    <!-- ATTACHMENT CONTEXT -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Inspect Network Interfaces (ENIs)
+      </div>
+
+      <p class="text-slate-600">
+        Displays Elastic Network Interfaces and their attachment context.
+        ENIs often reveal implicit security dependencies.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-network-interfaces   --query 'NetworkInterfaces[*].[NetworkInterfaceId,SubnetId,VpcId,Status]'   --output table
+      </pre>
+
+      <div class="text-xs text-slate-500">
+        Use ENIs to trace security group usage and resource coupling.
+      </div>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Inspect ENI Security Group Attachments
+      </div>
+
+      <p class="text-slate-600">
+        Displays detailed security group bindings for a specific ENI.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-network-interfaces   --network-interface-ids &lt;ENI_ID&gt;   --query 'NetworkInterfaces[*].Groups'   --output table
+      </pre>
+
+      <div class="text-xs text-slate-500">
+        Replace <span class="font-mono">&lt;ENI_ID&gt;</span> with a valid interface ID.
+      </div>
+    </div>
+
+  </div>
+
+  <p class="text-xs text-slate-500 italic">
+    Security inspection precedes security change.
+    Never modify rules without understanding attachment impact and blast radius.
+  </p>
+
+</section>
+
+
+<!-- ============================================================= -->
+<!-- SECTION 4: OBSERVABILITY SIGNALS (LOGS, METRICS, EVENTS) -->
+<!-- ============================================================= -->
+
+<section class="space-y-4">
+
+  <h4 class="text-sm font-semibold text-slate-800">
+    📊 Observability Signals — Logs, Metrics, Events
+  </h4>
+
+  <p class="text-sm text-slate-700">
+    Observability is not dashboards — it is signals.
+    Logs, metrics, and events answer different operational questions
+    and must never be conflated.
+  </p>
+
+  <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+    <li><strong>Logs</strong> explain <em>what happened</em></li>
+    <li><strong>Metrics</strong> show <em>how often and how much</em></li>
+    <li><strong>Events</strong> indicate <em>that something changed</em></li>
+  </ul>
+
+  <p class="text-sm text-slate-700">
+    This section focuses on <em>signal verification</em>.
+    All commands are read-only and safe to inspect independently of the UI.
+  </p>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-6 text-sm">
+
+    <!-- LOGS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Logs — Verify Log Groups Exist
+      </div>
+
+      <p class="text-slate-600">
+        Confirms that CloudWatch Log Groups are present in the region.
+        Absence here means the UI cannot show logs.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws logs describe-log-groups   --output table
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Logs — List Streams by Activity
+      </div>
+
+      <p class="text-slate-600">
+        Displays log streams ordered by recent activity.
+        Useful for detecting whether ingestion is live.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws logs describe-log-streams   --log-group-name /netpilot-ai/backend   --order-by LastEventTime   --descending   --output table
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Logs — Tail Recent Entries
+      </div>
+
+      <p class="text-slate-600">
+        Streams recent log entries to confirm runtime behavior.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws logs tail /netpilot-ai/backend   --since 10m   --follow
+      </pre>
+
+      <div class="text-xs text-slate-500">
+        Empty output may indicate inactivity, not failure.
+      </div>
+    </div>
+
+    <!-- METRICS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Metrics — Verify Namespace Availability
+      </div>
+
+      <p class="text-slate-600">
+        Confirms that services are publishing metrics.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws cloudwatch list-metrics   --namespace AWS/EC2   --output table
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Metrics — Inspect Recent Datapoints
+      </div>
+
+      <p class="text-slate-600">
+        Retrieves recent datapoints to confirm metrics are flowing.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws cloudwatch get-metric-statistics   --namespace AWS/EC2   --metric-name CPUUtilization   --statistics Average   --period 300   --start-time $(date -u -v-15M +%Y-%m-%dT%H:%M:%SZ)   --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ)   --output json
+      </pre>
+
+      <div class="text-xs text-slate-500">
+        Metric delays are common; absence does not always indicate failure.
+      </div>
+    </div>
+
+    <!-- EVENTS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Events — Verify EventBridge Activity
+      </div>
+
+      <p class="text-slate-600">
+        Confirms that events are being recorded by EventBridge.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws events lookup-events   --max-results 10   --output table
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Events — Inspect Rule Targets
+      </div>
+
+      <p class="text-slate-600">
+        Displays targets attached to an EventBridge rule.
+        Critical for diagnosing silent event failures.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws events list-targets-by-rule   --rule &lt;RULE_NAME&gt;   --output table
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Events — Inspect SQS Backlog
+      </div>
+
+      <p class="text-slate-600">
+        Checks whether messages are accumulating downstream.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws sqs get-queue-attributes   --queue-url &lt;QUEUE_URL&gt;   --attribute-names ApproximateNumberOfMessages                     ApproximateNumberOfMessagesNotVisible   --output table
+      </pre>
+
+      <div class="text-xs text-slate-500">
+        Message counts are approximate by design.
+      </div>
+    </div>
+
+  </div>
+
+  <p class="text-xs text-slate-500 italic">
+    When signals disagree, trust the raw signal before the UI.
+    Dashboards summarize — signals explain.
+  </p>
+
+</section>
+
+
+<!-- ============================================================= -->
+<!-- SECTION 5: NETWORK TOPOLOGY & ROUTING TRUTH -->
+<!-- ============================================================= -->
+
+<section class="space-y-4">
+
+  <h4 class="text-sm font-semibold text-slate-800">
+    🌐 Network Topology & Routing Truth
+  </h4>
+
+  <p class="text-sm text-slate-700">
+    Network failures are rarely mysterious — they are usually routing truth
+    misunderstood or assumed. This section validates how traffic actually flows
+    through VPCs, subnets, route tables, and gateways.
+  </p>
+
+  <p class="text-sm text-slate-700">
+    This section focuses on <em>operator reasoning</em>.
+    All commands are read-only and safe to inspect independently of the UI.
+  </p>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-6 text-sm">
+
+    <!-- ROUTE TABLES -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Routing — List Route Tables
+      </div>
+
+      <p class="text-slate-600">
+        Displays all route tables in the region.
+        If a route does not exist here, traffic cannot flow that way.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-route-tables   --output table
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Routing — Verify Subnet Associations
+      </div>
+
+      <p class="text-slate-600">
+        Confirms which route table governs each subnet.
+        Unassociated route tables are inert.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-route-tables   --query 'RouteTables[].{RouteTable:RouteTableId,Subnets:Associations[].SubnetId}'   --output table
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Routing — Inspect Effective Routes
+      </div>
+
+      <p class="text-slate-600">
+        Shows actual destinations and targets used for forwarding decisions.
+        Longest prefix match always wins.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-route-tables   --query 'RouteTables[].Routes'   --output table
+      </pre>
+    </div>
+
+    <!-- INTERNET GATEWAY -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Internet — Verify Internet Gateway Attachment
+      </div>
+
+      <p class="text-slate-600">
+        Confirms whether the VPC has a valid internet egress point.
+        Subnet naming alone does not imply internet access.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-internet-gateways   --output table
+      </pre>
+    </div>
+
+    <!-- NAT -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Egress — Verify NAT Gateways Exist
+      </div>
+
+      <p class="text-slate-600">
+        Checks whether private subnets can reach the internet through NAT.
+        NAT provides egress only.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-nat-gateways   --output table
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Egress — Validate NAT Operational State
+      </div>
+
+      <p class="text-slate-600">
+        Confirms NAT Gateways are usable.
+        Only AVAILABLE NATs can forward traffic.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-nat-gateways   --query 'NatGateways[].{NAT:NatGatewayId,State:State,Subnet:SubnetId}'   --output table
+      </pre>
+    </div>
+
+    <!-- RETURN PATH -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Routing — Detect Asymmetric Paths
+      </div>
+
+      <p class="text-slate-600">
+        Identifies scenarios where outbound traffic works
+        but return traffic fails due to missing or incorrect reverse paths.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-route-tables   --query 'RouteTables[].Routes[].{Destination:DestinationCidrBlock,Target:GatewayId}'   --output table
+      </pre>
+    </div>
+
+    <!-- MULTI-AZ -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Availability Zones — Verify NAT Placement
+      </div>
+
+      <p class="text-slate-600">
+        Confirms NAT Gateways are aligned with Availability Zones.
+        Cross-AZ NAT works but increases blast radius.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-nat-gateways   --query 'NatGateways[].{NAT:NatGatewayId,Subnet:SubnetId,AZ:AvailabilityZone}'   --output table
+      </pre>
+    </div>
+
+  </div>
+
+  <p class="text-xs text-slate-500 italic">
+    If traffic does not flow, the answer is almost always in the route tables.
+    Security controls block — routing decides.
+  </p>
+
+</section>
+
+
+<!-- ============================================================= -->
+<!-- SECTION 6: DEPENDENCY CHAINS & SAFE ORDER -->
+<!-- ============================================================= -->
+
+<section class="space-y-4">
+
+  <h4 class="text-sm font-semibold text-slate-800">
+    🔗 Dependency Chains & Safe Order — IGW → NAT → Routes → Subnets
+  </h4>
+
+  <p class="text-sm text-slate-700">
+    Infrastructure failures often occur not because of what was changed,
+    but because <em>the order of change violated a dependency chain</em>.
+    This section makes those dependencies explicit.
+  </p>
+
+  <p class="text-sm text-slate-700">
+    This section focuses on <em>safe operator sequencing</em>.
+    All commands are read-only and intended for inspection only.
+  </p>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-6 text-sm">
+
+    <!-- CANONICAL ORDER -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Canonical Network Dependency Order
+      </div>
+
+      <p class="text-slate-600">
+        Network components depend on one another in a strict hierarchy.
+        Violating this order causes silent breakage or partial outages.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+Internet Gateway (IGW)
+  → NAT Gateway
+      → Route Tables
+          → Subnets
+              → Workloads
+      </pre>
+    </div>
+
+    <!-- IGW -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Dependency — Internet Gateway First
+      </div>
+
+      <p class="text-slate-600">
+        NAT Gateways and public routes depend on an attached Internet Gateway.
+        Removing the IGW first breaks all downstream egress.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-internet-gateways   --output table
+      </pre>
+    </div>
+
+    <!-- NAT -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Dependency — NAT Gateways Second
+      </div>
+
+      <p class="text-slate-600">
+        NAT Gateways depend on the IGW and are referenced by route tables.
+        Deleting NATs first is safe only after routes are cleared.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-nat-gateways   --query 'NatGateways[].{NAT:NatGatewayId,State:State}'   --output table
+      </pre>
+    </div>
+
+    <!-- ROUTES -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Dependency — Route Tables Third
+      </div>
+
+      <p class="text-slate-600">
+        Route tables bind gateways to subnets.
+        Removing gateways before cleaning routes leaves dangling paths.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-route-tables   --query 'RouteTables[].Routes'   --output table
+      </pre>
+    </div>
+
+    <!-- SUBNETS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Dependency — Subnets Last
+      </div>
+
+      <p class="text-slate-600">
+        Subnets are consumers of routing.
+        They should be modified or deleted only after upstream dependencies
+        are detached and verified.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-subnets   --output table
+      </pre>
+    </div>
+
+    <!-- FAILURE MODES -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Common Failure Modes (Order Violations)
+      </div>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Deleting IGW while NAT routes still exist</li>
+        <li>Deleting NAT before removing private subnet routes</li>
+        <li>Editing subnets without validating effective routes</li>
+        <li>Assuming “unused” means “unreferenced”</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <p class="text-xs text-slate-500 italic">
+    Safe infrastructure changes are about sequencing, not speed.
+    Inspect dependencies first — then act.
+  </p>
+
+</section>
+
+
+<!-- ============================================================= -->
+<!-- SECTION 7: FAILURE DOMAINS & BLAST RADIUS -->
+<!-- ============================================================= -->
+
+<section class="space-y-4">
+
+  <h4 class="text-sm font-semibold text-slate-800">
+    💥 Failure Domains & Blast Radius
+  </h4>
+
+  <p class="text-sm text-slate-700">
+    Not all failures are equal. Some impact a single workload,
+    while others cascade across Availability Zones or entire VPCs.
+    This section helps reason about <em>how far a failure can spread</em>.
+  </p>
+
+  <p class="text-sm text-slate-700">
+    This section focuses on <em>failure containment</em>.
+    All commands are read-only and safe to inspect independently of the UI.
+  </p>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-6 text-sm">
+
+    <!-- FAILURE DOMAIN CONCEPT -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Understand Failure Domains
+      </div>
+
+      <p class="text-slate-600">
+        A failure domain is the smallest boundary within which a failure
+        can occur without affecting unrelated components.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Instance-level failures affect a single workload</li>
+        <li>Subnet-level failures affect all resources in that subnet</li>
+        <li>AZ-level failures affect all subnets in the AZ</li>
+        <li>VPC-level failures affect all workloads</li>
+      </ul>
+    </div>
+
+    <!-- AZ -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Availability Zones — Identify AZ Scope
+      </div>
+
+      <p class="text-slate-600">
+        Confirms how resources are distributed across Availability Zones.
+        Single-AZ concentration increases blast radius.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-subnets   --query 'Subnets[].{Subnet:SubnetId,AZ:AvailabilityZone}'   --output table
+      </pre>
+    </div>
+
+    <!-- NAT -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 NAT Gateways — Assess Egress Blast Radius
+      </div>
+
+      <p class="text-slate-600">
+        NAT Gateways are AZ-scoped.
+        A single NAT serving multiple AZs expands failure impact.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-nat-gateways   --query 'NatGateways[].{NAT:NatGatewayId,AZ:AvailabilityZone}'   --output table
+      </pre>
+    </div>
+
+    <!-- ROUTES -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Route Tables — Shared Dependencies
+      </div>
+
+      <p class="text-slate-600">
+        Route tables shared across multiple subnets increase blast radius.
+        A single route change can impact many workloads.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-route-tables   --query 'RouteTables[].{RouteTable:RouteTableId,Associations:Associations[].SubnetId}'   --output table
+      </pre>
+    </div>
+
+    <!-- IGW -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Internet Gateway — VPC-Wide Impact
+      </div>
+
+      <p class="text-slate-600">
+        The Internet Gateway is a VPC-level dependency.
+        Misconfiguration affects all public and NAT-based traffic.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-internet-gateways   --output table
+      </pre>
+    </div>
+
+    <!-- COMMON RISKS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Common High-Blast-Radius Patterns
+      </div>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Single NAT Gateway used by multiple AZs</li>
+        <li>Single route table associated with many subnets</li>
+        <li>Critical workloads concentrated in one AZ</li>
+        <li>IGW changes without dependency inspection</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <p class="text-xs text-slate-500 italic">
+    Reduce blast radius by design.
+    High availability starts with failure isolation.
+  </p>
+
+</section>
+
+
+<!-- ============================================================= -->
+<!-- SECTION 8: READ-ONLY TROUBLESHOOTING PLAYBOOKS -->
+<!-- ============================================================= -->
+
+<section class="space-y-4">
+
+  <h4 class="text-sm font-semibold text-slate-800">
+    🧭 Read-Only Troubleshooting Playbooks
+  </h4>
+
+  <p class="text-sm text-slate-700">
+    Troubleshooting should never begin with changes.
+    These playbooks provide <em>read-only verification paths</em>
+    to identify root causes before any action is taken.
+  </p>
+
+  <p class="text-sm text-slate-700">
+    This section focuses on <em>safe diagnosis</em>.
+    All commands are read-only and intended for human execution.
+  </p>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-6 text-sm">
+
+    <!-- PLAYBOOK: NO INTERNET -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Playbook — Instance Has No Internet Access
+      </div>
+
+      <p class="text-slate-600">
+        Use this path when workloads cannot reach external endpoints.
+        Do not assume security groups are the cause.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+# Verify route tables
+aws ec2 describe-route-tables --output table
+
+# Verify Internet Gateway
+aws ec2 describe-internet-gateways --output table
+
+# Verify NAT Gateways (private subnets)
+aws ec2 describe-nat-gateways --output table
+      </pre>
+    </div>
+
+    <!-- PLAYBOOK: PARTIAL CONNECTIVITY -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Playbook — Partial or Intermittent Connectivity
+      </div>
+
+      <p class="text-slate-600">
+        Use this path when some resources work while others fail.
+        This usually indicates blast-radius or AZ alignment issues.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+# Verify subnet AZ placement
+aws ec2 describe-subnets   --query 'Subnets[].{Subnet:SubnetId,AZ:AvailabilityZone}'   --output table
+
+# Verify NAT AZ alignment
+aws ec2 describe-nat-gateways   --query 'NatGateways[].{NAT:NatGatewayId,AZ:AvailabilityZone}'   --output table
+      </pre>
+    </div>
+
+    <!-- PLAYBOOK: ROUTING ANOMALIES -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Playbook — Unexpected Routing Behavior
+      </div>
+
+      <p class="text-slate-600">
+        Use this path when traffic flows differently than expected.
+        Routing truth is determined by effective routes, not intent.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+# Inspect effective routes
+aws ec2 describe-route-tables   --query 'RouteTables[].Routes'   --output table
+
+# Identify subnet associations
+aws ec2 describe-route-tables   --query 'RouteTables[].{RouteTable:RouteTableId,Subnets:Associations[].SubnetId}'   --output table
+      </pre>
+    </div>
+
+    <!-- PLAYBOOK: EGRESS FAILURES -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Playbook — NAT or Egress Failures
+      </div>
+
+      <p class="text-slate-600">
+        Use this path when private workloads cannot reach the internet.
+        NAT failures are often dependency or state related.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+# Verify NAT operational state
+aws ec2 describe-nat-gateways   --query 'NatGateways[].{NAT:NatGatewayId,State:State}'   --output table
+
+# Confirm IGW attachment
+aws ec2 describe-internet-gateways --output table
+      </pre>
+    </div>
+
+    <!-- PLAYBOOK: CASCADING IMPACT -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Playbook — Cascading or Widespread Impact
+      </div>
+
+      <p class="text-slate-600">
+        Use this path when many workloads fail simultaneously.
+        This usually indicates VPC-level or shared dependency issues.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+# Inspect shared route tables
+aws ec2 describe-route-tables   --query 'RouteTables[].{RouteTable:RouteTableId,Associations:Associations[].SubnetId}'   --output table
+
+# Inspect IGW scope
+aws ec2 describe-internet-gateways --output table
+      </pre>
+    </div>
+
+  </div>
+
+  <p class="text-xs text-slate-500 italic">
+    Diagnose first. Change later.
+    Most outages are understood before they are fixed.
+  </p>
+
+</section>
+
+
+<!-- ============================================================= -->
+<!-- SECTION 9: SAFE DELETION PRECONDITIONS -->
+<!-- ============================================================= -->
+
+<section class="space-y-4">
+
+  <h4 class="text-sm font-semibold text-slate-800">
+    🛑 Safe Deletion Preconditions
+  </h4>
+
+  <p class="text-sm text-slate-700">
+    Deletions are irreversible. Most infrastructure outages caused by deletion
+    occur because <em>preconditions were not verified</em>.
+    This section defines mandatory checks before removing network resources.
+  </p>
+
+  <p class="text-sm text-slate-700">
+    This section focuses on <em>pre-deletion validation</em>.
+    All commands are read-only and must be executed by a human operator.
+  </p>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-6 text-sm">
+
+    <!-- IGW -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Internet Gateway — Deletion Preconditions
+      </div>
+
+      <p class="text-slate-600">
+        Internet Gateways are VPC-wide dependencies.
+        They must not be deleted while NAT Gateways or default routes exist.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+# Verify IGW attachment
+aws ec2 describe-internet-gateways --output table
+
+# Verify no default routes reference IGW
+aws ec2 describe-route-tables   --query 'RouteTables[].Routes[].GatewayId'   --output table
+      </pre>
+    </div>
+
+    <!-- NAT -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 NAT Gateway — Deletion Preconditions
+      </div>
+
+      <p class="text-slate-600">
+        NAT Gateways are referenced by private subnet routes.
+        Routes must be removed before NAT deletion.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+# Verify NAT references in route tables
+aws ec2 describe-route-tables   --query 'RouteTables[].Routes[].NatGatewayId'   --output table
+
+# Verify NAT operational state
+aws ec2 describe-nat-gateways   --query 'NatGateways[].{NAT:NatGatewayId,State:State}'   --output table
+      </pre>
+    </div>
+
+    <!-- ROUTE TABLE -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Route Table — Deletion Preconditions
+      </div>
+
+      <p class="text-slate-600">
+        Route tables must not be associated with any subnets
+        and must not contain active gateway routes.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+# Verify subnet associations
+aws ec2 describe-route-tables   --query 'RouteTables[].{RouteTable:RouteTableId,Associations:Associations[].SubnetId}'   --output table
+
+# Verify route entries
+aws ec2 describe-route-tables   --query 'RouteTables[].Routes'   --output table
+      </pre>
+    </div>
+
+    <!-- SUBNET -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Subnet — Deletion Preconditions
+      </div>
+
+      <p class="text-slate-600">
+        Subnets must not contain active resources.
+        Deleting a subnet with attached resources will fail or cascade.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+# Verify no instances remain
+aws ec2 describe-instances   --query 'Reservations[].Instances[].SubnetId'   --output table
+
+# Verify no network interfaces remain
+aws ec2 describe-network-interfaces   --query 'NetworkInterfaces[].SubnetId'   --output table
+      </pre>
+    </div>
+
+    <!-- GENERAL RULE -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Universal Deletion Rule
+      </div>
+
+      <p class="text-slate-600">
+        If a resource is referenced anywhere, it is not safe to delete.
+        “Unused” is not the same as “unreferenced”.
+      </p>
+    </div>
+
+  </div>
+
+  <p class="text-xs text-slate-500 italic">
+    Safe deletion is about verification, not confidence.
+    If in doubt — stop.
+  </p>
+
+</section>
+
+
+<!-- ============================================================= -->
+<!-- SECTION 10: CHANGE IMPACT REVIEW CHECKLIST -->
+<!-- ============================================================= -->
+
+<section class="space-y-4">
+
+  <h4 class="text-sm font-semibold text-slate-800">
+    📋 Change Impact Review Checklist
+  </h4>
+
+  <p class="text-sm text-slate-700">
+    Most outages are not caused by bad changes — they are caused by
+    <em>unreviewed impact</em>. This checklist forces explicit reasoning
+    before any infrastructure modification is made.
+  </p>
+
+  <p class="text-sm text-slate-700">
+    This section focuses on <em>pre-change validation</em>.
+    All checks are read-only and must be completed by a human operator.
+  </p>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-6 text-sm">
+
+    <!-- SCOPE -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Scope — What Will Change?
+      </div>
+
+      <p class="text-slate-600">
+        Clearly identify the exact resource being modified.
+        Ambiguous scope leads to unintended impact.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Which resource type is changing?</li>
+        <li>Which specific resource ID?</li>
+        <li>Is the change additive, modifying, or destructive?</li>
+      </ul>
+    </div>
+
+    <!-- DEPENDENCIES -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Dependencies — What Relies on This?
+      </div>
+
+      <p class="text-slate-600">
+        Changes propagate through dependencies.
+        Identify all upstream and downstream references.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+# Inspect route table associations
+aws ec2 describe-route-tables   --query 'RouteTables[].{RouteTable:RouteTableId,Associations:Associations[].SubnetId}'   --output table
+      </pre>
+    </div>
+
+    <!-- BLAST RADIUS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Blast Radius — How Far Can This Spread?
+      </div>
+
+      <p class="text-slate-600">
+        Estimate the maximum possible impact if the change fails.
+        Design should constrain failures, not amplify them.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Single instance?</li>
+        <li>Single subnet?</li>
+        <li>Single AZ?</li>
+        <li>Entire VPC?</li>
+      </ul>
+    </div>
+
+    <!-- REVERSIBILITY -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Reversibility — Can This Be Undone?
+      </div>
+
+      <p class="text-slate-600">
+        If rollback is unclear or impossible, the change carries higher risk.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Is the change reversible?</li>
+        <li>Is there a known rollback path?</li>
+        <li>Is state preserved if reverted?</li>
+      </ul>
+    </div>
+
+    <!-- TIMING -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Timing — When Is This Happening?
+      </div>
+
+      <p class="text-slate-600">
+        Timing does not reduce risk, but it can reduce impact.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Is this during peak traffic?</li>
+        <li>Is monitoring active?</li>
+        <li>Is on-call coverage available?</li>
+      </ul>
+    </div>
+
+    <!-- SIGNALS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Signals — How Will Failure Be Detected?
+      </div>
+
+      <p class="text-slate-600">
+        A change without observability is blind.
+        Define how success and failure will be observed.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Which logs should change?</li>
+        <li>Which metrics should move?</li>
+        <li>Which events indicate success or failure?</li>
+      </ul>
+    </div>
+
+    <!-- FINAL GATE -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Final Gate — Stop Conditions
+      </div>
+
+      <p class="text-slate-600">
+        If any answer is unknown or assumed, the change is not ready.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Unknown dependencies</li>
+        <li>Unclear blast radius</li>
+        <li>No rollback path</li>
+        <li>No observable success signal</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <p class="text-xs text-slate-500 italic">
+    Changes succeed when impact is understood beforehand —
+    not discovered afterward.
+  </p>
+
+</section>
+
+
+<!-- ============================================================= -->
+<!-- SECTION 11: INCIDENT TRIAGE FLOW (SIGNALS → SCOPE → CAUSE) -->
+<!-- ============================================================= -->
+
+<section class="space-y-4">
+
+  <h4 class="text-sm font-semibold text-slate-800">
+    🚨 Incident Triage Flow — Signals → Scope → Cause
+  </h4>
+
+  <p class="text-sm text-slate-700">
+    Effective incident response starts with evidence, not assumptions.
+    This flow enforces a disciplined progression from raw signals,
+    to impact scope, to root cause.
+  </p>
+
+  <p class="text-sm text-slate-700">
+    This section focuses on <em>structured triage</em>.
+    All commands are read-only and intended for human execution.
+  </p>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-6 text-sm">
+
+    <!-- STEP 1: SIGNALS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Step 1 — Identify Signals
+      </div>
+
+      <p class="text-slate-600">
+        Start with raw signals to confirm that an incident is real.
+        Signals describe <em>what is happening</em>, not why.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+# Logs
+aws logs tail /netpilot-ai/backend --since 10m
+
+# Metrics
+aws cloudwatch list-metrics --namespace AWS/EC2 --output table
+
+# Events
+aws events lookup-events --max-results 10 --output table
+      </pre>
+    </div>
+
+    <!-- STEP 2: SCOPE -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Step 2 — Determine Scope
+      </div>
+
+      <p class="text-slate-600">
+        Define how far the incident extends.
+        Scope determines urgency and containment strategy.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Single instance or service?</li>
+        <li>Single subnet or AZ?</li>
+        <li>Multiple AZs or entire VPC?</li>
+      </ul>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+# Verify subnet and AZ distribution
+aws ec2 describe-subnets   --query 'Subnets[].{Subnet:SubnetId,AZ:AvailabilityZone}'   --output table
+      </pre>
+    </div>
+
+    <!-- STEP 3: CONTAINMENT -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Step 3 — Assess Containment
+      </div>
+
+      <p class="text-slate-600">
+        Determine whether the failure is isolated or propagating.
+        Shared dependencies increase blast radius.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+# Identify shared route tables
+aws ec2 describe-route-tables   --query 'RouteTables[].{RouteTable:RouteTableId,Associations:Associations[].SubnetId}'   --output table
+      </pre>
+    </div>
+
+    <!-- STEP 4: CAUSE -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Step 4 — Identify Likely Cause
+      </div>
+
+      <p class="text-slate-600">
+        Use evidence to narrow the cause.
+        Avoid configuration changes until the cause is understood.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Recent changes or deployments?</li>
+        <li>Routing or dependency violations?</li>
+        <li>AZ-specific or regional behavior?</li>
+      </ul>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+# Inspect effective routes
+aws ec2 describe-route-tables   --query 'RouteTables[].Routes'   --output table
+      </pre>
+    </div>
+
+    <!-- STEP 5: DECISION -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Step 5 — Decide Next Action
+      </div>
+
+      <p class="text-slate-600">
+        Only after signals, scope, and cause are clear
+        should corrective action be considered.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Is rollback safer than forward change?</li>
+        <li>Is containment sufficient for now?</li>
+        <li>Is escalation required?</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <p class="text-xs text-slate-500 italic">
+    Incidents are resolved faster when thinking is ordered.
+    Signals first. Scope second. Cause last.
+  </p>
+
+</section>
+
+
+<!-- ============================================================= -->
+<!-- SECTION 12: OPERATIONAL GUARDRAILS & INVARIANTS -->
+<!-- ============================================================= -->
+
+<section class="space-y-4">
+
+  <h4 class="text-sm font-semibold text-slate-800">
+    🧱 Operational Guardrails & Invariants
+  </h4>
+
+  <p class="text-sm text-slate-700">
+    Guardrails define the boundaries of safe operation.
+    Invariants are conditions that must always hold true
+    for the system to remain reliable.
+  </p>
+
+  <p class="text-sm text-slate-700">
+    This section focuses on <em>non-negotiable truths</em>.
+    All checks are read-only and intended for human verification.
+  </p>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-6 text-sm">
+
+    <!-- INVARIANT: ROUTING -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Invariant — Every Subnet Has a Known Route Table
+      </div>
+
+      <p class="text-slate-600">
+        No subnet should rely on assumed routing.
+        Route table associations must be explicit and understood.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-route-tables   --query 'RouteTables[].{RouteTable:RouteTableId,Subnets:Associations[].SubnetId}'   --output table
+      </pre>
+    </div>
+
+    <!-- INVARIANT: EGRESS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Invariant — Egress Paths Are Explicit
+      </div>
+
+      <p class="text-slate-600">
+        Internet access must be intentional.
+        Public subnets use IGW; private subnets use NAT.
+        Mixed or implicit designs violate this invariant.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-route-tables   --query 'RouteTables[].Routes'   --output table
+      </pre>
+    </div>
+
+    <!-- INVARIANT: DEPENDENCIES -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Invariant — Dependency Order Is Preserved
+      </div>
+
+      <p class="text-slate-600">
+        Downstream resources must never outlive upstream dependencies.
+        Violating order creates silent failure modes.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>IGW exists before NAT</li>
+        <li>NAT exists before private routes</li>
+        <li>Routes exist before subnets are relied upon</li>
+      </ul>
+    </div>
+
+    <!-- INVARIANT: BLAST RADIUS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Invariant — Blast Radius Is Intentionally Limited
+      </div>
+
+      <p class="text-slate-600">
+        High-availability systems are designed to fail in small pieces.
+        Shared components increase impact unless explicitly justified.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-nat-gateways   --query 'NatGateways[].{NAT:NatGatewayId,AZ:AvailabilityZone}'   --output table
+      </pre>
+    </div>
+
+    <!-- INVARIANT: OBSERVABILITY -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Invariant — Changes Are Observable
+      </div>
+
+      <p class="text-slate-600">
+        Any meaningful change must produce a signal.
+        If impact cannot be observed, it cannot be trusted.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Logs reflect behavior changes</li>
+        <li>Metrics reflect load or performance shifts</li>
+        <li>Events reflect state transitions</li>
+      </ul>
+    </div>
+
+    <!-- INVARIANT: OWNERSHIP -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Invariant — Ownership Is Clear
+      </div>
+
+      <p class="text-slate-600">
+        Every critical component must have a known owner.
+        Unowned infrastructure is a systemic risk.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-tags   --filters Name=resource-type,Values=vpc,subnet,route-table,natgateway   --output table
+      </pre>
+    </div>
+
+  </div>
+
+  <p class="text-xs text-slate-500 italic">
+    Guardrails prevent mistakes.
+    Invariants prevent disasters.
+  </p>
+
+</section>
+
+
+<!-- ============================================================= -->
+<!-- SECTION 13: POST-INCIDENT REVIEW CHECKLIST -->
+<!-- ============================================================= -->
+
+<section class="space-y-4">
+
+  <h4 class="text-sm font-semibold text-slate-800">
+    🧠 Post-Incident Review Checklist
+  </h4>
+
+  <p class="text-sm text-slate-700">
+    Incidents are expensive teachers. A disciplined review ensures
+    the same failure does not recur. This checklist formalizes
+    learning without assigning blame.
+  </p>
+
+  <p class="text-sm text-slate-700">
+    This section focuses on <em>learning and prevention</em>.
+    All inputs are observational and retrospective.
+  </p>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-6 text-sm">
+
+    <!-- SUMMARY -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Incident Summary
+      </div>
+
+      <p class="text-slate-600">
+        Establish a shared understanding of what happened.
+        Accuracy matters more than narrative.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Start time and end time</li>
+        <li>Detected by whom or what</li>
+        <li>User-visible impact</li>
+        <li>Services and regions affected</li>
+      </ul>
+    </div>
+
+    <!-- DETECTION -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Detection & Signals
+      </div>
+
+      <p class="text-slate-600">
+        Evaluate how the incident was detected
+        and whether signals were timely and sufficient.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Which logs indicated failure?</li>
+        <li>Which metrics deviated?</li>
+        <li>Which events confirmed impact?</li>
+      </ul>
+    </div>
+
+    <!-- RESPONSE -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Response & Triage
+      </div>
+
+      <p class="text-slate-600">
+        Review the triage process and decision flow.
+        Identify delays or unnecessary actions.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Was the triage flow followed?</li>
+        <li>Was scope identified early?</li>
+        <li>Were assumptions challenged?</li>
+      </ul>
+    </div>
+
+    <!-- ROOT CAUSE -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Root Cause Analysis
+      </div>
+
+      <p class="text-slate-600">
+        Identify the true root cause, not the triggering symptom.
+        Focus on system behavior, not individuals.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Configuration error</li>
+        <li>Dependency violation</li>
+        <li>Capacity or scaling limit</li>
+        <li>External service dependency</li>
+      </ul>
+    </div>
+
+    <!-- RECOVERY -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Recovery & Resolution
+      </div>
+
+      <p class="text-slate-600">
+        Examine how service was restored
+        and whether recovery steps were safe and repeatable.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Rollback vs forward fix</li>
+        <li>Time to mitigation</li>
+        <li>Residual risk after recovery</li>
+      </ul>
+    </div>
+
+    <!-- PREVENTION -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Prevention & Follow-Ups
+      </div>
+
+      <p class="text-slate-600">
+        Convert lessons learned into concrete actions.
+        Untracked lessons decay quickly.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Add or improve alerts</li>
+        <li>Strengthen guardrails or invariants</li>
+        <li>Update runbooks and playbooks</li>
+        <li>Improve change review or testing</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <p class="text-xs text-slate-500 italic">
+    Incidents end when services recover.
+    Reliability improves only when lessons are applied.
+  </p>
+
+</section>
+
+
+<!-- ============================================================= -->
+<!-- SECTION 14: KNOWN-GOOD BASELINES & DRIFT DETECTION -->
+<!-- ============================================================= -->
+
+<section class="space-y-4">
+
+  <h4 class="text-sm font-semibold text-slate-800">
+    📐 Known-Good Baselines & Drift Detection
+  </h4>
+
+  <p class="text-sm text-slate-700">
+    Reliability depends on knowing what “normal” looks like.
+    Baselines define the expected state of infrastructure;
+    drift is any deviation from that state.
+  </p>
+
+  <p class="text-sm text-slate-700">
+    This section focuses on <em>state awareness</em>.
+    All commands are read-only and intended for human comparison over time.
+  </p>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-6 text-sm">
+
+    <!-- BASELINE: NETWORK -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Baseline — Network Topology
+      </div>
+
+      <p class="text-slate-600">
+        Capture the known-good structure of the VPC:
+        subnets, route tables, gateways, and AZ layout.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-vpcs --output table
+aws ec2 describe-subnets --output table
+aws ec2 describe-route-tables --output table
+aws ec2 describe-internet-gateways --output table
+aws ec2 describe-nat-gateways --output table
+      </pre>
+    </div>
+
+    <!-- BASELINE: ROUTING -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Baseline — Routing Behavior
+      </div>
+
+      <p class="text-slate-600">
+        Record effective routes and associations.
+        These define actual traffic flow, not design intent.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-route-tables   --query 'RouteTables[].{RouteTable:RouteTableId,Routes:Routes,Associations:Associations[].SubnetId}'   --output json
+      </pre>
+    </div>
+
+    <!-- BASELINE: EGRESS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Baseline — Egress Paths
+      </div>
+
+      <p class="text-slate-600">
+        Establish which subnets use IGW versus NAT.
+        Ambiguous egress is a frequent source of drift.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-route-tables   --query 'RouteTables[].Routes[].{Destination:DestinationCidrBlock,Gateway:GatewayId,NAT:NatGatewayId}'   --output table
+      </pre>
+    </div>
+
+    <!-- DRIFT: CONFIG -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Drift Detection — Configuration Changes
+      </div>
+
+      <p class="text-slate-600">
+        Compare current state against previously recorded baselines.
+        Unexpected differences indicate drift.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+# Re-run baseline commands and compare outputs
+# Look for new, missing, or modified resources
+      </pre>
+    </div>
+
+    <!-- DRIFT: SIGNALS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Drift Detection — Behavioral Signals
+      </div>
+
+      <p class="text-slate-600">
+        Drift often manifests first as behavioral change,
+        not configuration change.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>New error patterns in logs</li>
+        <li>Gradual metric degradation</li>
+        <li>Unexpected or missing events</li>
+      </ul>
+    </div>
+
+    <!-- OWNERSHIP -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Baseline Ownership & Review
+      </div>
+
+      <p class="text-slate-600">
+        Baselines must be owned and reviewed periodically.
+        Stale baselines are indistinguishable from drift.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Who owns the baseline?</li>
+        <li>When was it last reviewed?</li>
+        <li>What changes require baseline updates?</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <p class="text-xs text-slate-500 italic">
+    You cannot detect drift without a baseline.
+    You cannot trust a baseline you do not review.
+  </p>
+
+</section>
+
+
+<!-- ============================================================= -->
+<!-- SECTION 15: OPERATIONAL READINESS SCORECARD -->
+<!-- ============================================================= -->
+
+<section class="space-y-4">
+
+  <h4 class="text-sm font-semibold text-slate-800">
+    🧪 Operational Readiness Scorecard
+  </h4>
+
+  <p class="text-sm text-slate-700">
+    Readiness is not a feeling — it is a collection of verified conditions.
+    This scorecard provides a structured way to assess whether a system
+    is prepared for normal operation, change, and failure.
+  </p>
+
+  <p class="text-sm text-slate-700">
+    This section focuses on <em>human-evaluated readiness</em>.
+    Scores are informational and should guide discussion, not gate automatically.
+  </p>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-6 text-sm">
+
+    <!-- OBSERVABILITY -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Observability Readiness
+      </div>
+
+      <p class="text-slate-600">
+        The system must clearly communicate its state through signals.
+        Lack of visibility reduces confidence in all other scores.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Logs are present and accessible</li>
+        <li>Metrics reflect load and performance</li>
+        <li>Events indicate meaningful state changes</li>
+      </ul>
+    </div>
+
+    <!-- TOPOLOGY -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Topology & Routing Readiness
+      </div>
+
+      <p class="text-slate-600">
+        Traffic flow must be understood and intentional.
+        Unknown routing paths represent unknown risk.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Subnet-to-route-table associations are known</li>
+        <li>Egress paths are explicit (IGW vs NAT)</li>
+        <li>Dependency order is respected</li>
+      </ul>
+    </div>
+
+    <!-- FAILURE -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Failure & Resilience Readiness
+      </div>
+
+      <p class="text-slate-600">
+        The system should fail in predictable, contained ways.
+        Large blast radius indicates low readiness.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>AZ-level isolation exists</li>
+        <li>NAT and routing are AZ-aligned</li>
+        <li>Shared dependencies are intentional</li>
+      </ul>
+    </div>
+
+    <!-- OPERATIONS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Operational Discipline Readiness
+      </div>
+
+      <p class="text-slate-600">
+        Safe systems rely on consistent operational behavior.
+        Process gaps increase incident probability.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Read-only troubleshooting precedes changes</li>
+        <li>Dependency order is checked before deletion</li>
+        <li>Change impact is reviewed explicitly</li>
+      </ul>
+    </div>
+
+    <!-- RECOVERY -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Recovery & Learning Readiness
+      </div>
+
+      <p class="text-slate-600">
+        Recovery speed matters, but learning matters more.
+        Systems improve only when incidents improve them.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Incident triage flow is known and followed</li>
+        <li>Post-incident reviews are completed</li>
+        <li>Baselines are updated after change</li>
+      </ul>
+    </div>
+
+    <!-- SCORING -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Score Interpretation
+      </div>
+
+      <p class="text-slate-600">
+        Use a simple qualitative scale for discussion:
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li><strong>High</strong> — Conditions verified and stable</li>
+        <li><strong>Medium</strong> — Known gaps with mitigations</li>
+        <li><strong>Low</strong> — Unknowns or unverified assumptions</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <p class="text-xs text-slate-500 italic">
+    Readiness is not perfection.
+    It is knowing where risk lives before it finds you.
+  </p>
+
+</section>
+
+
+<!-- ============================================================= -->
+<!-- SECTION 16: CONTINUOUS IMPROVEMENT LOOP -->
+<!-- ============================================================= -->
+
+<section class="space-y-4">
+
+  <h4 class="text-sm font-semibold text-slate-800">
+    🔁 Continuous Improvement Loop
+  </h4>
+
+  <p class="text-sm text-slate-700">
+    Operational excellence is not a static achievement.
+    It is the result of repeated learning cycles that
+    turn incidents, changes, and drift into durable improvement.
+  </p>
+
+  <p class="text-sm text-slate-700">
+    This section focuses on <em>institutional learning</em>.
+    The loop is human-driven and reinforced through practice.
+  </p>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-6 text-sm">
+
+    <!-- STEP 1 -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Step 1 — Observe
+      </div>
+
+      <p class="text-slate-600">
+        Capture signals from normal operation, incidents,
+        and change activity. Observation precedes interpretation.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Logs, metrics, and events</li>
+        <li>Change outcomes</li>
+        <li>User-visible behavior</li>
+      </ul>
+    </div>
+
+    <!-- STEP 2 -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Step 2 — Analyze
+      </div>
+
+      <p class="text-slate-600">
+        Analyze signals to identify patterns, weaknesses,
+        and repeated sources of risk.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Recurring incident types</li>
+        <li>Common dependency failures</li>
+        <li>Operational bottlenecks</li>
+      </ul>
+    </div>
+
+    <!-- STEP 3 -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Step 3 — Improve
+      </div>
+
+      <p class="text-slate-600">
+        Translate analysis into concrete improvements.
+        Improvements must be explicit to persist.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Strengthen guardrails or invariants</li>
+        <li>Update runbooks and playbooks</li>
+        <li>Refine change review criteria</li>
+      </ul>
+    </div>
+
+    <!-- STEP 4 -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Step 4 — Validate
+      </div>
+
+      <p class="text-slate-600">
+        Verify that improvements have the intended effect.
+        Validation prevents false confidence.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Re-evaluate readiness scorecard</li>
+        <li>Re-check baselines</li>
+        <li>Confirm signals reflect improvement</li>
+      </ul>
+    </div>
+
+    <!-- STEP 5 -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🟢 Step 5 — Reinforce
+      </div>
+
+      <p class="text-slate-600">
+        Ensure improvements become part of normal operation.
+        Unreinforced changes decay over time.
+      </p>
+
+      <ul class="list-disc list-outside pl-5 text-slate-600 space-y-1">
+        <li>Document decisions and rationale</li>
+        <li>Share lessons across teams</li>
+        <li>Schedule periodic review</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <p class="text-xs text-slate-500 italic">
+    Reliability is not maintained by avoiding failure,
+    but by learning faster than failure repeats.
+  </p>
+
+</section>
+
+
+<!-- ================= TROUBLESHOOTING & VERIFICATION ================= -->
+<div class="space-y-6">
+
+  <h5 class="text-sm font-semibold text-slate-800">
+    🧪 Troubleshooting & Verification
+  </h5>
+
+  <p class="text-sm text-slate-600">
+    Read-only diagnostic commands used to verify system health,
+    permissions, event flow, and data ingestion when the UI
+    appears incomplete or out of sync.
+  </p>
+
+  <!-- ================= COMMAND: VERIFY BACKEND HEALTH ================= -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      Verify Backend API Health
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Confirms that the NetPilot backend service is running
+      and responding to requests.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  curl http://localhost:8000/api/v1/health
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: JSON response indicating service health.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Local-only health check. No AWS interaction.
+    </div>
+
+  </div>
+
+  <!-- ================= COMMAND: VERIFY AWS IDENTITY ================= -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      Verify AWS Caller Identity
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Displays the AWS account, user, or role currently in use.
+      Useful for confirming permissions and environment context.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws sts get-caller-identity \
+    --output table
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: Account ID, ARN, and user or role name.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Identity inspection does not assume or modify roles.
+    </div>
+
+  </div>
+
+  <!-- ================= COMMAND: VERIFY REGION CONTEXT ================= -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      Verify AWS Region Context
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Confirms the default AWS region used by the CLI.
+      Region mismatches are a common cause of missing data.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws configure get region
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: Region name (for example, us-east-1).
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Region is resolved via AWS CLI configuration.
+    </div>
+
+  </div>
+
+  <!-- ================= COMMAND: VERIFY EVENT FLOW ================= -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      Verify Event Flow (EventBridge)
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Confirms that events are being emitted and recorded
+      by EventBridge.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws events lookup-events \
+    --max-results 5 \
+    --output table
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: Recent events with timestamps and sources.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Event availability depends on retention settings.
+    </div>
+
+  </div>
+
+  <!-- ================= COMMAND: VERIFY LOG INGESTION ================= -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      Verify Log Ingestion
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Checks whether logs are actively being written
+      to CloudWatch Logs.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws logs tail /netpilot-ai/backend \
+    --since 5m
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: Recent log entries or empty output if idle.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Empty output does not always indicate failure.
+    </div>
+
+  </div>
+
+  <!-- ================= COMMAND: VERIFY METRIC AVAILABILITY ================= -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      Verify Metric Availability
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Confirms that metrics exist for a service or resource.
+      Useful when dashboards show no data.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws cloudwatch list-metrics \
+    --namespace AWS/EC2 \
+    --output table
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: Table of available metric definitions.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Metric publishing may have inherent delay.
+    </div>
+
+  </div>
+
+  <!-- ================= COMMAND: VERIFY SQS BACKLOG ================= -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      Verify SQS Message Backlog
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Checks whether messages are accumulating in an SQS queue,
+      which may indicate downstream processing delays.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws sqs get-queue-attributes \
+    --queue-url &lt;QUEUE_URL&gt; \
+    --attribute-names ApproximateNumberOfMessages \
+                      ApproximateNumberOfMessagesNotVisible \
+    --output table
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: Approximate visible and in-flight message counts.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Message counts are approximate by design.
+    </div>
+  </div>
+</div>
+
+
+<!-- ================= LOGS ================= -->
+<div class="space-y-4">
+
+  <h5 class="text-sm font-semibold text-slate-800">
+    📄 Logs (CloudWatch Logs)
+  </h5>
+
+  <p class="text-sm text-slate-600">
+    Commands for inspecting CloudWatch Logs used by NetPilot
+    to display application and service activity.
+  </p>
+
+  <!-- LOG COMMAND: LIST LOG GROUPS -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      List Log Groups
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Lists all CloudWatch Log Groups in the current region.
+      This verifies that logging destinations exist.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+      aws logs describe-log-groups \
+        --output table
+        </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: Table of log group names and retention settings.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Read-only inspection command. No resources are modified.
+    </div>
+  </div>
+  <!-- ================= LOGS ================= -->
+  <div class="space-y-6">
+
+    <h5 class="text-sm font-semibold text-slate-800">
+      📄 Logs (CloudWatch Logs)
+    </h5>
+
+    <p class="text-sm text-slate-600">
+      Read-only commands for inspecting CloudWatch Logs.
+      These commands help verify log ingestion, activity, and availability
+      independent of the UI.
+    </p>
+
+    <!-- ================= COMMAND: LIST LOG GROUPS ================= -->
+    <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+      <div class="font-medium text-slate-800 text-sm">
+        List Log Groups
+      </div>
+
+      <p class="text-sm text-slate-600">
+        Lists all CloudWatch Log Groups in the current region.
+        Use this to confirm that services are successfully creating log destinations.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+    aws logs describe-log-groups \
+      --output table
+        </pre>
+
+      <div class="text-xs text-slate-500">
+        Expected output: Table of log group names and retention settings.
+      </div>
+
+      <div class="text-xs italic text-slate-400">
+        Read-only inspection command. No resources are modified.
+      </div>
+
+    </div>
+
+    <!-- ================= COMMAND: FILTER LOG GROUPS ================= -->
+    <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+      <div class="font-medium text-slate-800 text-sm">
+        Filter Log Groups by Prefix
+      </div>
+
+      <p class="text-sm text-slate-600">
+        Lists log groups matching a specific prefix.
+        Useful for large accounts or verifying naming conventions.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+    aws logs describe-log-groups \
+      --log-group-name-prefix /netpilot \
+      --output table
+        </pre>
+
+      <div class="text-xs text-slate-500">
+        Expected output: Filtered table of matching log groups.
+      </div>
+
+      <div class="text-xs italic text-slate-400">
+        Safe, read-only filter operation.
+      </div>
+
+    </div>
+
+    <!-- ================= COMMAND: LIST LOG STREAMS ================= -->
+    <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+      <div class="font-medium text-slate-800 text-sm">
+        List Log Streams
+      </div>
+
+      <p class="text-sm text-slate-600">
+        Displays log streams within a specific log group.
+        Recent timestamps indicate active log ingestion.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+    aws logs describe-log-streams \
+      --log-group-name /netpilot-ai/backend \
+      --order-by LastEventTime \
+      --descending \
+      --output table
+        </pre>
+
+      <div class="text-xs text-slate-500">
+        Expected output: Log stream names with last event timestamps.
+      </div>
+
+      <div class="text-xs italic text-slate-400">
+        No log data is modified or deleted.
+      </div>
+
+    </div>
+
+    <!-- ================= COMMAND: GET LOG EVENTS ================= -->
+    <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+      <div class="font-medium text-slate-800 text-sm">
+        Retrieve Recent Log Events
+      </div>
+
+      <p class="text-sm text-slate-600">
+        Retrieves recent log entries from a specific log stream.
+        Useful for spot-checking log content.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+    aws logs get-log-events \
+      --log-group-name /netpilot-ai/backend \
+      --log-stream-name &lt;LOG_STREAM_NAME&gt; \
+      --limit 20 \
+      --output json
+        </pre>
+
+      <div class="text-xs text-slate-500">
+        Expected output: JSON array of log events with timestamps and messages.
+      </div>
+
+      <div class="text-xs italic text-slate-400">
+        Replace &lt;LOG_STREAM_NAME&gt; with a stream name from the previous command.
+      </div>
+
+    </div>
+
+    <!-- ================= COMMAND: TAIL LOGS ================= -->
+    <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+      <div class="font-medium text-slate-800 text-sm">
+        Tail Logs (Near Real-Time)
+      </div>
+
+      <p class="text-sm text-slate-600">
+        Streams new log events as they arrive.
+        Best for confirming live backend or service activity.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+    aws logs tail /netpilot-ai/backend \
+      --since 10m \
+      --follow
+        </pre>
+
+      <div class="text-xs text-slate-500">
+        Expected output: Continuous log lines as events are written.
+      </div>
+
+      <div class="text-xs italic text-slate-400">
+        Streaming is read-only and does not affect log retention.
+      </div>
+
+    </div>
+
+    <!-- ================= COMMAND: FILTER LOG EVENTS ================= -->
+    <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+      <div class="font-medium text-slate-800 text-sm">
+        Filter Log Events by Pattern
+      </div>
+
+      <p class="text-sm text-slate-600">
+        Searches log events for specific keywords or patterns,
+        such as errors or warnings.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+    aws logs filter-log-events \
+      --log-group-name /netpilot-ai/backend \
+      --filter-pattern "ERROR" \
+      --limit 20 \
+      --output json
+        </pre>
+
+      <div class="text-xs text-slate-500">
+        Expected output: JSON array of matching log events.
+      </div>
+
+      <div class="text-xs italic text-slate-400">
+        Filtering does not alter stored log data.
+      </div>
+
+    </div>
+
+    <!-- ================= COMMAND: CHECK RETENTION ================= -->
+    <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+      <div class="font-medium text-slate-800 text-sm">
+        Verify Log Retention Settings
+      </div>
+
+      <p class="text-sm text-slate-600">
+        Displays log retention policies for all log groups.
+        Useful for compliance and cost verification.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+    aws logs describe-log-groups \
+      --query 'logGroups[*].[logGroupName,retentionInDays]' \
+      --output table
+        </pre>
+
+      <div class="text-xs text-slate-500">
+        Expected output: Log group names with retention periods (if set).
+      </div>
+
+      <div class="text-xs italic text-slate-400">
+        Blank retention values indicate indefinite storage.
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ================= ALERTS ================= -->
+<div class="space-y-6">
+
+  <h5 class="text-sm font-semibold text-slate-800">
+    🚨 Alerts (CloudWatch Alarms)
+  </h5>
+
+  <p class="text-sm text-slate-600">
+    Read-only commands for inspecting CloudWatch Alarms.
+    These commands help verify alarm existence, state, history,
+    and configuration independent of the UI.
+  </p>
+
+  <!-- ================= COMMAND: LIST ALARMS ================= -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      List Alarms
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Lists all CloudWatch alarms in the current region.
+      Use this to confirm that alerting rules exist.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws cloudwatch describe-alarms \
+    --output table
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: Table of alarm names, states, and metrics.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Read-only inspection command. No alarms are modified.
+    </div>
+
+  </div>
+
+  <!-- ================= COMMAND: FILTER ALARMS BY STATE ================= -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      Filter Alarms by State
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Displays alarms in a specific state, such as ALARM or OK.
+      Useful for quickly identifying active issues.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws cloudwatch describe-alarms \
+    --state-value ALARM \
+    --output table
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: Table of alarms currently in the selected state.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      State filtering does not change alarm behavior.
+    </div>
+
+  </div>
+
+  <!-- ================= COMMAND: DESCRIBE SINGLE ALARM ================= -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      Inspect Alarm Configuration
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Displays the full configuration of a specific alarm,
+      including thresholds, metrics, and evaluation periods.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws cloudwatch describe-alarms \
+    --alarm-names &lt;ALARM_NAME&gt; \
+    --output json
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: JSON description of the alarm configuration.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Replace &lt;ALARM_NAME&gt; with a valid alarm name.
+    </div>
+
+  </div>
+
+  <!-- ================= COMMAND: ALARM HISTORY ================= -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      View Alarm History
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Retrieves recent state transitions and actions
+      for a specific alarm.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws cloudwatch describe-alarm-history \
+    --alarm-name &lt;ALARM_NAME&gt; \
+    --history-item-type StateUpdate \
+    --max-items 10 \
+    --output table
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: Table of recent alarm state changes.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      History inspection does not trigger notifications.
+    </div>
+
+  </div>
+
+  <!-- ================= COMMAND: METRIC ALARMS ONLY ================= -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      List Metric Alarms
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Displays only metric-based alarms.
+      Useful when composite alarms are also present.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws cloudwatch describe-alarms \
+    --alarm-types MetricAlarm \
+    --output table
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: Table of metric alarms.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Composite alarms are excluded from this view.
+    </div>
+
+  </div>
+
+  <!-- ================= COMMAND: VERIFY ACTIONS ================= -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      Verify Alarm Actions
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Checks which notification actions are attached to alarms,
+      such as SNS topics.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws cloudwatch describe-alarms \
+    --query 'MetricAlarms[*].[AlarmName,AlarmActions]' \
+    --output table
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: Alarm names with configured actions.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Action inspection does not invoke notifications.
+    </div>
+  </div>
+</div>
+
+<!-- ================= METRICS ================= -->
+<div class="space-y-6">
+
+  <h5 class="text-sm font-semibold text-slate-800">
+    📊 Metrics (CloudWatch Metrics)
+  </h5>
+
+  <p class="text-sm text-slate-600">
+    Read-only commands for inspecting CloudWatch Metrics.
+    These commands help verify metric availability, namespaces,
+    dimensions, and data points independent of the UI.
+  </p>
+
+  <!-- ================= COMMAND: LIST METRIC NAMESPACES ================= -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      List Metric Namespaces
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Lists all available metric namespaces in the current region.
+      Useful for confirming that services are publishing metrics.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws cloudwatch list-metrics \
+    --query 'Metrics[*].Namespace' \
+    --output text
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: List of metric namespaces (may contain duplicates).
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Namespace listing is read-only and does not retrieve metric values.
+    </div>
+
+  </div>
+
+  <!-- ================= COMMAND: LIST METRICS IN NAMESPACE ================= -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      List Metrics in a Namespace
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Displays metrics published under a specific namespace.
+      Helps verify that expected metrics exist.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws cloudwatch list-metrics \
+    --namespace AWS/EC2 \
+    --output table
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: Table of metric names and dimensions.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Replace <span class="font-mono">AWS/EC2</span> with the desired namespace.
+    </div>
+
+  </div>
+
+  <!-- ================= COMMAND: FILTER METRICS BY NAME ================= -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      Filter Metrics by Name
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Filters metrics by metric name within a namespace.
+      Useful for identifying a specific signal.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws cloudwatch list-metrics \
+    --namespace AWS/EC2 \
+    --metric-name CPUUtilization \
+    --output table
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: Matching metric definitions with dimensions.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Listing metrics does not retrieve datapoints.
+    </div>
+
+  </div>
+
+  <!-- ================= COMMAND: GET METRIC STATISTICS ================= -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      Retrieve Metric Statistics
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Retrieves aggregated datapoints for a metric over a time range.
+      Useful for verifying metric values and trends.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws cloudwatch get-metric-statistics \
+    --namespace AWS/EC2 \
+    --metric-name CPUUtilization \
+    --statistics Average \
+    --period 300 \
+    --start-time 2026-01-15T00:00:00Z \
+    --end-time 2026-01-15T01:00:00Z \
+    --output json
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: JSON datapoints with timestamps and values.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Time range and dimensions must match published metric data.
+    </div>
+
+  </div>
+
+  <!-- ================= COMMAND: GET METRIC DATA ================= -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      Retrieve Metric Data (Multiple Metrics)
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Retrieves datapoints for one or more metrics using metric queries.
+      Recommended for dashboards and batch inspection.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws cloudwatch get-metric-data \
+    --metric-data-queries file://metric-queries.json \
+    --start-time 2026-01-15T00:00:00Z \
+    --end-time 2026-01-15T01:00:00Z \
+    --output json
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: JSON metric results for each query.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Metric queries are defined externally for clarity and reuse.
+    </div>
+
+  </div>
+
+  <!-- ================= COMMAND: VERIFY METRIC DELAY ================= -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      Verify Metric Publishing Delay
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Checks whether metrics are being published with delay.
+      Useful when UI appears out of sync.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws cloudwatch get-metric-statistics \
+    --namespace AWS/EC2 \
+    --metric-name CPUUtilization \
+    --statistics Maximum \
+    --period 300 \
+    --start-time 2026-01-15T00:55:00Z \
+    --end-time 2026-01-15T01:00:00Z \
+    --output json
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: Recent datapoints or empty result if delayed.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      CloudWatch metrics may have inherent publishing latency.
+    </div>
+  </div>
+</div>
+
+<!-- ================= EVENTS ================= -->
+<div class="space-y-6">
+
+  <h5 class="text-sm font-semibold text-slate-800">
+    📡 Events (EventBridge, SQS, SNS)
+  </h5>
+
+  <p class="text-sm text-slate-600">
+    Read-only commands for inspecting AWS event flow.
+    These commands help verify EventBridge rules, targets,
+    and downstream messaging (SQS / SNS) independent of the UI.
+  </p>
+
+  <!-- ================= COMMAND: LIST EVENTBRIDGE RULES ================= -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      List EventBridge Rules
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Lists all EventBridge rules in the current region.
+      Use this to confirm that event sources and routing rules exist.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws events list-rules \
+    --output table
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: Table of rule names, states, and event buses.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Read-only inspection command. No rules are modified.
+    </div>
+
+  </div>
+
+  <!-- ================= COMMAND: FILTER RULES BY PREFIX ================= -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      Filter EventBridge Rules by Prefix
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Displays rules matching a specific name prefix.
+      Useful for identifying NetPilot-managed rules.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws events list-rules \
+    --name-prefix netpilot \
+    --output table
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: Filtered table of matching rules.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Prefix filtering does not affect rule execution.
+    </div>
+
+  </div>
+
+  <!-- ================= COMMAND: LIST RULE TARGETS ================= -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      List EventBridge Rule Targets
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Displays targets attached to a specific EventBridge rule,
+      such as SQS queues, SNS topics, or Lambda functions.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws events list-targets-by-rule \
+    --rule &lt;RULE_NAME&gt; \
+    --output table
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: Table of rule targets and ARNs.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Replace &lt;RULE_NAME&gt; with an existing rule name.
+    </div>
+
+  </div>
+
+  <!-- ================= COMMAND: LOOKUP RECENT EVENTS ================= -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      Lookup Recent Events
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Retrieves recent events recorded by EventBridge.
+      Useful for confirming that events are being emitted.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws events lookup-events \
+    --max-results 10 \
+    --output table
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: Table of recent events with timestamps and sources.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Event history availability depends on EventBridge retention.
+    </div>
+
+  </div>
+
+  <!-- ================= COMMAND: RECEIVE SQS MESSAGES ================= -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      Receive Messages from SQS Queue
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Retrieves messages from an SQS queue used as an event target.
+      This helps verify end-to-end event delivery.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws sqs receive-message \
+    --queue-url &lt;QUEUE_URL&gt; \
+    --max-number-of-messages 5 \
+    --wait-time-seconds 1 \
+    --output json
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: JSON array of messages (if available).
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Receiving messages does not delete them unless explicitly requested.
+    </div>
+
+  </div>
+
+  <!-- ================= COMMAND: PEEK SQS ATTRIBUTES ================= -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      Inspect SQS Queue Attributes
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Displays message counts and queue state.
+      Useful for diagnosing backlogs or delivery delays.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws sqs get-queue-attributes \
+    --queue-url &lt;QUEUE_URL&gt; \
+    --attribute-names ApproximateNumberOfMessages \
+                      ApproximateNumberOfMessagesNotVisible \
+    --output table
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: Approximate message counts.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Message counts are approximate by design.
+    </div>
+
+  </div>
+
+  <!-- ================= COMMAND: VERIFY SNS TOPICS ================= -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+    <div class="font-medium text-slate-800 text-sm">
+      List SNS Topics
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Lists SNS topics used for notifications or event fan-out.
+      Helps verify alerting and messaging configuration.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws sns list-topics \
+    --output table
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: Table of SNS topic ARNs.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Listing topics does not publish or modify messages.
+    </div>
+  </div>
+</div>
+
+<!-- ================= NETWORK INVENTORY ================= -->
+<div class="space-y-6">
+
+  <h5 class="text-sm font-semibold text-slate-800">
+    🌐 Network Inventory (VPC, Subnets, Routing, Gateways)
+  </h5>
+
+  <p class="text-sm text-slate-600">
+    Read-only commands for inspecting AWS network resources.
+    These commands verify network topology, routing, and connectivity
+    components independent of the UI.
+  </p>
+
+  <!-- ================= VPCS ================= -->
+  <div class="space-y-4">
+
+    <h6 class="text-sm font-semibold text-slate-700">
+      VPCs
+    </h6>
+
+    <!-- LIST VPCS -->
+    <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+      <div class="font-medium text-slate-800 text-sm">List VPCs</div>
+      <p class="text-sm text-slate-600">
+        Displays all Virtual Private Clouds in the current region.
+        Confirms VPC existence and CIDR allocation.
+      </p>
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws ec2 describe-vpcs \
+    --query 'Vpcs[*].[VpcId,CidrBlock,IsDefault,State]' \
+    --output table
+        </pre>
+      <div class="text-xs text-slate-500">
+        Expected output: Table of VPC IDs, CIDR blocks, and default status.
+      </div>
+      <div class="text-xs italic text-slate-400">
+        Read-only inspection. No network resources are modified.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================= SUBNETS ================= -->
+  <div class="space-y-4">
+
+    <h6 class="text-sm font-semibold text-slate-700">
+      Subnets
+    </h6>
+
+    <!-- LIST SUBNETS -->
+    <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+      <div class="font-medium text-slate-800 text-sm">List Subnets</div>
+      <p class="text-sm text-slate-600">
+        Displays all subnets and their availability zones.
+        Useful for verifying subnet layout.
+      </p>
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws ec2 describe-subnets \
+    --query 'Subnets[*].[SubnetId,VpcId,CidrBlock,AvailabilityZone]' \
+    --output table
+        </pre>
+      <div class="text-xs text-slate-500">
+        Expected output: Table of subnets with CIDR blocks and AZs.
+      </div>
+      <div class="text-xs italic text-slate-400">
+        Read-only network inspection.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================= ROUTE TABLES ================= -->
+  <div class="space-y-4">
+
+    <h6 class="text-sm font-semibold text-slate-700">
+      Route Tables
+    </h6>
+
+    <!-- LIST ROUTE TABLES -->
+    <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+      <div class="font-medium text-slate-800 text-sm">List Route Tables</div>
+      <p class="text-sm text-slate-600">
+        Displays route tables and their associated VPCs.
+        Confirms routing configuration presence.
+      </p>
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws ec2 describe-route-tables \
+    --query 'RouteTables[*].[RouteTableId,VpcId]' \
+    --output table
+        </pre>
+      <div class="text-xs text-slate-500">
+        Expected output: Table of route table IDs and VPC associations.
+      </div>
+      <div class="text-xs italic text-slate-400">
+        Routes are not modified or applied.
+      </div>
+    </div>
+
+    <!-- INSPECT ROUTES -->
+    <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+      <div class="font-medium text-slate-800 text-sm">Inspect Routes</div>
+      <p class="text-sm text-slate-600">
+        Displays detailed routes within a specific route table.
+        Useful for validating internet or NAT routing.
+      </p>
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws ec2 describe-route-tables \
+    --route-table-ids &lt;ROUTE_TABLE_ID&gt; \
+    --output json
+        </pre>
+      <div class="text-xs text-slate-500">
+        Expected output: JSON route definitions.
+      </div>
+      <div class="text-xs italic text-slate-400">
+        Replace &lt;ROUTE_TABLE_ID&gt; with a valid route table ID.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================= INTERNET GATEWAYS ================= -->
+  <div class="space-y-4">
+
+    <h6 class="text-sm font-semibold text-slate-700">
+      Internet Gateways
+    </h6>
+
+    <!-- LIST IGWS -->
+    <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+      <div class="font-medium text-slate-800 text-sm">List Internet Gateways</div>
+      <p class="text-sm text-slate-600">
+        Displays all Internet Gateways and their attachments.
+        Confirms internet access configuration.
+      </p>
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws ec2 describe-internet-gateways \
+    --query 'InternetGateways[*].[InternetGatewayId,Attachments]' \
+    --output table
+        </pre>
+      <div class="text-xs text-slate-500">
+        Expected output: IGW IDs and attached VPCs.
+      </div>
+      <div class="text-xs italic text-slate-400">
+        Gateway attachments are not modified.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================= NAT GATEWAYS ================= -->
+  <div class="space-y-4">
+
+    <h6 class="text-sm font-semibold text-slate-700">
+      NAT Gateways
+    </h6>
+
+    <!-- LIST NAT GATEWAYS -->
+    <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+      <div class="font-medium text-slate-800 text-sm">List NAT Gateways</div>
+      <p class="text-sm text-slate-600">
+        Displays NAT Gateways and their operational state.
+        Useful for verifying outbound internet paths.
+      </p>
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws ec2 describe-nat-gateways \
+    --query 'NatGateways[*].[NatGatewayId,VpcId,SubnetId,State]' \
+    --output table
+        </pre>
+      <div class="text-xs text-slate-500">
+        Expected output: Table of NAT Gateways with state and subnet.
+      </div>
+      <div class="text-xs italic text-slate-400">
+        NAT resources are not created or deleted.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= SECURITY GROUPS ================= -->
+<div class="space-y-4">
+
+  <h6 class="text-sm font-semibold text-slate-700">
+    Security Groups
+  </h6>
+
+  <!-- LIST SECURITY GROUPS -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+    <div class="font-medium text-slate-800 text-sm">
+      List Security Groups
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Displays all security groups in the current region along with their VPC
+      associations. Useful for verifying segmentation and isolation boundaries.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws ec2 describe-security-groups \
+    --query 'SecurityGroups[*].[GroupId,GroupName,VpcId]' \
+    --output table
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: Table of security group IDs, names, and VPC IDs.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Read-only inspection. No rules are modified.
+    </div>
+  </div>
+
+  <!-- INSPECT SECURITY GROUP RULES -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+    <div class="font-medium text-slate-800 text-sm">
+      Inspect Security Group Rules
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Displays inbound and outbound rules for a specific security group.
+      Useful for validating allowed traffic.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws ec2 describe-security-groups \
+    --group-ids &lt;SECURITY_GROUP_ID&gt; \
+    --output json
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: JSON description of ingress and egress rules.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Replace &lt;SECURITY_GROUP_ID&gt; with a valid group ID.
+    </div>
+  </div>
+</div>
+
+<!-- ================= NETWORK INTERFACES ================= -->
+<div class="space-y-4">
+
+  <h6 class="text-sm font-semibold text-slate-700">
+    Network Interfaces (ENIs)
+  </h6>
+
+  <!-- LIST ENIS -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+    <div class="font-medium text-slate-800 text-sm">
+      List Network Interfaces
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Displays all Elastic Network Interfaces in the region.
+      Useful for verifying attachments to EC2 instances, NAT gateways,
+      and load balancers.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws ec2 describe-network-interfaces \
+    --query 'NetworkInterfaces[*].[NetworkInterfaceId,SubnetId,VpcId,Status]' \
+    --output table
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: Table of ENI IDs, subnets, VPCs, and status.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Network interfaces are not attached or detached by this command.
+    </div>
+  </div>
+
+  <!-- INSPECT ENI DETAILS -->
+  <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+    <div class="font-medium text-slate-800 text-sm">
+      Inspect Network Interface Details
+    </div>
+
+    <p class="text-sm text-slate-600">
+      Displays detailed configuration for a specific ENI,
+      including private IPs, attachments, and security groups.
+    </p>
+
+    <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+  aws ec2 describe-network-interfaces \
+    --network-interface-ids &lt;ENI_ID&gt; \
+    --output json
+      </pre>
+
+    <div class="text-xs text-slate-500">
+      Expected output: JSON description of the ENI configuration.
+    </div>
+
+    <div class="text-xs italic text-slate-400">
+      Replace &lt;ENI_ID&gt; with a valid network interface ID.
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================= -->
+<!-- EXECUTION COMPANION (CLI-FIRST, READ-ONLY) -->
+<!-- ============================================================= -->
+
+<section class="space-y-4 mt-8">
+
+  <h4 class="text-sm font-semibold text-slate-800">
+    🔴 Execution Companion — CLI-First (Read-Only)
+  </h4>
+
+  <p class="text-sm text-slate-700">
+    This section provides <strong>execution-oriented AWS CLI commands</strong>
+    for operators who prefer terminal workflows.
+    These commands <strong>do not execute automatically</strong> and are
+    <strong>not run by the UI</strong>.
+  </p>
+
+  <p class="text-sm text-slate-700">
+    🔴 <strong>Operator Responsibility:</strong>
+    You are fully responsible for understanding, validating, and executing
+    these commands. Incorrect execution can cause service impact.
+  </p>
+
+  <div class="bg-red-50 border border-red-200 rounded-lg p-4 space-y-6 text-sm">
+
+    <!-- VPC -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect VPC State
+      </div>
+
+      <p class="text-slate-600">
+        Use this to confirm VPC existence, CIDR ranges, and default status.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-vpcs   --query 'Vpcs[].{VPC:VpcId,CIDR:CidrBlock,State:State,IsDefault:IsDefault}'   --output table
+      </pre>
+
+      <div class="text-xs text-red-600">
+        🔴 Read-only inspection. No changes are performed.
+      </div>
+    </div>
+
+    <!-- SUBNETS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect Subnets
+      </div>
+
+      <p class="text-slate-600">
+        Confirms subnet CIDRs, AZ placement, and public IP behavior.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-subnets   --query 'Subnets[].{Subnet:SubnetId,VPC:VpcId,AZ:AvailabilityZone,CIDR:CidrBlock,PublicIP:MapPublicIpOnLaunch}'   --output table
+      </pre>
+    </div>
+
+    <!-- ROUTE TABLES -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect Route Tables
+      </div>
+
+      <p class="text-slate-600">
+        Reveals effective routing and subnet associations.
+        This is the source of routing truth.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-route-tables   --query 'RouteTables[].{RTB:RouteTableId,Routes:Routes,Associations:Associations[].SubnetId}'   --output json
+      </pre>
+
+      <div class="text-xs text-red-600">
+        🔴 Misinterpreting routes leads to incorrect conclusions.
+      </div>
+    </div>
+
+    <!-- INTERNET GATEWAY -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect Internet Gateways
+      </div>
+
+      <p class="text-slate-600">
+        Confirms IGW attachment and scope.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-internet-gateways   --query 'InternetGateways[].{IGW:InternetGatewayId,Attachments:Attachments}'   --output table
+      </pre>
+    </div>
+
+    <!-- NAT GATEWAYS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect NAT Gateways
+      </div>
+
+      <p class="text-slate-600">
+        Confirms NAT state, AZ placement, and elasticity.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-nat-gateways   --query 'NatGateways[].{NAT:NatGatewayId,State:State,AZ:AvailabilityZone,Subnet:SubnetId}'   --output table
+      </pre>
+
+      <div class="text-xs text-red-600">
+        🔴 NAT deletion or failure impacts all private egress.
+      </div>
+    </div>
+
+    <!-- SECURITY GROUPS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect Security Groups
+      </div>
+
+      <p class="text-slate-600">
+        Displays inbound and outbound rules.
+        Security groups are stateful.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-security-groups   --query 'SecurityGroups[].{SG:GroupId,Name:GroupName,VPC:VpcId}'   --output table
+      </pre>
+    </div>
+
+    <!-- NETWORK INTERFACES -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect Network Interfaces (ENIs)
+      </div>
+
+      <p class="text-slate-600">
+        Confirms attachments, IP addresses, and security bindings.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-network-interfaces   --query 'NetworkInterfaces[].{ENI:NetworkInterfaceId,Subnet:SubnetId,Status:Status,Attachment:Attachment.InstanceId}'   --output table
+      </pre>
+    </div>
+
+  </div>
+
+  <p class="text-xs text-slate-500 italic">
+    🔴 Execution is powerful. Verification is mandatory.
+    Always inspect before you change.
+  </p>
+
+</section>
+
+
+<!-- ============================================================= -->
+<!-- EXECUTION COMPANION — EC-2: COMPUTE (EC2, ASG, ALB) -->
+<!-- ============================================================= -->
+
+<section class="space-y-4 mt-8">
+
+  <h4 class="text-sm font-semibold text-slate-800">
+    🔴 Execution Companion — Compute (EC2, ASG, ALB)
+  </h4>
+
+  <div class="bg-red-50 border border-red-200 rounded-lg p-4 space-y-6 text-sm">
+
+    <!-- EC2 -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect EC2 Instances
+      </div>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-instances   --query 'Reservations[].Instances[].{
+    Instance:InstanceId,
+    State:State.Name,
+    AZ:Placement.AvailabilityZone,
+    Subnet:SubnetId,
+    Type:InstanceType
+  }'   --output table
+      </pre>
+    </div>
+
+    <!-- ASG -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect Auto Scaling Groups
+      </div>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws autoscaling describe-auto-scaling-groups   --query 'AutoScalingGroups[].{
+    ASG:AutoScalingGroupName,
+    Desired:DesiredCapacity,
+    Min:MinSize,
+    Max:MaxSize,
+    Instances:Instances[].InstanceId
+  }'   --output table
+      </pre>
+    </div>
+
+    <!-- ALB -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect Load Balancers
+      </div>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws elbv2 describe-load-balancers   --query 'LoadBalancers[].{
+    LB:LoadBalancerName,
+    Type:Type,
+    Scheme:Scheme,
+    AZs:AvailabilityZones[].ZoneName,
+    State:State.Code
+  }'   --output table
+      </pre>
+    </div>
+
+  </div>
+
+  <p class="text-xs text-slate-500 italic">
+    🔴 Compute inspection does not equal application health.
+    Always correlate with logs and metrics.
+  </p>
+
+</section>
+
+
+<!-- ============================================================= -->
+<!-- EXECUTION COMPANION — EC-3: IAM & PERMISSION EXECUTION -->
+<!-- ============================================================= -->
+
+<section class="space-y-4 mt-8">
+
+  <h4 class="text-sm font-semibold text-slate-800">
+    🔴 Execution Companion — IAM & Permissions
+  </h4>
+
+  <div class="bg-red-50 border border-red-200 rounded-lg p-4 space-y-6 text-sm">
+
+    <!-- CALLER IDENTITY -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Verify Caller Identity
+      </div>
+
+      <p class="text-slate-600">
+        Confirms which principal is executing AWS CLI commands.
+        This is the first step in any permission investigation.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws sts get-caller-identity
+      </pre>
+
+      <div class="text-xs text-red-600">
+        🔴 Always confirm identity before assuming permissions.
+      </div>
+    </div>
+
+    <!-- IAM USERS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect IAM Users
+      </div>
+
+      <p class="text-slate-600">
+        Lists IAM users in the account.
+        Long-lived users increase operational risk.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws iam list-users   --query 'Users[].{User:UserName,Created:CreateDate}'   --output table
+      </pre>
+    </div>
+
+    <!-- IAM ROLES -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect IAM Roles
+      </div>
+
+      <p class="text-slate-600">
+        Roles define runtime permissions for services and workloads.
+        Misconfigured trust policies are a frequent failure point.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws iam list-roles   --query 'Roles[].{Role:RoleName,Created:CreateDate}'   --output table
+      </pre>
+    </div>
+
+    <!-- ROLE TRUST POLICY -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect Role Trust Policy
+      </div>
+
+      <p class="text-slate-600">
+        Verifies which principals are allowed to assume a role.
+        Trust failures often appear as access denied errors.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws iam get-role   --role-name &lt;ROLE_NAME&gt;   --query 'Role.AssumeRolePolicyDocument'   --output json
+      </pre>
+
+      <div class="text-xs italic text-slate-400">
+        Replace &lt;ROLE_NAME&gt; with a valid IAM role name.
+      </div>
+    </div>
+
+    <!-- ATTACHED POLICIES -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect Attached Role Policies
+      </div>
+
+      <p class="text-slate-600">
+        Lists managed policies attached to a role.
+        Permissions are cumulative.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws iam list-attached-role-policies   --role-name &lt;ROLE_NAME&gt;   --output table
+      </pre>
+    </div>
+
+    <!-- INLINE POLICIES -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect Inline Role Policies
+      </div>
+
+      <p class="text-slate-600">
+        Inline policies override clarity.
+        They are harder to audit and reason about.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws iam list-role-policies   --role-name &lt;ROLE_NAME&gt;   --output table
+      </pre>
+    </div>
+
+    <!-- POLICY SIMULATION -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Simulate Effective Permissions
+      </div>
+
+      <p class="text-slate-600">
+        Safely tests whether a principal is allowed to perform an action
+        without actually performing it.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws iam simulate-principal-policy   --policy-source-arn &lt;ROLE_ARN&gt;   --action-names ec2:DescribeInstances   --output table
+      </pre>
+
+      <div class="text-xs italic text-slate-400">
+        Replace &lt;ROLE_ARN&gt; with the role ARN under investigation.
+      </div>
+
+      <div class="text-xs text-red-600">
+        🔴 Simulation ≠ runtime context (conditions still matter).
+      </div>
+    </div>
+
+  </div>
+
+  <p class="text-xs text-slate-500 italic">
+    🔴 Most “service failures” are permission failures in disguise.
+    Always inspect IAM before changing infrastructure.
+  </p>
+
+</section>
+
+
+<!-- ============================================================= -->
+<!-- EXECUTION COMPANION — EC-4: LOGS, METRICS & ALERT EXECUTION -->
+<!-- ============================================================= -->
+
+<section class="space-y-4 mt-8">
+
+  <h4 class="text-sm font-semibold text-slate-800">
+    🔴 Execution Companion — Logs, Metrics & Alerts
+  </h4>
+
+  <div class="bg-red-50 border border-red-200 rounded-lg p-4 space-y-6 text-sm">
+
+    <!-- LOG GROUPS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Verify Log Groups
+      </div>
+
+      <p class="text-slate-600">
+        Confirms that log groups exist in the region.
+        Absence here means no logs can appear in the UI.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws logs describe-log-groups   --output table
+      </pre>
+    </div>
+
+    <!-- LOG STREAMS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect Log Streams (Freshness)
+      </div>
+
+      <p class="text-slate-600">
+        Orders streams by recent activity to confirm ingestion is live.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws logs describe-log-streams   --log-group-name &lt;LOG_GROUP_NAME&gt;   --order-by LastEventTime   --descending   --output table
+      </pre>
+
+      <div class="text-xs italic text-slate-400">
+        Replace &lt;LOG_GROUP_NAME&gt; with a valid log group.
+      </div>
+    </div>
+
+    <!-- LOG TAIL -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Tail Recent Logs
+      </div>
+
+      <p class="text-slate-600">
+        Streams recent log entries to confirm runtime behavior.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws logs tail &lt;LOG_GROUP_NAME&gt;   --since 10m   --follow
+      </pre>
+
+      <div class="text-xs text-red-600">
+        🔴 Empty output may indicate inactivity, not failure.
+      </div>
+    </div>
+
+    <!-- METRIC NAMESPACES -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Verify Metric Namespaces
+      </div>
+
+      <p class="text-slate-600">
+        Confirms that AWS services are publishing metrics.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws cloudwatch list-metrics   --namespace AWS/EC2   --output table
+      </pre>
+    </div>
+
+    <!-- METRIC DATA -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect Recent Metric Data
+      </div>
+
+      <p class="text-slate-600">
+        Retrieves datapoints to verify metrics are flowing.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws cloudwatch get-metric-statistics   --namespace AWS/EC2   --metric-name CPUUtilization   --statistics Average   --period 300   --start-time $(date -u -v-15M +%Y-%m-%dT%H:%M:%SZ)   --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ)   --output json
+      </pre>
+
+      <div class="text-xs text-red-600">
+        🔴 Metric delay is common; absence does not always imply failure.
+      </div>
+    </div>
+
+    <!-- ALARMS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect CloudWatch Alarms
+      </div>
+
+      <p class="text-slate-600">
+        Lists alarms and their current state.
+        Alarms indicate detection readiness.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws cloudwatch describe-alarms   --query 'MetricAlarms[].{Alarm:AlarmName,State:StateValue,Metric:MetricName}'   --output table
+      </pre>
+    </div>
+
+    <!-- EVENTBRIDGE RULES -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect EventBridge Rules
+      </div>
+
+      <p class="text-slate-600">
+        Confirms event rules that generate notifications or downstream actions.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws events list-rules   --output table
+      </pre>
+    </div>
+
+    <!-- RULE TARGETS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect Event Rule Targets
+      </div>
+
+      <p class="text-slate-600">
+        Verifies whether rules are wired to SNS, SQS, or other targets.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws events list-targets-by-rule   --rule &lt;RULE_NAME&gt;   --output table
+      </pre>
+
+      <div class="text-xs italic text-slate-400">
+        Replace &lt;RULE_NAME&gt; with a valid EventBridge rule name.
+      </div>
+    </div>
+
+  </div>
+
+  <p class="text-xs text-slate-500 italic">
+    🔴 If you cannot see it in logs, metrics, or events,
+    you cannot prove it is working.
+  </p>
+
+</section>
+
+
+<!-- ============================================================= -->
+<!-- EXECUTION COMPANION — EC-5: SAFE CHANGE & ROLLBACK COMMANDS -->
+<!-- ============================================================= -->
+
+<section class="space-y-4 mt-8">
+
+  <h4 class="text-sm font-semibold text-slate-800">
+    🔴 Execution Companion — Safe Change & Rollback
+  </h4>
+
+  <div class="bg-red-50 border border-red-200 rounded-lg p-4 space-y-6 text-sm">
+
+    <!-- PRINCIPLE -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Core Rule — Rollback First
+      </div>
+
+      <p class="text-slate-600">
+        If you cannot explain how to undo a change,
+        you are not ready to make it.
+      </p>
+    </div>
+
+    <!-- SECURITY GROUP CHANGE -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Change Example — Security Group Rule
+      </div>
+
+      <p class="text-slate-600">
+        Adding or removing rules can immediately affect live traffic.
+        Always capture the existing state first.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+# PRE-CHANGE: Capture existing rules
+aws ec2 describe-security-groups   --group-ids &lt;SG_ID&gt;   --output json
+
+# CHANGE (example only – DO NOT RUN blindly)
+aws ec2 authorize-security-group-ingress   --group-id &lt;SG_ID&gt;   --protocol tcp   --port 443   --cidr 0.0.0.0/0
+
+# ROLLBACK (example only)
+aws ec2 revoke-security-group-ingress   --group-id &lt;SG_ID&gt;   --protocol tcp   --port 443   --cidr 0.0.0.0/0
+      </pre>
+
+      <div class="text-xs text-red-600">
+        🔴 Security group changes are immediate and global.
+      </div>
+    </div>
+
+    <!-- ROUTE TABLE CHANGE -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Change Example — Route Table Entry
+      </div>
+
+      <p class="text-slate-600">
+        Route changes affect entire subnets.
+        Misroutes cause silent outages.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+# PRE-CHANGE: Capture routes
+aws ec2 describe-route-tables   --route-table-ids &lt;RTB_ID&gt;   --output json
+
+# CHANGE (example only)
+aws ec2 create-route   --route-table-id &lt;RTB_ID&gt;   --destination-cidr-block 0.0.0.0/0   --nat-gateway-id &lt;NAT_ID&gt;
+
+# ROLLBACK (example only)
+aws ec2 delete-route   --route-table-id &lt;RTB_ID&gt;   --destination-cidr-block 0.0.0.0/0
+      </pre>
+
+      <div class="text-xs text-red-600">
+        🔴 Route table changes redefine traffic flow.
+      </div>
+    </div>
+
+    <!-- ASG CHANGE -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Change Example — Auto Scaling Capacity
+      </div>
+
+      <p class="text-slate-600">
+        Capacity changes may trigger instance launches or terminations.
+        Always record original values.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+# PRE-CHANGE: Capture capacity
+aws autoscaling describe-auto-scaling-groups   --auto-scaling-group-names &lt;ASG_NAME&gt;   --output json
+
+# CHANGE (example only)
+aws autoscaling update-auto-scaling-group   --auto-scaling-group-name &lt;ASG_NAME&gt;   --desired-capacity 4
+
+# ROLLBACK (example only)
+aws autoscaling update-auto-scaling-group   --auto-scaling-group-name &lt;ASG_NAME&gt;   --desired-capacity &lt;ORIGINAL_DESIRED&gt;
+      </pre>
+
+      <div class="text-xs text-red-600">
+        🔴 Scaling changes may cascade into cost and availability.
+      </div>
+    </div>
+
+    <!-- IAM CHANGE -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Change Example — IAM Policy Attachment
+      </div>
+
+      <p class="text-slate-600">
+        IAM changes affect security posture immediately.
+        Least privilege must be preserved.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+# PRE-CHANGE: Capture attached policies
+aws iam list-attached-role-policies   --role-name &lt;ROLE_NAME&gt;   --output table
+
+# CHANGE (example only)
+aws iam attach-role-policy   --role-name &lt;ROLE_NAME&gt;   --policy-arn &lt;POLICY_ARN&gt;
+
+# ROLLBACK (example only)
+aws iam detach-role-policy   --role-name &lt;ROLE_NAME&gt;   --policy-arn &lt;POLICY_ARN&gt;
+      </pre>
+
+      <div class="text-xs text-red-600">
+        🔴 IAM mistakes can cause outages or security exposure.
+      </div>
+    </div>
+
+  </div>
+
+  <p class="text-xs text-slate-500 italic">
+    🔴 Safe systems are not change-averse.
+    They are rollback-ready.
+  </p>
+
+</section>
+
+
+<!-- ============================================================= -->
+<!-- EXECUTION COMPANION — EC-6: COST, QUOTAS & EXPOSURE CHECKS -->
+<!-- ============================================================= -->
+
+<section class="space-y-4 mt-8">
+
+  <h4 class="text-sm font-semibold text-slate-800">
+    🔴 Execution Companion — Cost, Quotas & Exposure
+  </h4>
+
+  <div class="bg-red-50 border border-red-200 rounded-lg p-4 space-y-6 text-sm">
+
+    <!-- COST EXPLORER -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect Current Month Cost (Account Level)
+      </div>
+
+      <p class="text-slate-600">
+        Provides a high-level view of spend trends.
+        Requires Cost Explorer to be enabled.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ce get-cost-and-usage   --time-period Start=$(date -u +%Y-%m-01),End=$(date -u +%Y-%m-%d)   --granularity MONTHLY   --metrics UnblendedCost
+      </pre>
+
+      <div class="text-xs text-red-600">
+        🔴 Costs lag reality; today’s changes appear later.
+      </div>
+    </div>
+
+    <!-- SERVICE COST -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect Cost by Service
+      </div>
+
+      <p class="text-slate-600">
+        Identifies which services contribute most to spend.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ce get-cost-and-usage   --time-period Start=$(date -u +%Y-%m-01),End=$(date -u +%Y-%m-%d)   --granularity MONTHLY   --metrics UnblendedCost   --group-by Type=DIMENSION,Key=SERVICE
+      </pre>
+    </div>
+
+    <!-- BUDGETS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect Budgets
+      </div>
+
+      <p class="text-slate-600">
+        Confirms whether spend guardrails exist and are enforced.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws budgets describe-budgets   --account-id &lt;ACCOUNT_ID&gt;   --output table
+      </pre>
+
+      <div class="text-xs italic text-slate-400">
+        Replace &lt;ACCOUNT_ID&gt; with the AWS account ID.
+      </div>
+    </div>
+
+    <!-- SERVICE QUOTAS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect Service Quotas (General)
+      </div>
+
+      <p class="text-slate-600">
+        Lists service quotas for a given AWS service.
+        Quota exhaustion blocks scaling and provisioning.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws service-quotas list-service-quotas   --service-code ec2   --output table
+      </pre>
+    </div>
+
+    <!-- EC2 QUOTAS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect EC2 Capacity Limits
+      </div>
+
+      <p class="text-slate-600">
+        Confirms instance, vCPU, and elastic IP limits.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws service-quotas get-service-quota   --service-code ec2   --quota-code L-1216C47A   --output table
+      </pre>
+
+      <div class="text-xs text-slate-400">
+        Example quota: On-Demand vCPU limit.
+      </div>
+    </div>
+
+    <!-- PUBLIC EXPOSURE -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect Publicly Exposed Resources
+      </div>
+
+      <p class="text-slate-600">
+        Identifies resources that may incur cost or security exposure
+        due to public accessibility.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+# Public IPs
+aws ec2 describe-addresses --output table
+
+# Internet-facing load balancers
+aws elbv2 describe-load-balancers   --query 'LoadBalancers[?Scheme==`internet-facing`].[LoadBalancerName,Type]'   --output table
+      </pre>
+    </div>
+
+    <!-- IDLE RESOURCES -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect Potentially Idle Resources
+      </div>
+
+      <p class="text-slate-600">
+        Idle resources silently generate cost.
+        Identification precedes cleanup.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+# Stopped instances
+aws ec2 describe-instances   --filters Name=instance-state-name,Values=stopped   --query 'Reservations[].Instances[].InstanceId'   --output table
+
+# Unattached volumes
+aws ec2 describe-volumes   --filters Name=status,Values=available   --query 'Volumes[].VolumeId'   --output table
+      </pre>
+
+      <div class="text-xs text-red-600">
+        🔴 Identification ≠ permission to delete.
+      </div>
+    </div>
+
+  </div>
+
+  <p class="text-xs text-slate-500 italic">
+    🔴 Cost incidents are still incidents.
+    Visibility is the first control.
+  </p>
+
+</section>
+
+
+<!-- ============================================================= -->
+<!-- EXECUTION COMPANION — EC-7: STORAGE & DATA PATH EXECUTION -->
+<!-- ============================================================= -->
+
+<section class="space-y-4 mt-8">
+
+  <h4 class="text-sm font-semibold text-slate-800">
+    🔴 Execution Companion — Storage & Data Paths
+  </h4>
+
+  <div class="bg-red-50 border border-red-200 rounded-lg p-4 space-y-6 text-sm">
+
+    <!-- S3 BUCKETS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect S3 Buckets
+      </div>
+
+      <p class="text-slate-600">
+        Lists buckets in the account.
+        Bucket existence alone does not imply correct policy or encryption.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws s3api list-buckets   --query 'Buckets[].Name'   --output table
+      </pre>
+    </div>
+
+    <!-- S3 ENCRYPTION -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect S3 Bucket Encryption
+      </div>
+
+      <p class="text-slate-600">
+        Confirms whether server-side encryption is enforced.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws s3api get-bucket-encryption   --bucket &lt;BUCKET_NAME&gt;
+      </pre>
+
+      <div class="text-xs italic text-slate-400">
+        Replace &lt;BUCKET_NAME&gt; with a valid S3 bucket name.
+      </div>
+    </div>
+
+    <!-- S3 PUBLIC ACCESS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect S3 Public Access Block
+      </div>
+
+      <p class="text-slate-600">
+        Verifies account-level and bucket-level public access protection.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws s3api get-public-access-block   --bucket &lt;BUCKET_NAME&gt;
+      </pre>
+
+      <div class="text-xs text-red-600">
+        🔴 Public S3 exposure is a frequent data breach vector.
+      </div>
+    </div>
+
+    <!-- EBS VOLUMES -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect EBS Volumes
+      </div>
+
+      <p class="text-slate-600">
+        Confirms attachment state, AZ placement, and encryption.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-volumes   --query 'Volumes[].{
+    Volume:VolumeId,
+    State:State,
+    AZ:AvailabilityZone,
+    Encrypted:Encrypted,
+    AttachedTo:Attachments[].InstanceId
+  }'   --output table
+      </pre>
+    </div>
+
+    <!-- EBS SNAPSHOTS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect EBS Snapshots
+      </div>
+
+      <p class="text-slate-600">
+        Snapshots define recoverability.
+        Orphaned snapshots silently incur cost.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-snapshots   --owner-ids self   --query 'Snapshots[].{Snapshot:SnapshotId,Volume:VolumeId,Start:StartTime}'   --output table
+      </pre>
+    </div>
+
+    <!-- EFS FILE SYSTEMS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect EFS File Systems
+      </div>
+
+      <p class="text-slate-600">
+        Confirms file system lifecycle state and encryption.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws efs describe-file-systems   --query 'FileSystems[].{
+    EFS:FileSystemId,
+    State:LifeCycleState,
+    Encrypted:Encrypted
+  }'   --output table
+      </pre>
+    </div>
+
+    <!-- DATA PATH PERMISSIONS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect Storage Access Paths
+      </div>
+
+      <p class="text-slate-600">
+        Identifies IAM roles commonly used for storage access.
+        Permission drift here causes silent application failures.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws iam list-roles   --query 'Roles[?contains(RoleName, `S3`) || contains(RoleName, `EFS`)].[RoleName]'   --output table
+      </pre>
+    </div>
+
+  </div>
+
+  <p class="text-xs text-slate-500 italic">
+    🔴 Data paths fail quietly.
+    Inspect storage before blaming compute.
+  </p>
+
+</section>
+
+
+<!-- ============================================================= -->
+<!-- EXECUTION COMPANION — EC-8: ADVANCED NETWORKING EXECUTION -->
+<!-- ============================================================= -->
+
+<section class="space-y-4 mt-8">
+
+  <h4 class="text-sm font-semibold text-slate-800">
+    🔴 Execution Companion — Advanced Networking
+  </h4>
+
+  <div class="bg-red-50 border border-red-200 rounded-lg p-4 space-y-6 text-sm">
+
+    <!-- VPC FLOW LOGS -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Verify VPC Flow Logs
+      </div>
+
+      <p class="text-slate-600">
+        Confirms whether packet-level visibility exists.
+        Absence of flow logs makes network debugging probabilistic.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-flow-logs   --query 'FlowLogs[].{
+    FlowLogId:FlowLogId,
+    Resource:ResourceId,
+    Status:FlowLogStatus,
+    Destination:LogDestinationType
+  }'   --output table
+      </pre>
+    </div>
+
+    <!-- NACL INSPECTION -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect Network ACL Rules
+      </div>
+
+      <p class="text-slate-600">
+        Network ACLs are stateless and evaluated before security groups.
+        Explicit denies override all allows.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-network-acls   --query 'NetworkAcls[].{
+    NACL:NetworkAclId,
+    VPC:VpcId,
+    Rules:Entries[].{Rule:RuleNumber,Action:RuleAction,Egress:Egress}
+  }'   --output table
+      </pre>
+    </div>
+
+    <!-- ROUTE PROPAGATION -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect Route Propagation
+      </div>
+
+      <p class="text-slate-600">
+        Verifies whether routes are dynamically propagated
+        from VPN or Transit Gateway attachments.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-route-tables   --query 'RouteTables[].{
+    RTB:RouteTableId,
+    PropagatingVGWs:PropagatingVgws[].GatewayId
+  }'   --output table
+      </pre>
+    </div>
+
+    <!-- TRANSIT GATEWAY -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect Transit Gateway Attachments
+      </div>
+
+      <p class="text-slate-600">
+        Confirms attachment state and routing domain membership.
+        TGW misalignment causes asymmetric routing.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-transit-gateway-attachments   --query 'TransitGatewayAttachments[].{
+    Attachment:TransitGatewayAttachmentId,
+    Resource:ResourceId,
+    State:State
+  }'   --output table
+      </pre>
+    </div>
+
+    <!-- VPC PEERING -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect VPC Peering Connections
+      </div>
+
+      <p class="text-slate-600">
+        Confirms peering state and acceptance.
+        Missing routes silently break connectivity.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-vpc-peering-connections   --query 'VpcPeeringConnections[].{
+    Peering:VpcPeeringConnectionId,
+    Status:Status.Code,
+    Requester:RequesterVpcInfo.VpcId,
+    Accepter:AccepterVpcInfo.VpcId
+  }'   --output table
+      </pre>
+    </div>
+
+    <!-- DNS RESOLUTION -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect VPC DNS Settings
+      </div>
+
+      <p class="text-slate-600">
+        DNS resolution failures often masquerade as network outages.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-vpcs   --query 'Vpcs[].{
+    VPC:VpcId,
+    DNSHostnames:EnableDnsHostnames,
+    DNSSupport:EnableDnsSupport
+  }'   --output table
+      </pre>
+    </div>
+
+    <!-- AZ DISTRIBUTION -->
+    <div>
+      <div class="font-medium text-slate-800">
+        🔴 Execute — Inspect AZ Distribution
+      </div>
+
+      <p class="text-slate-600">
+        Confirms whether subnets and instances are spread across AZs.
+        Single-AZ placement increases blast radius.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+aws ec2 describe-subnets   --query 'Subnets[].{Subnet:SubnetId,AZ:AvailabilityZone,VPC:VpcId}'   --output table
+      </pre>
+    </div>
+
+  </div>
+
+  <p class="text-xs text-slate-500 italic">
+    🔴 Advanced networking failures are systemic.
+    Always inspect routing, security, and DNS together.
+  </p>
+
+</section>

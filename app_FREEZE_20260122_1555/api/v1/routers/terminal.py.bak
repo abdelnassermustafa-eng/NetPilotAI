@@ -1,0 +1,10 @@
+"""
+Terminal router placeholder.
+
+Execution intentionally disabled.
+Restored for stability only.
+"""
+
+from fastapi import APIRouter
+
+router = APIRouter(prefix="/terminal", tags=["terminal"])

@@ -1,0 +1,70 @@
+import boto3
+from botocore.exceptions import ClientError
+
+
+class AWSNatGatewayManager:
+    def __init__(self, region: str = "us-east-1"):
+        session = boto3.session.Session()
+        self.ec2 = session.client("ec2", region_name=region)
+
+    # ---------------------------------------------------------
+    # CREATE NAT GATEWAY
+    # ---------------------------------------------------------
+    def create_nat_gateway(
+        self,
+        subnet_id: str,
+        allocation_id: str | None = None,
+        name: str | None = None,
+    ):
+        try:
+            # Allocate Elastic IP if not provided
+            if not allocation_id:
+                eip = self.ec2.allocate_address(Domain="vpc")
+                allocation_id = eip["AllocationId"]
+
+            response = self.ec2.create_nat_gateway(
+                SubnetId=subnet_id,
+                AllocationId=allocation_id,
+            )
+
+            nat_gw = response["NatGateway"]
+            nat_gw_id = nat_gw["NatGatewayId"]
+
+            if name:
+                self.ec2.create_tags(
+                    Resources=[nat_gw_id],
+                    Tags=[{"Key": "Name", "Value": name}],
+                )
+
+            return {
+                "status": "success",
+                "nat_gateway_id": nat_gw_id,
+                "subnet_id": subnet_id,
+                "allocation_id": allocation_id,
+                "state": nat_gw["State"],
+            }
+
+        except ClientError as e:
+            return {
+                "status": "failed",
+                "error": e.response["Error"]["Message"],
+            }
+
+    # ---------------------------------------------------------
+    # DELETE NAT GATEWAY
+    # ---------------------------------------------------------
+    def delete_nat_gateway(self, nat_gateway_id: str):
+        try:
+            self.ec2.delete_nat_gateway(
+                NatGatewayId=nat_gateway_id
+            )
+            return {
+                "status": "success",
+                "nat_gateway_id": nat_gateway_id,
+            }
+
+        except ClientError as e:
+            return {
+                "status": "failed",
+                "error": e.response["Error"]["Message"],
+            }
