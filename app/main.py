@@ -13,6 +13,10 @@ from app.api.v1.routers.observability.events import router as events_router
 from app.api.v1.routers.observability_autoscaling_events import router as autoscaling_router
 from app.api.v1.routers.observability_scheduled_events import router as scheduled_router
 from app.api.v1.routers.observability_messaging_sqs import router as messaging_sqs_router
+from app.api.v1.routers.terminal_execute import router as terminal_execute_router
+from app.api.v1.routers.terminal import router as terminal_router
+
+
 
 # ----------------------------
 # Core Routers (VALID)
@@ -58,6 +62,9 @@ app.include_router(events_router, prefix="/api/v1")
 app.include_router(autoscaling_router)
 app.include_router(scheduled_router)
 app.include_router(messaging_sqs_router)
+app.include_router(terminal_router)
+
+
 
 
 # ----------------------------
