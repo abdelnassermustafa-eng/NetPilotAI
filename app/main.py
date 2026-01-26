@@ -47,6 +47,23 @@ if not any(isinstance(h, MemoryLogHandler) for h in root_logger.handlers):
     root_logger.addHandler(MemoryLogHandler())
     root_logger.setLevel(logging.INFO)
 
+# --------------------------------------------------
+# CloudWatch logging handler (real logs)
+# --------------------------------------------------
+try:
+    import watchtower
+    cw_handler = watchtower.CloudWatchLogHandler(
+        log_group="/netpilot-ai/backend",
+        stream_name="netpilot-backend"
+    )
+    root_logger.addHandler(cw_handler)
+    logging.getLogger("netpilot.backend").info("CloudWatch logging handler attached")
+except Exception as e:
+    logging.getLogger("netpilot.backend").error(
+        f"Failed to attach CloudWatch logging handler: {e}"
+    )
+
+
 
 # ----------------------------
 # Routers
@@ -351,7 +368,8 @@ def settings_governance(request: Request):
 @app.on_event("startup")
 def startup_event():
     init_db()
-    print("NetPilot AI backend started successfully.")
+    import logging
+    logging.getLogger("netpilot.backend").info("NetPilot AI backend started successfully")
 
 from app.api.v1.routers.aws_health import router as aws_health_router
 app.include_router(aws_health_router, prefix="/api/v1")

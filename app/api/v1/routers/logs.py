@@ -1,94 +1,85 @@
 from fastapi import APIRouter, Query
-from datetime import datetime, timedelta
-from app.core.memory_log_handler import memory_logs
+from datetime import datetime
+from typing import List, Dict, Optional
 import boto3
 import os
+import re
 
 router = APIRouter(prefix="/logs", tags=["Logs"])
 
 # -------------------------------------------------
-# Local-dev fallback logs (safe, deterministic)
+# Configuration
 # -------------------------------------------------
-_LOCAL_DEV_LOGS = [
-    {
-        "timestamp": datetime.utcnow().isoformat() + "Z",
-        "level": "INFO",
-        "message": "NetPilot backend started successfully",
-    },
-    {
-        "timestamp": datetime.utcnow().isoformat() + "Z",
-        "level": "INFO",
-        "message": "Observability logs endpoint initialized",
-    },
-]
 
+LOG_GROUP = os.getenv("NETPILOT_LOG_GROUP", "/netpilot-ai/backend")
+LOG_STREAM = os.getenv("NETPILOT_LOG_STREAM", "netpilot-backend")
+
+logs_client = boto3.client("logs")
+
+_LEVEL_RE = re.compile(r"\b(DEBUG|INFO|WARN|WARNING|ERROR|CRITICAL)\b")
+
+
+def _infer_level(message: str) -> str:
+    if not message:
+        return "INFO"
+    m = _LEVEL_RE.search(message)
+    if not m:
+        return "INFO"
+    lvl = m.group(1)
+    return "WARN" if lvl == "WARNING" else lvl
+
+
+# -------------------------------------------------
+# GET /api/v1/logs/recent
+# -------------------------------------------------
 
 @router.get("/recent")
 def get_recent_logs(
-    window: int = Query(15, ge=1, le=120),
     limit: int = Query(50, ge=1, le=200),
-):
+    next_token: Optional[str] = Query(default=None),
+) -> Dict:
     """
-    Return recent backend logs.
+    Return real backend application logs from AWS CloudWatch Logs.
 
-    Priority order:
-    1. In-memory live backend logs
-    2. Local-dev fallback logs
-    3. CloudWatch (AWS only)
+    - Direct stream read (stable)
+    - Read-only
+    - Tail-style behavior (like aws logs tail)
+    - Normalized for UI consumption
     """
 
-    # -------------------------------------------------
-    # Phase 5.3 — ALWAYS return in-memory logs first
-    # -------------------------------------------------
-    if memory_logs:
-        return {
-            "status": "ok",
-            "source": "memory",
-            "count": min(len(memory_logs), limit),
-            "logs": list(memory_logs)[-limit:],
-        }
+    params = {
+        "logGroupName": LOG_GROUP,
+        "logStreamName": LOG_STREAM,
+        "limit": limit,
+        "startFromHead": False,
+    }
 
-    # -------------------------------------------------
-    # Local-dev fallback (no AWS)
-    # -------------------------------------------------
-    if os.getenv("AWS_EXECUTION_ENV") is None:
-        return {
-            "status": "ok",
-            "source": "local-dev",
-            "count": len(_LOCAL_DEV_LOGS),
-            "logs": _LOCAL_DEV_LOGS[-limit:],
-        }
-
-    # -------------------------------------------------
-    # CloudWatch (AWS only)
-    # -------------------------------------------------
-    logs_client = boto3.client("logs")
-    start_time = int(
-        (datetime.utcnow() - timedelta(minutes=window)).timestamp() * 1000
-    )
+    if next_token:
+        params["nextToken"] = next_token
 
     try:
-        response = logs_client.filter_log_events(
-            logGroupName="/netpilot-ai/backend",
-            startTime=start_time,
-            limit=limit,
-        )
+        response = logs_client.get_log_events(**params)
 
-        events = [
-            {
-                "timestamp": datetime.utcfromtimestamp(
-                    e["timestamp"] / 1000
-                ).isoformat() + "Z",
-                "level": "INFO",
-                "message": e.get("message", "").strip(),
-            }
-            for e in response.get("events", [])
-        ]
+        events: List[Dict] = []
+        for e in response.get("events", []):
+            msg = (e.get("message") or "").strip()
+            events.append(
+                {
+                    "timestamp": datetime.utcfromtimestamp(
+                        e["timestamp"] / 1000
+                    ).isoformat() + "Z",
+                    "level": _infer_level(msg),
+                    "message": msg,
+                }
+            )
 
         return {
             "status": "ok",
             "source": "cloudwatch",
+            "log_group": LOG_GROUP,
+            "log_stream": LOG_STREAM,
             "count": len(events),
+            "next_token": response.get("nextForwardToken"),
             "logs": events,
         }
 
@@ -96,6 +87,8 @@ def get_recent_logs(
         return {
             "status": "error",
             "source": "cloudwatch",
+            "log_group": LOG_GROUP,
+            "log_stream": LOG_STREAM,
             "error": str(exc),
             "logs": [],
         }

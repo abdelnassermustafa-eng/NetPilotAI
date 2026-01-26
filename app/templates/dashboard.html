@@ -1836,7 +1836,7 @@
 
         <!-- ================= OBSERVABILITY SECTION SWITCHER ================= -->
         <div class="flex gap-2 mb-4 border-b pb-2">
-            <button @click="observabilitySection = 'logs'" :class="observabilitySection === 'logs'
+            <button @click="activeTab = 'observability'; observabilitySection = 'logs'" :class="observabilitySection === 'logs'
                     ? 'bg-slate-800 text-white'
                     : 'bg-slate-100 text-slate-700'" class="px-3 py-1 rounded text-sm font-medium">
                 Logs
@@ -1872,9 +1872,11 @@
         </div>
 
         <div x-show="activeTab === 'observability'" x-cloak class="space-y-6">
-            <div x-show="observabilitySection === 'logs'" x-cloak>
-                {% include "observability/_logs.html" %}
-            </div>
+            <template x-if="activeTab === 'observability' && observabilitySection === 'logs'">
+                <div>
+                    {% include "observability/_logs.html" %}
+                </div>
+            </template>
             <div x-show="observabilitySection === 'metrics'" x-cloak>
                 {% include "observability/_metrics.html" %}
             </div>
@@ -2995,27 +2997,15 @@
                     // =============================
                     async loadLogs() {
                         try {
-                            // 1️⃣ Fetch recent logs (15 minutes)
-                            const recentRes = await fetch(
-                                `/api/v1/logs/recent?window=${this.logWindowMinutes}`
-                            );
-                            const recentData = await recentRes.json();
-                            this.recentLogs = recentData.logs || [];
-
-                            // 2️⃣ If no recent logs, fetch fallback logs (30 minutes)
-                            if (this.recentLogs.length === 0) {
-                                const fallbackRes = await fetch(
-                                    `/api/v1/logs/recent?window=${this.fallbackWindowMinutes}`
-                                );
-                                const fallbackData = await fallbackRes.json();
-                                this.lastKnownLogs = fallbackData.logs || [];
-                            }
+                            const res = await fetch("/api/v1/logs/recent?limit=50");
+                            const data = await res.json();
+                            this.recentLogs = data.logs || [];
                         } catch (err) {
-                            console.error('Failed to load logs', err);
-                            this.showError('Unable to load backend logs');
+                            console.error("Failed to load logs", err);
+                            this.showError("Unable to load backend logs");
+                            this.recentLogs = [];
                         }
                     },
-
 
                     async loadNatGateways() {
                         try {
