@@ -1850,1250 +1850,1341 @@
             <button @click="activeTab = 'observability'; observabilitySection = 'logs'" :class="observabilitySection === 'logs'
                     ? 'bg-slate-800 text-white'
                     : 'bg-slate-100 text-slate-700'" class="px-3 py-1 rounded text-sm font-medium">
-                📜 Logs
+                Logs
             </button>
             <button @click="observabilitySection = 'metrics'; fetchMetrics()" :class="observabilitySection === 'metrics'
                     ? 'bg-slate-800 text-white'
                     : 'bg-slate-100 text-slate-700'" class="px-3 py-1 rounded text-sm font-medium">
-                📊 Metrics
+                Metrics
             </button>
             <button @click="observabilitySection = 'alerts'" :class="observabilitySection === 'alerts'
                     ? 'bg-slate-800 text-white'
                     : 'bg-slate-100 text-slate-700'" class="px-3 py-1 rounded text-sm font-medium">
-                🚨 Alerts
+                Alerts
             </button>
             <button @click="observabilitySection = 'events'" :class="observabilitySection === 'events'
                     ? 'bg-slate-800 text-white'
                     : 'bg-slate-100 text-slate-700'" class="px-3 py-1 rounded text-sm font-medium">
-                🗓️ Events
+                Events
             </button>
             <button @click="observabilitySection = 'tools'" :class="observabilitySection === 'tools'
                     ? 'bg-slate-800 text-white'
                     : 'bg-slate-100 text-slate-700'" class="px-3 py-1 rounded text-sm font-medium">
-                🛠️ Tools
+                Tools
             </button>
             <button @click="observabilitySection = 'terminal'" :class="observabilitySection === 'terminal'
                     ? 'border-indigo-500 text-indigo-600'
                     : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
                 class="whitespace-nowrap py-2 px-3 border-b-2 font-medium text-sm">
-                💻 Terminal
+                Terminal
             </button>
 
-            <button @click="activeTab = 'observability'; observabilitySection = 'overview'" :class="activeTab === 'observability' && observabilitySection === 'overview'
-                    ? 'border-indigo-500 text-indigo-600'
-                    : 'border-transparent text-slate-600 hover:text-slate-800'"
-                class="px-3 py-2 text-sm font-medium border-b-2">
-                🧭 Overview
-            </button>
+
         </div>
 
-        <!-- ================= OBSERVABILITY CONTENT ================= -->
         <div x-show="activeTab === 'observability'" x-cloak class="space-y-6">
+            <template x-if="activeTab === 'observability' && observabilitySection === 'logs'">
+                <div>
 
-            <!-- OVERVIEW -->
-            <template x-if="observabilitySection === 'overview'">
-                {% include "observability/_overview.html" %}
-            </template>
+                    
+<!-- ====== OVERVIEW (Injected by Python) ====== -->
+<!-- ================= OVERVIEW ================= -->
+<div x-show="observabilitySection === 'overview'" x-cloak class="space-y-6">
 
-            <!-- LOGS -->
-            <template x-if="observabilitySection === 'logs'">
-                {% include "observability/_logs.html" %}
-            </template>
-
-            <!-- METRICS -->
-            <template x-if="observabilitySection === 'metrics'">
-                {% include "observability/_metrics.html" %}
-            </template>
-
-            <!-- ALERTS -->
-            <template x-if="observabilitySection === 'alerts'">
-                {% include "observability/_alerts.html" %}
-            </template>
-
-            <!-- EVENTS -->
-            <template x-if="observabilitySection === 'events'">
-                {% include "observability/_events.html" %}
-            </template>
-
-            <!-- TOOLS -->
-            <template x-if="observabilitySection === 'tools'">
-                {% include "observability/_tools.html" %}
-            </template>
-
-            <!-- TERMINAL -->
-            <template x-if="observabilitySection === 'terminal'">
-                {% include "observability/_terminal.html" %}
-            </template>
-
-        </div>
-        <!-- =============== END OBSERVABILITY CONTENT =============== -->
-
+    <!-- HEADER -->
+    <div>
+        <h3 class="text-base font-semibold text-slate-800">🧭 Overview</h3>
+        <p class="text-sm text-slate-600 mt-1">
+            High-level orientation for NetPilot AI — purpose, scope, and operating principles.
+        </p>
     </div>
 
+    <!-- WHAT THIS PLATFORM IS -->
+    <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
+        <h4 class="text-sm font-semibold text-slate-800 mb-2">What this platform is</h4>
+        <p class="text-sm text-slate-700 leading-relaxed">
+            NetPilot AI is an engineer-first control plane for AWS networking, observability,
+            and safe operations. It is designed to surface operational truth — not marketing
+            dashboards — by combining real AWS data with clear UI panels and CLI-verifiable
+            evidence.
+        </p>
+        <p class="text-sm text-slate-700 leading-relaxed mt-2">
+            The platform favors read-only insight, explicit safety boundaries, and human-
+            verifiable outputs so operators always understand what exists, how it is connected,
+            and how to confirm it independently.
+        </p>
+    </div>
+
+    <!-- WHAT YOU CAN DO -->
+    <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
+        <h4 class="text-sm font-semibold text-slate-800 mb-3">What you can do</h4>
+
+        <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-2">
+            <li>
+                <strong>Network Inventory</strong>
+                <ul class="list-disc list-outside pl-5 mt-1 space-y-1">
+                    <li>View VPCs, Subnets, Route Tables, Internet Gateways, and NAT Gateways</li>
+                    <li>Inspect attachments, routes, and effective traffic paths</li>
+                </ul>
+            </li>
+
+            <li>
+                <strong>Observability</strong>
+                <ul class="list-disc list-outside pl-5 mt-1 space-y-1">
+                    <li>Logs: real backend logs sourced from AWS</li>
+                    <li>Metrics: CloudWatch signals with verifiable meaning</li>
+                    <li>Alerts: normalized states with explicit scope</li>
+                    <li>Events: EC2, Auto Scaling, Scheduled, and messaging events</li>
+                </ul>
+            </li>
+
+            <li>
+                <strong>Tools & Playbooks</strong>
+                <ul class="list-disc list-outside pl-5 mt-1 space-y-1">
+                    <li>Read-only AWS CLI examples with safety annotations</li>
+                    <li>Commands written for human execution and verification</li>
+                </ul>
+            </li>
+
+            <li>
+                <strong>Terminal (companion)</strong>
+                <ul class="list-disc list-outside pl-5 mt-1 space-y-1">
+                    <li>Reference-only workflows for validation and troubleshooting</li>
+                    <li>Clear responsibility boundaries — execution is always explicit</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <!-- DESIGN PRINCIPLES -->
+    <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
+        <h4 class="text-sm font-semibold text-slate-800 mb-3">Design principles</h4>
+
+        <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-2">
+            <li><strong>Truth over polish:</strong> every UI claim can be validated via CLI</li>
+            <li><strong>Safe by default:</strong> read-only guidance with no hidden mutations</li>
+            <li><strong>Step-by-step clarity:</strong> inspect → verify → decide</li>
+            <li><strong>Modular architecture:</strong> clean partials and predictable controllers</li>
+        </ul>
+    </div>
+
+    <!-- TYPICAL WORKFLOW -->
+    <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
+        <h4 class="text-sm font-semibold text-slate-800 mb-3">Typical workflow</h4>
+
+        <ol class="list-decimal list-outside pl-5 text-sm text-slate-700 space-y-2">
+            <li>Inspect a resource and its relationships in the UI</li>
+            <li>Verify the state using the provided AWS CLI command</li>
+            <li>Observe logs, metrics, and events tied to that resource</li>
+            <li>Make operational decisions outside the UI with confidence</li>
+        </ol>
+    </div>
+
+    <!-- WHO IT IS FOR -->
+    <div class="bg-slate-50 border border-slate-200 rounded-lg p-4">
+        <h4 class="text-sm font-semibold text-slate-800 mb-2">Who this is for</h4>
+        <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+            <li>Cloud and network engineers who value clarity and safety</li>
+            <li>DevOps teams validating real-time AWS state</li>
+            <li>Builders who prefer CLI truth paired with UI context</li>
+        </ul>
+    </div>
+
+</div>
+<!-- =============== END OVERVIEW =============== -->
+<!-- ====== END OVERVIEW ====== -->
+
+{% include "observability/_logs.html" %}
+                </div>
+            </template>
+            <div x-show="observabilitySection === 'metrics'" x-cloak>
+                {% include "observability/_metrics.html" %}
+            </div>
+
+            <div x-show="observabilitySection === 'events'" x-cloak>
+                {% include "observability/_events.html" %}
+            </div>
+
+            <div x-show="activeTab === 'observability'">
+                {% include "observability/_alerts.html" %}
+            </div>
 
 
-    <!-- ============================================================= -->
-    <!-- ALPINE.JS LOGIC (Single Source of Truth) -->
-    <!-- ============================================================= -->
-    <script>
-        function networkConsole() {
-            return {
+            <!-- ================= OBSERVABILITY : TOOLS ================= -->
+            <div x-show="observabilitySection === 'tools'" x-cloak>
+                {% include "observability/_tools.html" %}
+            </div>
 
-                // =============================
-                // ALERT SEVERITY ICON (SAFE)
-                // =============================
-                alertSeverityIcon(severity) {
-                    switch ((severity || "").toLowerCase()) {
-                        case "critical":
-                        case "high":
-                            return "🔴";
-                        case "warning":
-                        case "medium":
-                            return "🟡";
-                        case "info":
-                        case "low":
-                            return "🟢";
-                        default:
-                            return "⚪";
-                    }
-                },
-                // =============================
-                // LOG POLLING STATE (Phase 5.2)
-                // =============================
+            <div x-show="observabilitySection === 'terminal'" x-cloak>
+                {% include "observability/_terminal.html" %}
+            </div>>
 
-                logPollingIntervalMs: 4000,
+        </div>
 
-                logPollTimer: null,
 
-                // =============================
-                // TIMESTAMP FORMATTER (LOGS)
-                // =============================
-                formatTimestamp(ts) {
-                    if (!ts) return "—";
-                    try {
-                        const d = new Date(ts);
-                        return d.toISOString()
-                            .replace("T", " ")
-                            .replace("Z", " UTC")
-                            .split(".")[0];
-                    } catch {
-                        return ts;
-                    }
-                },
-                // =============================
-                // BYTE FORMATTER (SAFE)
-                // =============================
-                formatBytes(bytes) {
-                    if (bytes === null || bytes === undefined) return "—";
-                    const units = ["B", "KB", "MB", "GB", "TB"];
-                    let i = 0;
-                    let val = Number(bytes);
-                    while (val >= 1024 && i < units.length - 1) {
-                        val /= 1024;
-                        i++;
-                    }
-                    return `${val.toFixed(1)} ${units[i]}`;
-                },
 
-                // =============================
-                // RATE CALCULATION (SAFE)
-                // =============================
-                ratePerSecond(series) {
-                    if (!Array.isArray(series) || series.length < 2) return "—";
-                    const a = series[series.length - 2];
-                    const b = series[series.length - 1];
-                    if (!a?.timestamp || !b?.timestamp) return "—";
+        <!-- ============================================================= -->
+        <!-- ALPINE.JS LOGIC (Single Source of Truth) -->
+        <!-- ============================================================= -->
+        <script>
+            function networkConsole() {
+                return {
 
-                    const dt = (new Date(b.timestamp) - new Date(a.timestamp)) / 1000;
-                    if (dt <= 0) return "—";
+                    // =============================
+                    // ALERT SEVERITY ICON (SAFE)
+                    // =============================
+                    alertSeverityIcon(severity) {
+                        switch ((severity || "").toLowerCase()) {
+                            case "critical":
+                            case "high":
+                                return "🔴";
+                            case "warning":
+                            case "medium":
+                                return "🟡";
+                            case "info":
+                            case "low":
+                                return "🟢";
+                            default:
+                                return "⚪";
+                        }
+                    },
+                    // =============================
+                    // LOG POLLING STATE (Phase 5.2)
+                    // =============================
 
-                    const rate = (b.value - a.value) / dt;
-                    return this.formatBytes(rate) + "/s";
-                },
+                    logPollingIntervalMs: 4000,
 
-                // =============================
+                    logPollTimer: null,
 
-                // RATE FORMATTER (SAFE)
-                ratePerSecond(series) {
-                    try {
-                        if (!series || series.length < 2) return "—";
-                        const a = series.at(-2);
-                        const b = series.at(-1);
+                    // =============================
+                    // TIMESTAMP FORMATTER (LOGS)
+                    // =============================
+                    formatTimestamp(ts) {
+                        if (!ts) return "—";
+                        try {
+                            const d = new Date(ts);
+                            return d.toISOString()
+                                .replace("T", " ")
+                                .replace("Z", " UTC")
+                                .split(".")[0];
+                        } catch {
+                            return ts;
+                        }
+                    },
+                    // =============================
+                    // BYTE FORMATTER (SAFE)
+                    // =============================
+                    formatBytes(bytes) {
+                        if (bytes === null || bytes === undefined) return "—";
+                        const units = ["B", "KB", "MB", "GB", "TB"];
+                        let i = 0;
+                        let val = Number(bytes);
+                        while (val >= 1024 && i < units.length - 1) {
+                            val /= 1024;
+                            i++;
+                        }
+                        return `${val.toFixed(1)} ${units[i]}`;
+                    },
+
+                    // =============================
+                    // RATE CALCULATION (SAFE)
+                    // =============================
+                    ratePerSecond(series) {
+                        if (!Array.isArray(series) || series.length < 2) return "—";
+                        const a = series[series.length - 2];
+                        const b = series[series.length - 1];
                         if (!a?.timestamp || !b?.timestamp) return "—";
 
-                        const t1 = new Date(a.timestamp).getTime();
-                        const t2 = new Date(b.timestamp).getTime();
-                        const dt = (t2 - t1) / 1000;
-                        if (!dt || dt <= 0) return "—";
+                        const dt = (new Date(b.timestamp) - new Date(a.timestamp)) / 1000;
+                        if (dt <= 0) return "—";
 
-                        const dv = b.value - a.value;
-                        if (dv < 0) return "—";
-
-                        const rate = dv / dt;
+                        const rate = (b.value - a.value) / dt;
                         return this.formatBytes(rate) + "/s";
-                    } catch {
-                        return "—";
-                    }
-                },
-                // BYTE FORMATTER (SAFE)
-                // =============================
-                formatBytes(bytes) {
-                    if (bytes == null || isNaN(bytes)) return "—";
-                    if (bytes < 1024) return bytes + " B";
-                    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-                    if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + " MB";
-                    return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
-                },
+                    },
+
+                    // =============================
+
+                    // RATE FORMATTER (SAFE)
+                    ratePerSecond(series) {
+                        try {
+                            if (!series || series.length < 2) return "—";
+                            const a = series.at(-2);
+                            const b = series.at(-1);
+                            if (!a?.timestamp || !b?.timestamp) return "—";
+
+                            const t1 = new Date(a.timestamp).getTime();
+                            const t2 = new Date(b.timestamp).getTime();
+                            const dt = (t2 - t1) / 1000;
+                            if (!dt || dt <= 0) return "—";
+
+                            const dv = b.value - a.value;
+                            if (dv < 0) return "—";
+
+                            const rate = dv / dt;
+                            return this.formatBytes(rate) + "/s";
+                        } catch {
+                            return "—";
+                        }
+                    },
+                    // BYTE FORMATTER (SAFE)
+                    // =============================
+                    formatBytes(bytes) {
+                        if (bytes == null || isNaN(bytes)) return "—";
+                        if (bytes < 1024) return bytes + " B";
+                        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+                        if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+                        return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+                    },
 
 
-                // =============================
-                // METRICS HELPERS (SAFE)
-                // =============================
-                sparkline(series) {
-                    try {
-                        if (!Array.isArray(series) || series.length === 0) return "—";
-                        const values = series
-                            .map(p => Number(p?.value))
-                            .filter(v => Number.isFinite(v));
-                        if (values.length === 0) return "—";
+                    // =============================
+                    // METRICS HELPERS (SAFE)
+                    // =============================
+                    sparkline(series) {
+                        try {
+                            if (!Array.isArray(series) || series.length === 0) return "—";
+                            const values = series
+                                .map(p => Number(p?.value))
+                                .filter(v => Number.isFinite(v));
+                            if (values.length === 0) return "—";
 
-                        const bars = ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"];
-                        const min = Math.min(...values);
-                        const max = Math.max(...values);
-                        if (max === min) return "▅".repeat(Math.min(8, values.length));
+                            const bars = ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"];
+                            const min = Math.min(...values);
+                            const max = Math.max(...values);
+                            if (max === min) return "▅".repeat(Math.min(8, values.length));
 
-                        // last up to 8 points
-                        const slice = values.slice(-8);
-                        return slice.map(v => {
-                            const idx = Math.max(0, Math.min(7, Math.round(((v - min) / (max - min)) * 7)));
-                            return bars[idx];
-                        }).join("");
-                    } catch {
-                        return "—";
-                    }
-                },
+                            // last up to 8 points
+                            const slice = values.slice(-8);
+                            return slice.map(v => {
+                                const idx = Math.max(0, Math.min(7, Math.round(((v - min) / (max - min)) * 7)));
+                                return bars[idx];
+                            }).join("");
+                        } catch {
+                            return "—";
+                        }
+                    },
 
-                metricTrend(series) {
-                    try {
-                        if (!Array.isArray(series) || series.length < 2) return "—";
-                        const a = Number(series.at(-2)?.value);
-                        const b = Number(series.at(-1)?.value);
-                        if (!Number.isFinite(a) || !Number.isFinite(b)) return "—";
-                        if (b > a) return "↑";
-                        if (b < a) return "↓";
-                        return "→";
-                    } catch {
-                        return "—";
-                    }
-                },
-
-
-                // =============================
-                // LOG LEVEL COLORIZATION
-                // =============================
-                levelClass(level) {
-                    switch ((level || "").toUpperCase()) {
-                        case "ERROR":
-                            return "bg-red-600 text-white";
-                        case "WARN":
-                        case "WARNING":
-                            return "bg-yellow-500 text-black";
-                        case "INFO":
-                            return "bg-blue-600 text-white";
-                        default:
-                            return "bg-slate-400 text-white";
-                    }
-                },
-
-                // =============================
-                // INIT (ordered, no races)
-                // =============================
-                async init() {
-                    await this.loadVPCs();        // sets selectedVpcId safely
-                    await this.loadAZs();         // Loads Availability Zones
-                    await this.loadSubnets();     // now selectedVpcId exists
-                    await this.loadRouteTables(); // Loads Route Tables
-                    await this.loadLogs();        // OBSERVABILITY – LOG INIT (STEP 1c)
-                    await this.loadBackendHealth(); // Loads Health status
-                    await this.fetchMetrics();     // METRICS – Phase 6.3 init
-                    await this.fetchAlerts();   // ALERTS – Phase 7.3 init
-                    this.startAlertsPolling(); // Phase 7.4
-
-                },
-
-                alertSeverityClass(alert) {
-                    switch (alert.severity) {
-                        case "critical":
-                            return "bg-red-100 text-red-800 border-red-300";
-                        case "warning":
-                            return "bg-amber-100 text-amber-800 border-amber-300";
-                        case "info":
-                        default:
-                            return "bg-slate-100 text-slate-700 border-slate-300";
-                    }
-                },
-
-                alertStateIcon(alert) {
-                    switch (alert.state) {
-                        case "ALARM":
-                            return "⛔";
-                        case "INSUFFICIENT_DATA":
-                            return "⚠️";
-                        case "OK":
-                        default:
-                            return "✅";
-                    }
-                },
+                    metricTrend(series) {
+                        try {
+                            if (!Array.isArray(series) || series.length < 2) return "—";
+                            const a = Number(series.at(-2)?.value);
+                            const b = Number(series.at(-1)?.value);
+                            if (!Number.isFinite(a) || !Number.isFinite(b)) return "—";
+                            if (b > a) return "↑";
+                            if (b < a) return "↓";
+                            return "→";
+                        } catch {
+                            return "—";
+                        }
+                    },
 
 
+                    // =============================
+                    // LOG LEVEL COLORIZATION
+                    // =============================
+                    levelClass(level) {
+                        switch ((level || "").toUpperCase()) {
+                            case "ERROR":
+                                return "bg-red-600 text-white";
+                            case "WARN":
+                            case "WARNING":
+                                return "bg-yellow-500 text-black";
+                            case "INFO":
+                                return "bg-blue-600 text-white";
+                            default:
+                                return "bg-slate-400 text-white";
+                        }
+                    },
 
-                // =============================
-                // GLOBAL STATE
-                // =============================
-                activeTab: 'network',
-                observabilitySection: 'overview',
-                expandedMetrics: { cloudwatch: true },
-                runtimeMetrics: null,
-                metricsError: null,
-                metricsPollTimer: null,
-                metricsPollingIntervalMs: 10000, // 10s (safe)
-                autoRefreshMetrics: false,
+                    // =============================
+                    // INIT (ordered, no races)
+                    // =============================
+                    async init() {
+                        await this.loadVPCs();        // sets selectedVpcId safely
+                        await this.loadAZs();         // Loads Availability Zones
+                        await this.loadSubnets();     // now selectedVpcId exists
+                        await this.loadRouteTables(); // Loads Route Tables
+                        await this.loadLogs();        // OBSERVABILITY – LOG INIT (STEP 1c)
+                        await this.loadBackendHealth(); // Loads Health status
+                        await this.fetchMetrics();     // METRICS – Phase 6.3 init
+                        await this.fetchAlerts();   // ALERTS – Phase 7.3 init
+                        this.startAlertsPolling(); // Phase 7.4
 
-                // =============================
-                expandedAlerts: { cloudwatch: false },
-                expandedEvents: { cloudwatch: false },
-                globalError: null,
+                    },
 
-                // =============================
-                // ALERTS STATE (Phase 7.4)
-                // =============================
-                alerts: [],
-                alertsError: null,
-                alertsPollTimer: null,
-                alertsPollingIntervalMs: 30000,
+                    alertSeverityClass(alert) {
+                        switch (alert.severity) {
+                            case "critical":
+                                return "bg-red-100 text-red-800 border-red-300";
+                            case "warning":
+                                return "bg-amber-100 text-amber-800 border-amber-300";
+                            case "info":
+                            default:
+                                return "bg-slate-100 text-slate-700 border-slate-300";
+                        }
+                    },
 
-                // =============================
-                // OBSERVABILITY – LOG STATE (STEP 1)
-                // =============================
-                recentLogs: [],
-                lastKnownLogs: [],
-                logWindowMinutes: 15,
-                fallbackWindowMinutes: 30,
+                    alertStateIcon(alert) {
+                        switch (alert.state) {
+                            case "ALARM":
+                                return "⛔";
+                            case "INSUFFICIENT_DATA":
+                                return "⚠️";
+                            case "OK":
+                            default:
+                                return "✅";
+                        }
+                    },
 
-                onVpcSelected() {
-                    if (!this.selectedVpcId) {
-                        this.subnets = [];
-                        return;
-                    }
-                    this.loadSubnets();
-                },
 
-                showError(msg) {
-                    this.globalError = msg;
-                    setTimeout(() => (this.globalError = null), 6000);
-                },
 
-                // =============================
-                // LOGS AUTO-REFRESH (PHASE 1.3)
-                // =============================
-                startLogPolling() {
-                    if (this.logPollTimer) return;
-                    this.logPollTimer = setInterval(() => {
+                    // =============================
+                    // GLOBAL STATE
+                    // =============================
+                    activeTab: 'network',
+                    observabilitySection: 'overview',
+                    expandedMetrics: { cloudwatch: true },
+                    runtimeMetrics: null,
+                    metricsError: null,
+                    metricsPollTimer: null,
+                    metricsPollingIntervalMs: 10000, // 10s (safe)
+                    autoRefreshMetrics: false,
+
+                    // =============================
+                    expandedAlerts: { cloudwatch: false },
+                    expandedEvents: { cloudwatch: false },
+                    globalError: null,
+
+                    // =============================
+                    // ALERTS STATE (Phase 7.4)
+                    // =============================
+                    alerts: [],
+                    alertsError: null,
+                    alertsPollTimer: null,
+                    alertsPollingIntervalMs: 30000,
+
+                    // =============================
+                    // OBSERVABILITY – LOG STATE (STEP 1)
+                    // =============================
+                    recentLogs: [],
+                    lastKnownLogs: [],
+                    logWindowMinutes: 15,
+                    fallbackWindowMinutes: 30,
+
+                    onVpcSelected() {
+                        if (!this.selectedVpcId) {
+                            this.subnets = [];
+                            return;
+                        }
+                        this.loadSubnets();
+                    },
+
+                    showError(msg) {
+                        this.globalError = msg;
+                        setTimeout(() => (this.globalError = null), 6000);
+                    },
+
+                    // =============================
+                    // LOGS AUTO-REFRESH (PHASE 1.3)
+                    // =============================
+                    startLogPolling() {
+                        if (this.logPollTimer) return;
+                        this.logPollTimer = setInterval(() => {
+                            if (this.autoRefreshLogs) {
+                                this.fetchRecentLogs();
+                            }
+                        }, this.logPollingIntervalMs);
+                    },
+
+                    stopLogPolling() {
+                        if (this.logPollTimer) {
+                            clearInterval(this.logPollTimer);
+                            this.logPollTimer = null;
+                        }
+                    },
+
+                    // =============================
+                    autoRefreshLogs: false,
+                    _logsTimer: null,
+
+                    toggleAutoRefresh() {
                         if (this.autoRefreshLogs) {
-                            this.fetchRecentLogs();
+                            this._logsTimer = setInterval(() => {
+                                this.loadLogs();
+                            }, 30000);
+                        } else {
+                            clearInterval(this._logsTimer);
+                            this._logsTimer = null;
                         }
-                    }, this.logPollingIntervalMs);
-                },
+                    },
 
-                stopLogPolling() {
-                    if (this.logPollTimer) {
-                        clearInterval(this.logPollTimer);
-                        this.logPollTimer = null;
-                    }
-                },
+                    // =============================
+                    // METRICS AUTO-REFRESH (Phase 6.4)
+                    // =============================
+                    startMetricsPolling() {
+                        if (this.metricsPollTimer) return;
 
-                // =============================
-                autoRefreshLogs: false,
-                _logsTimer: null,
+                        this.metricsPollTimer = setInterval(() => {
+                            this.fetchMetrics();
+                        }, this.metricsPollingIntervalMs);
+                    },
 
-                toggleAutoRefresh() {
-                    if (this.autoRefreshLogs) {
-                        this._logsTimer = setInterval(() => {
-                            this.loadLogs();
-                        }, 30000);
-                    } else {
-                        clearInterval(this._logsTimer);
-                        this._logsTimer = null;
-                    }
-                },
-
-                // =============================
-                // METRICS AUTO-REFRESH (Phase 6.4)
-                // =============================
-                startMetricsPolling() {
-                    if (this.metricsPollTimer) return;
-
-                    this.metricsPollTimer = setInterval(() => {
-                        this.fetchMetrics();
-                    }, this.metricsPollingIntervalMs);
-                },
-
-                stopMetricsPolling() {
-                    if (this.metricsPollTimer) {
-                        clearInterval(this.metricsPollTimer);
-                        this.metricsPollTimer = null;
-                    }
-                },
-
-                toggleAutoRefreshMetrics() {
-                    this.autoRefreshMetrics = !this.autoRefreshMetrics;
-
-                    if (this.autoRefreshMetrics) {
-                        this.fetchMetrics();        // immediate
-                        this.startMetricsPolling();
-                    } else {
-                        this.stopMetricsPolling();
-                    }
-                },
-
-
-                // =============================
-                // FETCH METRICS (Phase 6.2)
-                // =============================
-                async fetchMetrics() {
-                    try {
-                        const res = await fetch("/api/v1/metrics/summary");
-                        const data = await res.json();
-                        this.runtimeMetrics = data.metrics;
-                        this.metricsError = null;
-                    } catch (e) {
-                        console.error("fetchMetrics failed", e);
-                        this.metricsError = "Failed to load metrics";
-                    }
-                },
-
-
-                // =============================
-                // INFO TOGGLES
-                // =============================
-                showVpcInfo: true,
-                showRoutesInfo: true,
-                showIGWInfo: true,
-                showNatInfo: true,
-
-                // =============================
-                // CORE DATA (single definitions)
-                // =============================
-                vpcs: [],
-                selectedVpcId: '',
-                validationVpcId: "",
-                subnets: [],
-                availabilityZones: [],
-                routeTables: [],
-
-                // =============================
-                // VPC UI
-                // =============================
-                showCreateVPC: false,
-                newVpcCidr: '10.0.0.0/16',
-
-                async createVPC() {
-                    if (!this.newVpcCidr) return this.showError('VPC CIDR is required');
-                    try {
-                        const res = await fetch(`/api/v1/aws/vpcs?cidr=${encodeURIComponent(this.newVpcCidr)}`, { method: 'POST' });
-                        const data = await res.json();
-                        if (!res.ok || data.status === 'failed') return this.showError(data.error || 'VPC creation failed');
-                        this.showCreateVPC = false;
-                        await this.loadVPCs();
-                        await this.loadSubnets();
-                        await this.loadRouteTables();
-                    } catch {
-                        this.showError('Failed to create VPC');
-                    }
-                },
-
-                async deleteVPC(vpc) {
-                    if (!vpc?.vpc_id) return this.showError('Invalid VPC');
-                    if (!confirm(`Delete VPC ${vpc.vpc_id}? This cannot be undone.`)) return;
-                    try {
-                        const res = await fetch(`/api/v1/aws/vpc/${vpc.vpc_id}/delete`, { method: 'DELETE' });
-                        const data = await res.json();
-                        if (!res.ok || data.status === 'failed') return this.showError(data.error || 'VPC delete failed');
-                        await this.loadVPCs();
-                        await this.loadSubnets();
-                        await this.loadRouteTables();
-                    } catch {
-                        this.showError('Failed to delete VPC');
-                    }
-                },
-
-                async safeDeleteVPC(vpc) {
-                    if (!vpc?.vpc_id) return this.showError('Invalid VPC');
-                    if (!confirm(`Safe delete VPC ${vpc.vpc_id}?\nDependencies will be checked first.`)) return;
-                    try {
-                        const res = await fetch(`/api/v1/aws/vpc/${vpc.vpc_id}/safe-delete`, { method: 'DELETE' });
-                        const data = await res.json();
-                        if (!res.ok || data.status === 'failed') return this.showError(data.error || 'Safe delete blocked');
-                        await this.loadVPCs();
-                        await this.loadSubnets();
-                        await this.loadRouteTables();
-                    } catch {
-                        this.showError('Failed to safe-delete VPC');
-                    }
-                },
-
-                // =============================
-                // SUBNET UI
-                // =============================
-                showCreateSubnet: false,
-                subnetError: '',
-                newSubnetVPC: '',
-                newSubnetVPCManual: '',
-                newSubnetCIDR: '',
-                newSubnetAZ: '',
-                newSubnetName: '',
-
-                closeSubnetModal() {
-                    this.showCreateSubnet = false;
-                    this.newSubnetVPC = '';
-                    this.newSubnetVPCManual = '';
-                    this.newSubnetCIDR = '';
-                    this.newSubnetAZ = '';
-                    this.newSubnetName = '';
-                    this.subnetError = '';
-                },
-
-                async submitCreateSubnet() {
-                    this.subnetError = '';
-                    const vpcId = this.newSubnetVPC || this.newSubnetVPCManual;
-
-                    if (!vpcId || !this.newSubnetCIDR || !this.newSubnetAZ) {
-                        this.subnetError = 'Missing required subnet fields';
-                        return;
-                    }
-                    try {
-                        const url =
-                            `/api/v1/aws/subnets` +
-                            `?vpc_id=${encodeURIComponent(vpcId)}` +
-                            `&cidr=${encodeURIComponent(this.newSubnetCIDR)}` +
-                            `&availability_zone=${encodeURIComponent(this.newSubnetAZ)}` +
-                            `&name=${encodeURIComponent(this.newSubnetName || 'Subnet')}`;
-
-                        const res = await fetch(url, { method: 'POST' });
-                        const data = await res.json();
-
-                        if (!res.ok || data.status === 'failed') {
-                            this.subnetError = data.error || 'Subnet creation failed';
-                            return;
+                    stopMetricsPolling() {
+                        if (this.metricsPollTimer) {
+                            clearInterval(this.metricsPollTimer);
+                            this.metricsPollTimer = null;
                         }
+                    },
+
+                    toggleAutoRefreshMetrics() {
+                        this.autoRefreshMetrics = !this.autoRefreshMetrics;
+
+                        if (this.autoRefreshMetrics) {
+                            this.fetchMetrics();        // immediate
+                            this.startMetricsPolling();
+                        } else {
+                            this.stopMetricsPolling();
+                        }
+                    },
+
+
+                    // =============================
+                    // FETCH METRICS (Phase 6.2)
+                    // =============================
+                    async fetchMetrics() {
+                        try {
+                            const res = await fetch("/api/v1/metrics/summary");
+                            const data = await res.json();
+                            this.runtimeMetrics = data.metrics;
+                            this.metricsError = null;
+                        } catch (e) {
+                            console.error("fetchMetrics failed", e);
+                            this.metricsError = "Failed to load metrics";
+                        }
+                    },
+
+
+                    // =============================
+                    // INFO TOGGLES
+                    // =============================
+                    showVpcInfo: true,
+                    showRoutesInfo: true,
+                    showIGWInfo: true,
+                    showNatInfo: true,
+
+                    // =============================
+                    // CORE DATA (single definitions)
+                    // =============================
+                    vpcs: [],
+                    selectedVpcId: '',
+                    validationVpcId: "",
+                    subnets: [],
+                    availabilityZones: [],
+                    routeTables: [],
+
+                    // =============================
+                    // VPC UI
+                    // =============================
+                    showCreateVPC: false,
+                    newVpcCidr: '10.0.0.0/16',
+
+                    async createVPC() {
+                        if (!this.newVpcCidr) return this.showError('VPC CIDR is required');
+                        try {
+                            const res = await fetch(`/api/v1/aws/vpcs?cidr=${encodeURIComponent(this.newVpcCidr)}`, { method: 'POST' });
+                            const data = await res.json();
+                            if (!res.ok || data.status === 'failed') return this.showError(data.error || 'VPC creation failed');
+                            this.showCreateVPC = false;
+                            await this.loadVPCs();
+                            await this.loadSubnets();
+                            await this.loadRouteTables();
+                        } catch {
+                            this.showError('Failed to create VPC');
+                        }
+                    },
+
+                    async deleteVPC(vpc) {
+                        if (!vpc?.vpc_id) return this.showError('Invalid VPC');
+                        if (!confirm(`Delete VPC ${vpc.vpc_id}? This cannot be undone.`)) return;
+                        try {
+                            const res = await fetch(`/api/v1/aws/vpc/${vpc.vpc_id}/delete`, { method: 'DELETE' });
+                            const data = await res.json();
+                            if (!res.ok || data.status === 'failed') return this.showError(data.error || 'VPC delete failed');
+                            await this.loadVPCs();
+                            await this.loadSubnets();
+                            await this.loadRouteTables();
+                        } catch {
+                            this.showError('Failed to delete VPC');
+                        }
+                    },
+
+                    async safeDeleteVPC(vpc) {
+                        if (!vpc?.vpc_id) return this.showError('Invalid VPC');
+                        if (!confirm(`Safe delete VPC ${vpc.vpc_id}?\nDependencies will be checked first.`)) return;
+                        try {
+                            const res = await fetch(`/api/v1/aws/vpc/${vpc.vpc_id}/safe-delete`, { method: 'DELETE' });
+                            const data = await res.json();
+                            if (!res.ok || data.status === 'failed') return this.showError(data.error || 'Safe delete blocked');
+                            await this.loadVPCs();
+                            await this.loadSubnets();
+                            await this.loadRouteTables();
+                        } catch {
+                            this.showError('Failed to safe-delete VPC');
+                        }
+                    },
+
+                    // =============================
+                    // SUBNET UI
+                    // =============================
+                    showCreateSubnet: false,
+                    subnetError: '',
+                    newSubnetVPC: '',
+                    newSubnetVPCManual: '',
+                    newSubnetCIDR: '',
+                    newSubnetAZ: '',
+                    newSubnetName: '',
+
+                    closeSubnetModal() {
                         this.showCreateSubnet = false;
-                        await this.loadSubnets();
-                        await this.loadRouteTables();
-                    } catch {
-                        this.subnetError = 'Failed to create subnet';
-                    }
-                },
+                        this.newSubnetVPC = '';
+                        this.newSubnetVPCManual = '';
+                        this.newSubnetCIDR = '';
+                        this.newSubnetAZ = '';
+                        this.newSubnetName = '';
+                        this.subnetError = '';
+                    },
 
-                async deleteSubnet(subnet) {
-                    if (!subnet?.subnet_id) return this.showError('Invalid subnet');
-                    if (!confirm(`Delete subnet ${subnet.subnet_id}?`)) return;
+                    async submitCreateSubnet() {
+                        this.subnetError = '';
+                        const vpcId = this.newSubnetVPC || this.newSubnetVPCManual;
 
-                    try {
-                        const res = await fetch(`/api/v1/aws/subnets/${subnet.subnet_id}`, { method: 'DELETE' });
-                        const data = await res.json();
-                        if (!res.ok || data.status === 'failed') return this.showError(data.error || 'Subnet delete failed');
-                        await this.loadSubnets();
-                        await this.loadRouteTables();
-                    } catch {
-                        this.showError('Failed to delete subnet');
-                    }
-                },
-
-                // =============================
-                // ROUTE TABLE UI (keep as-is, cleaned)
-                // =============================
-                showCreateRTB: false,
-                showAssociateRTB: false,
-                showAddRoute: false,
-
-                newRTBVPC: '',
-                newRTBName: 'NetPilot-RTB',
-                newRTBDescription: '',
-
-                selectedRTBId: '',
-                selectedSubnetForAssoc: '',
-                candidateSubnetsForRTB: [],
-
-                rtbCreateError: '',
-                rtbAssocError: '',
-
-                addRouteRTBId: '',
-                addRouteDestination: '',
-                addRouteTargetType: 'igw',
-                addRouteTargetId: '',
-                addRouteError: '',
-
-                openCreateRTBModal() {
-                    this.showCreateRTB = true;
-                    this.rtbCreateError = '';
-                    this.newRTBVPC = '';
-                    this.newRTBName = 'NetPilot-RTB';
-                    this.newRTBDescription = '';
-                },
-
-                closeCreateRTBModal() {
-                    this.showCreateRTB = false;
-                    this.newRTBVPC = '';
-                    this.newRTBName = 'NetPilot-RTB';
-                    this.newRTBDescription = '';
-                    this.rtbCreateError = '';
-                },
-
-                openAssocModal(rt) {
-                    this.selectedRTBId = rt.route_table_id;
-                    this.selectedSubnetForAssoc = '';
-                    this.candidateSubnetsForRTB = this.subnets.filter(s => s.vpc_id === rt.vpc_id);
-                    this.rtbAssocError = '';
-                    this.showAssociateRTB = true;
-                },
-
-                closeAssocModal() {
-                    this.showAssociateRTB = false;
-                    this.selectedRTBId = '';
-                    this.selectedSubnetForAssoc = '';
-                    this.candidateSubnetsForRTB = [];
-                    this.rtbAssocError = '';
-                },
-
-                async associateRouteTable() {
-                    this.rtbAssocError = '';
-                    if (!this.selectedRTBId || !this.selectedSubnetForAssoc) {
-                        this.rtbAssocError = 'Please select a subnet';
-                        return;
-                    }
-
-                    try {
-                        const res = await fetch(
-                            `/api/v1/aws/route-tables/${this.selectedRTBId}/associate?subnet_id=${encodeURIComponent(this.selectedSubnetForAssoc)}`,
-                            { method: 'POST' }
-                        );
-                        const data = await res.json();
-                        if (!res.ok || data.status === 'failed') {
-                            this.rtbAssocError = data.error || 'Association failed';
+                        if (!vpcId || !this.newSubnetCIDR || !this.newSubnetAZ) {
+                            this.subnetError = 'Missing required subnet fields';
                             return;
                         }
+                        try {
+                            const url =
+                                `/api/v1/aws/subnets` +
+                                `?vpc_id=${encodeURIComponent(vpcId)}` +
+                                `&cidr=${encodeURIComponent(this.newSubnetCIDR)}` +
+                                `&availability_zone=${encodeURIComponent(this.newSubnetAZ)}` +
+                                `&name=${encodeURIComponent(this.newSubnetName || 'Subnet')}`;
 
-                        this.closeAssocModal();
-                        await this.loadRouteTables();
-                    } catch {
-                        this.rtbAssocError = 'Failed to associate route table';
-                    }
-                },
+                            const res = await fetch(url, { method: 'POST' });
+                            const data = await res.json();
 
-                async deassociateRouteTable(associationId) {
-                    if (!associationId) return;
-                    try {
-                        const res = await fetch(`/api/v1/aws/route-tables/${associationId}/disassociate`, { method: 'POST' });
-                        const data = await res.json();
-                        if (!res.ok || data.status === 'failed') return this.showError(data.error || 'Failed to de-associate route table');
-                        await this.loadRouteTables();
-                    } catch {
-                        this.showError('Failed to de-associate route table');
-                    }
-                },
-
-                async submitCreateRTB() {
-                    this.rtbCreateError = '';
-                    if (!this.newRTBVPC) {
-                        this.rtbCreateError = 'Please select a VPC';
-                        return;
-                    }
-
-                    try {
-                        const res = await fetch('/api/v1/aws/route-tables', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                vpc_id: this.newRTBVPC,
-                                name: this.newRTBName,
-                                description: this.newRTBDescription || ''
-                            })
-                        });
-
-                        const data = await res.json();
-                        if (!res.ok || data.status === 'failed') {
-                            this.rtbCreateError = data.error || 'Route table creation failed';
-                            return;
+                            if (!res.ok || data.status === 'failed') {
+                                this.subnetError = data.error || 'Subnet creation failed';
+                                return;
+                            }
+                            this.showCreateSubnet = false;
+                            await this.loadSubnets();
+                            await this.loadRouteTables();
+                        } catch {
+                            this.subnetError = 'Failed to create subnet';
                         }
+                    },
 
-                        this.closeCreateRTBModal();
-                        await this.loadRouteTables();
-                    } catch {
-                        this.rtbCreateError = 'Failed to create route table';
-                    }
-                },
-
-                openAddRouteModal(rt) {
-                    this.addRouteRTBId = rt.route_table_id;
-                    this.addRouteDestination = '';
-                    this.addRouteTargetType = 'igw';
-                    this.addRouteTargetId = '';
-                    this.addRouteError = '';
-                    this.showAddRoute = true;
-                },
-
-                closeAddRouteModal() {
-                    this.showAddRoute = false;
-                    this.addRouteRTBId = '';
-                    this.addRouteDestination = '';
-                    this.addRouteTargetType = 'igw';
-                    this.addRouteTargetId = '';
-                    this.addRouteError = '';
-                },
-
-                async submitAddRoute() {
-                    this.addRouteError = '';
-                    if (!this.addRouteRTBId || !this.addRouteDestination || !this.addRouteTargetType || !this.addRouteTargetId) {
-                        this.addRouteError = 'All fields are required';
-                        return;
-                    }
-
-                    try {
-                        const res = await fetch(`/api/v1/aws/route-tables/${this.addRouteRTBId}/routes`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                destination_cidr: this.addRouteDestination,
-                                target_type: this.addRouteTargetType,
-                                target_id: this.addRouteTargetId,
-                            }),
-                        });
-
-                        const data = await res.json();
-                        if (!res.ok || data.status === 'failed') {
-                            this.addRouteError = data.error || 'Failed to add route';
-                            return;
-                        }
-
-                        this.closeAddRouteModal();
-                        await this.loadRouteTables();
-                    } catch {
-                        this.addRouteError = 'Failed to add route';
-                    }
-                },
-
-                async deleteRouteTable(rt) {
-                    if (rt?.is_main) return;
-                    try {
-                        const res = await fetch(`/api/v1/aws/route-tables/${rt.route_table_id}`, { method: 'DELETE' });
-                        const data = await res.json();
-                        if (!res.ok || data.status === 'failed') return this.showError(data.error || 'Route table delete failed');
-                        await this.loadRouteTables();
-                    } catch {
-                        this.showError('Failed to delete route table');
-                    }
-                },
-
-                // =============================
-                // IGW
-                // =============================
-                internetGateways: [],
-                igwError: null,
-
-                showCreateIGW: false,
-                showAttachIGW: false,
-                showDetachIGWConfirm: false,
-
-                igwCreateError: '',
-                igwAttachError: null,
-                igwDetachError: null,
-
-                newIGWName: '',
-                selectedIGWId: null,
-
-                selectedVpcForIGWAttach: '',
-                selectedVpcForIGWAttachManual: '',
-                selectedVpcForIGWDetach: '',
-                selectedVpcForIGWDetachManual: '',
-
-                closeCreateIGWModal() {
-                    this.showCreateIGW = false;
-                    this.newIGWName = '';
-                    this.igwCreateError = '';
-                },
-
-                async submitCreateIGW() {
-                    this.igwCreateError = '';
-                    try {
-                        const res = await fetch(`/api/v1/aws/internet-gateways?name=${encodeURIComponent(this.newIGWName || '')}`, { method: 'POST' });
-                        const data = await res.json();
-                        if (!res.ok || data.status === 'failed') {
-                            this.igwCreateError = data.error || 'Failed to create Internet Gateway';
-                            return;
-                        }
-                        this.closeCreateIGWModal();
-                        await this.loadInternetGateways();
-                    } catch {
-                        this.igwCreateError = 'Failed to create Internet Gateway';
-                    }
-                },
-
-                openAttachIGWModal(igwId) {
-                    this.selectedIGWId = igwId;
-                    this.selectedVpcForIGWAttach = '';
-                    this.selectedVpcForIGWAttachManual = '';
-                    this.igwAttachError = '';
-                    this.showAttachIGW = true;
-                },
-
-                closeAttachIGWModal() {
-                    this.showAttachIGW = false;
-                    this.selectedIGWId = null;
-                },
-
-                async submitAttachIGW() {
-                    const vpcId = this.selectedVpcForIGWAttach || this.selectedVpcForIGWAttachManual;
-                    if (!this.selectedIGWId || !vpcId) {
-                        this.igwAttachError = 'IGW and VPC are required';
-                        return;
-                    }
-
-                    try {
-                        const res = await fetch(`/api/v1/aws/internet-gateways/${this.selectedIGWId}/attach?vpc_id=${encodeURIComponent(vpcId)}`, { method: 'POST' });
-                        const d = await res.json();
-                        if (!res.ok || d.status === 'failed') {
-                            this.igwAttachError = d.error || 'Attach failed';
-                            return;
-                        }
-
-                        this.showAttachIGW = false;
-                        await this.loadInternetGateways();
-                    } catch {
-                        this.igwAttachError = 'Failed to attach Internet Gateway';
-                    }
-                },
-
-                promptDetachIGW(igw) {
-                    this.selectedIGWId = igw.internet_gateway_id;
-                    this.selectedVpcForIGWDetach = '';
-                    this.selectedVpcForIGWDetachManual = '';
-                    this.igwDetachError = '';
-                    this.showDetachIGWConfirm = true;
-                },
-
-                closeDetachIGWModal() {
-                    this.showDetachIGWConfirm = false;
-                    this.selectedIGWId = null;
-                },
-
-                async submitDetachIGW() {
-                    const vpcId = this.selectedVpcForIGWDetach || this.selectedVpcForIGWDetachManual;
-                    if (!this.selectedIGWId || !vpcId) {
-                        this.igwDetachError = 'VPC is required to detach';
-                        return;
-                    }
-
-                    try {
-                        const res = await fetch(`/api/v1/aws/internet-gateways/${this.selectedIGWId}/detach?vpc_id=${encodeURIComponent(vpcId)}`, { method: 'POST' });
-                        const d = await res.json();
-                        if (!res.ok || d.status === 'failed') {
-                            this.igwDetachError = d.error || 'Detach failed';
-                            return;
-                        }
-
-                        this.showDetachIGWConfirm = false;
-                        await this.loadInternetGateways();
-                    } catch {
-                        this.igwDetachError = 'Failed to detach Internet Gateway';
-                    }
-                },
-
-                async deleteIGW(igwId) {
-                    if (!confirm(`Delete Internet Gateway ${igwId}? It must be detached first.`)) return;
-                    try {
-                        const res = await fetch(`/api/v1/aws/internet-gateways/${igwId}`, { method: 'DELETE' });
-                        const d = await res.json();
-                        if (!res.ok || d.status === 'failed') return this.showError(d.error || 'Delete failed');
-                        await this.loadInternetGateways();
-                    } catch {
-                        this.showError('Failed to delete Internet Gateway');
-                    }
-                },
-
-                // =============================
-                // NAT
-                // =============================
-                natGateways: [],
-                natError: null,
-
-                showCreateNAT: false,
-                newNATSubnetId: '',
-                newNATName: 'NetPilot-NAT',
-                natCreateError: '',
-
-                openCreateNATModal() {
-                    this.natCreateError = '';
-                    this.newNATSubnetId = '';
-                    this.showCreateNAT = true;
-                },
-
-                closeCreateNATModal() {
-                    this.showCreateNAT = false;
-                    this.natCreateError = '';
-                },
-
-                async submitCreateNAT() {
-                    this.natCreateError = '';
-                    if (!this.newNATSubnetId) {
-                        this.natCreateError = 'Please select a subnet';
-                        return;
-                    }
-
-                    try {
-                        const res = await fetch(
-                            `/api/v1/aws/nat-gateways?subnet_id=${encodeURIComponent(this.newNATSubnetId)}` +
-                            (this.newNATName ? `&name=${encodeURIComponent(this.newNATName)}` : ''),
-                            { method: 'POST' }
-                        );
-
-                        const data = await res.json();
-                        if (!res.ok || data.status === 'failed') {
-                            this.natCreateError = data.error || 'Failed to create NAT Gateway';
-                            return;
-                        }
-
-                        this.closeCreateNATModal();
-                        await this.loadNatGateways();
-                    } catch {
-                        this.natCreateError = 'Failed to create NAT Gateway';
-                    }
-                },
-
-                async deleteNatGateway(ngw) {
-                    if (!ngw?.nat_gateway_id) return this.showError('Invalid NAT Gateway');
-                    if (!confirm(`Delete NAT Gateway ${ngw.nat_gateway_id}?`)) return;
-
-                    try {
-                        const res = await fetch(`/api/v1/aws/nat-gateways/${ngw.nat_gateway_id}`, { method: 'DELETE' });
-                        const data = await res.json();
-                        if (!res.ok || data.status === 'failed') return this.showError(data.error || 'Delete failed');
-                        await this.loadNatGateways();
-                    } catch {
-                        this.showError('Failed to delete NAT Gateway');
-                    }
-                },
-
-                // =============================
-                // VALIDATION (kept compatible)
-                // =============================
-                vpcInspectionResult: null,
-                vpcInspectionError: null,
-                inspectingVpc: false,
-
-                internetGatewayInspection: [],
-
-                expandedValidation: {
-                    subnets: false,
-                    route_tables: false,
-                    internet_gateways: false,
-                    nat_gateways: false,
-                    network_interfaces: false,
-                    route_tables_inspection: false,
-                    subnets_inspection: false
-                },
-
-                routeTableInspection: null,
-                routeTableLoading: false,
-                routeTableError: null,
-
-                subnetInspection: null,
-                subnetLoading: false,
-                subnetErrorValidation: null,
-
-                async loadRouteTableValidation() {
-                    if (!this.selectedVpcId) return;
-                    this.routeTableLoading = true;
-                    this.routeTableError = null;
-
-                    try {
-                        const res = await fetch(`/api/v1/aws/route-tables/inspect?vpc_id=${this.selectedVpcId}`);
-                        const data = await res.json();
-
-                        if (!res.ok) {
-                            this.routeTableError = data.error || 'Failed to load route tables';
-                            this.routeTableInspection = null;
-                            return;
-                        }
-
-                        this.routeTableInspection = data;
-                    } catch {
-                        this.routeTableError = 'Failed to contact backend';
-                        this.routeTableInspection = null;
-                    } finally {
-                        this.routeTableLoading = false;
-                    }
-                },
-
-                async loadSubnetInspection() {
-                    this.subnetLoading = true;
-                    this.subnetErrorValidation = null;
-
-                    try {
-                        const vpcId = this.vpcInspectionResult?.vpc_id;
-                        if (!vpcId) return;
-
-                        const res = await fetch(`/api/v1/aws/vpcs/${vpcId}/subnets/inspection`);
-                        const data = await res.json();
-
-                        if (!res.ok) {
-                            this.subnetErrorValidation = data.error || 'Failed to load subnet inspection';
-                            return;
-                        }
-
-                        this.subnetInspection = data;
-                    } catch {
-                        this.subnetErrorValidation = 'Failed to load subnet inspection';
-                    } finally {
-                        this.subnetLoading = false;
-                    }
-                },
-
-
-                async inspectVpcDependencies() {
-                    if (!this.selectedVpcId) return;
-
-                    this.inspectingVpc = true;
-                    this.vpcInspectionError = null;
-
-                    this.vpcInspectionResult = null;
-                    this.internetGatewayInspection = [];
-                    this.routeTableInspection = null;
-                    this.subnetInspection = null;
-
-                    const vpcId = this.selectedVpcId;
-
-
-
-                    try {
-                        const res = await fetch(`/api/v1/aws/vpcs/${vpcId}/inspect`);
-                        const data = await res.json();
-
-                        if (!res.ok) {
-                            this.vpcInspectionError = data.error || 'Inspection failed';
-                            return;
-                        }
-
-                        this.vpcInspectionResult = data;
-
-                        await this.loadRouteTableValidation();
-                        await this.loadSubnetInspection();
+                    async deleteSubnet(subnet) {
+                        if (!subnet?.subnet_id) return this.showError('Invalid subnet');
+                        if (!confirm(`Delete subnet ${subnet.subnet_id}?`)) return;
 
                         try {
-                            const igwRes = await fetch(`/api/v1/aws/internet-gateways/inspect?vpc_id=${vpcId}`);
-                            const igwData = await igwRes.json();
-                            this.internetGatewayInspection = Array.isArray(igwData.details) ? igwData.details : [];
+                            const res = await fetch(`/api/v1/aws/subnets/${subnet.subnet_id}`, { method: 'DELETE' });
+                            const data = await res.json();
+                            if (!res.ok || data.status === 'failed') return this.showError(data.error || 'Subnet delete failed');
+                            await this.loadSubnets();
+                            await this.loadRouteTables();
                         } catch {
-                            this.internetGatewayInspection = [];
+                            this.showError('Failed to delete subnet');
+                        }
+                    },
+
+                    // =============================
+                    // ROUTE TABLE UI (keep as-is, cleaned)
+                    // =============================
+                    showCreateRTB: false,
+                    showAssociateRTB: false,
+                    showAddRoute: false,
+
+                    newRTBVPC: '',
+                    newRTBName: 'NetPilot-RTB',
+                    newRTBDescription: '',
+
+                    selectedRTBId: '',
+                    selectedSubnetForAssoc: '',
+                    candidateSubnetsForRTB: [],
+
+                    rtbCreateError: '',
+                    rtbAssocError: '',
+
+                    addRouteRTBId: '',
+                    addRouteDestination: '',
+                    addRouteTargetType: 'igw',
+                    addRouteTargetId: '',
+                    addRouteError: '',
+
+                    openCreateRTBModal() {
+                        this.showCreateRTB = true;
+                        this.rtbCreateError = '';
+                        this.newRTBVPC = '';
+                        this.newRTBName = 'NetPilot-RTB';
+                        this.newRTBDescription = '';
+                    },
+
+                    closeCreateRTBModal() {
+                        this.showCreateRTB = false;
+                        this.newRTBVPC = '';
+                        this.newRTBName = 'NetPilot-RTB';
+                        this.newRTBDescription = '';
+                        this.rtbCreateError = '';
+                    },
+
+                    openAssocModal(rt) {
+                        this.selectedRTBId = rt.route_table_id;
+                        this.selectedSubnetForAssoc = '';
+                        this.candidateSubnetsForRTB = this.subnets.filter(s => s.vpc_id === rt.vpc_id);
+                        this.rtbAssocError = '';
+                        this.showAssociateRTB = true;
+                    },
+
+                    closeAssocModal() {
+                        this.showAssociateRTB = false;
+                        this.selectedRTBId = '';
+                        this.selectedSubnetForAssoc = '';
+                        this.candidateSubnetsForRTB = [];
+                        this.rtbAssocError = '';
+                    },
+
+                    async associateRouteTable() {
+                        this.rtbAssocError = '';
+                        if (!this.selectedRTBId || !this.selectedSubnetForAssoc) {
+                            this.rtbAssocError = 'Please select a subnet';
+                            return;
                         }
 
-                    } catch {
-                        this.vpcInspectionError = 'Failed to contact backend';
-                    } finally {
-                        this.inspectingVpc = false;
-                        // Refresh inventory so UI stays consistent
-                        await this.loadSubnets();
-                    }
+                        try {
+                            const res = await fetch(
+                                `/api/v1/aws/route-tables/${this.selectedRTBId}/associate?subnet_id=${encodeURIComponent(this.selectedSubnetForAssoc)}`,
+                                { method: 'POST' }
+                            );
+                            const data = await res.json();
+                            if (!res.ok || data.status === 'failed') {
+                                this.rtbAssocError = data.error || 'Association failed';
+                                return;
+                            }
 
-                },
-
-
-                // =============================
-                // HEALTH (unchanged)
-                // =============================
-                backendHealth: null,
-                awsHealth: null,
-                awsLegacyHealth: null,
-                healthError: null,
-                healthCheckedAt: null,
-
-                async checkBackendHealth() {
-                    try {
-                        const r = await fetch('/api/v1/health');
-                        this.backendHealth = await r.json();
-                    } catch {
-                        this.backendHealth = { status: 'failed' };
-                    }
-                },
-
-                async checkAwsHealth() {
-                    try {
-                        const r = await fetch('/api/v1/aws/health');
-                        this.awsHealth = await r.json();
-                    } catch {
-                        this.awsHealth = { status: 'failed' };
-                    }
-                },
-
-                async checkAwsLegacyHealth() {
-                    try {
-                        const r = await fetch('/api/v1/aws/health/legacy');
-                        this.awsLegacyHealth = await r.json();
-                    } catch {
-                        this.awsLegacyHealth = { status: 'failed' };
-                    }
-                },
-
-                async checkAllHealth() {
-                    this.healthError = null;
-                    this.healthCheckedAt = new Date().toISOString();
-                    await Promise.all([this.checkBackendHealth(), this.checkAwsHealth(), this.checkAwsLegacyHealth()]);
-                },
-
-                // =============================
-                // LOADERS (stable + subnet fix)
-                // =============================
-                async loadVPCs() {
-                    try {
-                        const r = await fetch('/api/v1/aws/vpcs');
-                        const d = await r.json();
-                        this.vpcs = d.vpcs || [];
-
-                        if (this.vpcs.length && !this.selectedVpcId) {
-                            this.selectedVpcId = this.vpcs[0].vpc_id;
+                            this.closeAssocModal();
+                            await this.loadRouteTables();
+                        } catch {
+                            this.rtbAssocError = 'Failed to associate route table';
                         }
-                    } catch {
-                        this.showError('Failed to load VPCs');
-                    }
-                },
+                    },
 
-                async loadSubnets() {
-                    if (!this.selectedVpcId) {
-                        this.subnets = [];
-                        return;
-                    }
+                    async deassociateRouteTable(associationId) {
+                        if (!associationId) return;
+                        try {
+                            const res = await fetch(`/api/v1/aws/route-tables/${associationId}/disassociate`, { method: 'POST' });
+                            const data = await res.json();
+                            if (!res.ok || data.status === 'failed') return this.showError(data.error || 'Failed to de-associate route table');
+                            await this.loadRouteTables();
+                        } catch {
+                            this.showError('Failed to de-associate route table');
+                        }
+                    },
 
-                    try {
-                        const r = await fetch(`/api/v1/aws/subnets?vpc_id=${encodeURIComponent(this.selectedVpcId)}`);
-                        const d = await r.json();
+                    async submitCreateRTB() {
+                        this.rtbCreateError = '';
+                        if (!this.newRTBVPC) {
+                            this.rtbCreateError = 'Please select a VPC';
+                            return;
+                        }
 
-                        // ✅ FIX: accept both response shapes
-                        if (Array.isArray(d)) this.subnets = d;
-                        else if (Array.isArray(d.subnets)) this.subnets = d.subnets;
-                        else this.subnets = [];
+                        try {
+                            const res = await fetch('/api/v1/aws/route-tables', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    vpc_id: this.newRTBVPC,
+                                    name: this.newRTBName,
+                                    description: this.newRTBDescription || ''
+                                })
+                            });
 
-                    } catch {
-                        this.showError('Failed to load subnets');
-                        this.subnets = [];
-                    }
-                },
+                            const data = await res.json();
+                            if (!res.ok || data.status === 'failed') {
+                                this.rtbCreateError = data.error || 'Route table creation failed';
+                                return;
+                            }
 
-                async loadAZs() {
-                    try {
-                        const r = await fetch('/api/v1/aws/availability-zones');
-                        const d = await r.json();
-                        this.availabilityZones = d.availability_zones || d.zones || [];
-                    } catch {
-                        this.showError('Failed to load Availability Zones');
-                        this.availabilityZones = [];
-                    }
-                },
+                            this.closeCreateRTBModal();
+                            await this.loadRouteTables();
+                        } catch {
+                            this.rtbCreateError = 'Failed to create route table';
+                        }
+                    },
 
-                async loadRouteTables() {
-                    try {
-                        const r = await fetch('/api/v1/aws/route-tables');
-                        const d = await r.json();
-                        this.routeTables = d.route_tables || [];
-                    } catch {
-                        this.showError('Failed to load route tables');
-                    }
-                },
+                    openAddRouteModal(rt) {
+                        this.addRouteRTBId = rt.route_table_id;
+                        this.addRouteDestination = '';
+                        this.addRouteTargetType = 'igw';
+                        this.addRouteTargetId = '';
+                        this.addRouteError = '';
+                        this.showAddRoute = true;
+                    },
 
-                async loadInternetGateways() {
-                    try {
-                        const r = await fetch('/api/v1/aws/internet-gateways');
-                        const d = await r.json();
-                        this.internetGateways = (d.internet_gateways || []).map(igw => ({
-                            ...igw,
-                            attached_vpc_ids: igw.attached_vpc_id ? [igw.attached_vpc_id] : []
-                        }));
-                    } catch {
-                        this.showError('Failed to load Internet Gateways');
-                    }
-                },
+                    closeAddRouteModal() {
+                        this.showAddRoute = false;
+                        this.addRouteRTBId = '';
+                        this.addRouteDestination = '';
+                        this.addRouteTargetType = 'igw';
+                        this.addRouteTargetId = '';
+                        this.addRouteError = '';
+                    },
 
-                // =============================
-                // OBSERVABILITY – LOG LOADING (STEP 1b)
-                // =============================
-                async loadLogs() {
-                    try {
-                        const res = await fetch("/api/v1/logs/recent?limit=50");
-                        const data = await res.json();
-                        this.recentLogs = data.logs || [];
-                    } catch (err) {
-                        console.error("Failed to load logs", err);
-                        this.showError("Unable to load backend logs");
-                        this.recentLogs = [];
-                    }
-                },
+                    async submitAddRoute() {
+                        this.addRouteError = '';
+                        if (!this.addRouteRTBId || !this.addRouteDestination || !this.addRouteTargetType || !this.addRouteTargetId) {
+                            this.addRouteError = 'All fields are required';
+                            return;
+                        }
 
-                async loadNatGateways() {
-                    try {
-                        const r = await fetch('/api/v1/aws/nat-gateways');
-                        const d = await r.json();
-                        this.natGateways = (d.nat_gateways || []).map(ngw => ({
-                            ...ngw,
-                            public_ip: ngw.addresses && ngw.addresses.length ? ngw.addresses[0].public_ip : null
-                        }));
-                    } catch {
-                        this.showError('Failed to load NAT Gateways');
-                    }
-                },
+                        try {
+                            const res = await fetch(`/api/v1/aws/route-tables/${this.addRouteRTBId}/routes`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    destination_cidr: this.addRouteDestination,
+                                    target_type: this.addRouteTargetType,
+                                    target_id: this.addRouteTargetId,
+                                }),
+                            });
 
-                async loadBackendHealth() {
-                    try {
-                        const res = await fetch('/api/v1/health');
-                        this.backendHealth = await res.json();
-                    } catch (e) {
-                        this.backendHealth = { status: 'error' };
-                    }
-                },
+                            const data = await res.json();
+                            if (!res.ok || data.status === 'failed') {
+                                this.addRouteError = data.error || 'Failed to add route';
+                                return;
+                            }
 
-                // =============================
-                // FETCH ALERTS (Phase 7.3)
-                // =============================
-                async fetchAlerts() {
-                    try {
-                        const res = await fetch("/api/v1/alerts/cloudwatch");
-                        const data = await res.json();
-                        this.alerts = data.alarms || [];
-                        this.alertsError = null;
-                    } catch (e) {
-                        console.error("fetchAlerts failed", e);
-                        this.alertsError = "Failed to load alerts";
-                    }
-                },
+                            this.closeAddRouteModal();
+                            await this.loadRouteTables();
+                        } catch {
+                            this.addRouteError = 'Failed to add route';
+                        }
+                    },
 
-                // =============================
-                // ALERTS POLLING CONTROL
-                // =============================
-                startAlertsPolling() {
-                    if (this.alertsPollTimer) return;
+                    async deleteRouteTable(rt) {
+                        if (rt?.is_main) return;
+                        try {
+                            const res = await fetch(`/api/v1/aws/route-tables/${rt.route_table_id}`, { method: 'DELETE' });
+                            const data = await res.json();
+                            if (!res.ok || data.status === 'failed') return this.showError(data.error || 'Route table delete failed');
+                            await this.loadRouteTables();
+                        } catch {
+                            this.showError('Failed to delete route table');
+                        }
+                    },
 
-                    this.fetchAlerts(); // immediate load
+                    // =============================
+                    // IGW
+                    // =============================
+                    internetGateways: [],
+                    igwError: null,
 
-                    this.alertsPollTimer = setInterval(() => {
-                        this.fetchAlerts();
-                    }, this.alertsPollingIntervalMs);
-                },
+                    showCreateIGW: false,
+                    showAttachIGW: false,
+                    showDetachIGWConfirm: false,
 
-                stopAlertsPolling() {
-                    if (this.alertsPollTimer) {
-                        clearInterval(this.alertsPollTimer);
-                        this.alertsPollTimer = null;
-                    }
-                },
-            };
-        }
-    </script>
-</div>
-{% endblock %}
+                    igwCreateError: '',
+                    igwAttachError: null,
+                    igwDetachError: null,
+
+                    newIGWName: '',
+                    selectedIGWId: null,
+
+                    selectedVpcForIGWAttach: '',
+                    selectedVpcForIGWAttachManual: '',
+                    selectedVpcForIGWDetach: '',
+                    selectedVpcForIGWDetachManual: '',
+
+                    closeCreateIGWModal() {
+                        this.showCreateIGW = false;
+                        this.newIGWName = '';
+                        this.igwCreateError = '';
+                    },
+
+                    async submitCreateIGW() {
+                        this.igwCreateError = '';
+                        try {
+                            const res = await fetch(`/api/v1/aws/internet-gateways?name=${encodeURIComponent(this.newIGWName || '')}`, { method: 'POST' });
+                            const data = await res.json();
+                            if (!res.ok || data.status === 'failed') {
+                                this.igwCreateError = data.error || 'Failed to create Internet Gateway';
+                                return;
+                            }
+                            this.closeCreateIGWModal();
+                            await this.loadInternetGateways();
+                        } catch {
+                            this.igwCreateError = 'Failed to create Internet Gateway';
+                        }
+                    },
+
+                    openAttachIGWModal(igwId) {
+                        this.selectedIGWId = igwId;
+                        this.selectedVpcForIGWAttach = '';
+                        this.selectedVpcForIGWAttachManual = '';
+                        this.igwAttachError = '';
+                        this.showAttachIGW = true;
+                    },
+
+                    closeAttachIGWModal() {
+                        this.showAttachIGW = false;
+                        this.selectedIGWId = null;
+                    },
+
+                    async submitAttachIGW() {
+                        const vpcId = this.selectedVpcForIGWAttach || this.selectedVpcForIGWAttachManual;
+                        if (!this.selectedIGWId || !vpcId) {
+                            this.igwAttachError = 'IGW and VPC are required';
+                            return;
+                        }
+
+                        try {
+                            const res = await fetch(`/api/v1/aws/internet-gateways/${this.selectedIGWId}/attach?vpc_id=${encodeURIComponent(vpcId)}`, { method: 'POST' });
+                            const d = await res.json();
+                            if (!res.ok || d.status === 'failed') {
+                                this.igwAttachError = d.error || 'Attach failed';
+                                return;
+                            }
+
+                            this.showAttachIGW = false;
+                            await this.loadInternetGateways();
+                        } catch {
+                            this.igwAttachError = 'Failed to attach Internet Gateway';
+                        }
+                    },
+
+                    promptDetachIGW(igw) {
+                        this.selectedIGWId = igw.internet_gateway_id;
+                        this.selectedVpcForIGWDetach = '';
+                        this.selectedVpcForIGWDetachManual = '';
+                        this.igwDetachError = '';
+                        this.showDetachIGWConfirm = true;
+                    },
+
+                    closeDetachIGWModal() {
+                        this.showDetachIGWConfirm = false;
+                        this.selectedIGWId = null;
+                    },
+
+                    async submitDetachIGW() {
+                        const vpcId = this.selectedVpcForIGWDetach || this.selectedVpcForIGWDetachManual;
+                        if (!this.selectedIGWId || !vpcId) {
+                            this.igwDetachError = 'VPC is required to detach';
+                            return;
+                        }
+
+                        try {
+                            const res = await fetch(`/api/v1/aws/internet-gateways/${this.selectedIGWId}/detach?vpc_id=${encodeURIComponent(vpcId)}`, { method: 'POST' });
+                            const d = await res.json();
+                            if (!res.ok || d.status === 'failed') {
+                                this.igwDetachError = d.error || 'Detach failed';
+                                return;
+                            }
+
+                            this.showDetachIGWConfirm = false;
+                            await this.loadInternetGateways();
+                        } catch {
+                            this.igwDetachError = 'Failed to detach Internet Gateway';
+                        }
+                    },
+
+                    async deleteIGW(igwId) {
+                        if (!confirm(`Delete Internet Gateway ${igwId}? It must be detached first.`)) return;
+                        try {
+                            const res = await fetch(`/api/v1/aws/internet-gateways/${igwId}`, { method: 'DELETE' });
+                            const d = await res.json();
+                            if (!res.ok || d.status === 'failed') return this.showError(d.error || 'Delete failed');
+                            await this.loadInternetGateways();
+                        } catch {
+                            this.showError('Failed to delete Internet Gateway');
+                        }
+                    },
+
+                    // =============================
+                    // NAT
+                    // =============================
+                    natGateways: [],
+                    natError: null,
+
+                    showCreateNAT: false,
+                    newNATSubnetId: '',
+                    newNATName: 'NetPilot-NAT',
+                    natCreateError: '',
+
+                    openCreateNATModal() {
+                        this.natCreateError = '';
+                        this.newNATSubnetId = '';
+                        this.showCreateNAT = true;
+                    },
+
+                    closeCreateNATModal() {
+                        this.showCreateNAT = false;
+                        this.natCreateError = '';
+                    },
+
+                    async submitCreateNAT() {
+                        this.natCreateError = '';
+                        if (!this.newNATSubnetId) {
+                            this.natCreateError = 'Please select a subnet';
+                            return;
+                        }
+
+                        try {
+                            const res = await fetch(
+                                `/api/v1/aws/nat-gateways?subnet_id=${encodeURIComponent(this.newNATSubnetId)}` +
+                                (this.newNATName ? `&name=${encodeURIComponent(this.newNATName)}` : ''),
+                                { method: 'POST' }
+                            );
+
+                            const data = await res.json();
+                            if (!res.ok || data.status === 'failed') {
+                                this.natCreateError = data.error || 'Failed to create NAT Gateway';
+                                return;
+                            }
+
+                            this.closeCreateNATModal();
+                            await this.loadNatGateways();
+                        } catch {
+                            this.natCreateError = 'Failed to create NAT Gateway';
+                        }
+                    },
+
+                    async deleteNatGateway(ngw) {
+                        if (!ngw?.nat_gateway_id) return this.showError('Invalid NAT Gateway');
+                        if (!confirm(`Delete NAT Gateway ${ngw.nat_gateway_id}?`)) return;
+
+                        try {
+                            const res = await fetch(`/api/v1/aws/nat-gateways/${ngw.nat_gateway_id}`, { method: 'DELETE' });
+                            const data = await res.json();
+                            if (!res.ok || data.status === 'failed') return this.showError(data.error || 'Delete failed');
+                            await this.loadNatGateways();
+                        } catch {
+                            this.showError('Failed to delete NAT Gateway');
+                        }
+                    },
+
+                    // =============================
+                    // VALIDATION (kept compatible)
+                    // =============================
+                    vpcInspectionResult: null,
+                    vpcInspectionError: null,
+                    inspectingVpc: false,
+
+                    internetGatewayInspection: [],
+
+                    expandedValidation: {
+                        subnets: false,
+                        route_tables: false,
+                        internet_gateways: false,
+                        nat_gateways: false,
+                        network_interfaces: false,
+                        route_tables_inspection: false,
+                        subnets_inspection: false
+                    },
+
+                    routeTableInspection: null,
+                    routeTableLoading: false,
+                    routeTableError: null,
+
+                    subnetInspection: null,
+                    subnetLoading: false,
+                    subnetErrorValidation: null,
+
+                    async loadRouteTableValidation() {
+                        if (!this.selectedVpcId) return;
+                        this.routeTableLoading = true;
+                        this.routeTableError = null;
+
+                        try {
+                            const res = await fetch(`/api/v1/aws/route-tables/inspect?vpc_id=${this.selectedVpcId}`);
+                            const data = await res.json();
+
+                            if (!res.ok) {
+                                this.routeTableError = data.error || 'Failed to load route tables';
+                                this.routeTableInspection = null;
+                                return;
+                            }
+
+                            this.routeTableInspection = data;
+                        } catch {
+                            this.routeTableError = 'Failed to contact backend';
+                            this.routeTableInspection = null;
+                        } finally {
+                            this.routeTableLoading = false;
+                        }
+                    },
+
+                    async loadSubnetInspection() {
+                        this.subnetLoading = true;
+                        this.subnetErrorValidation = null;
+
+                        try {
+                            const vpcId = this.vpcInspectionResult?.vpc_id;
+                            if (!vpcId) return;
+
+                            const res = await fetch(`/api/v1/aws/vpcs/${vpcId}/subnets/inspection`);
+                            const data = await res.json();
+
+                            if (!res.ok) {
+                                this.subnetErrorValidation = data.error || 'Failed to load subnet inspection';
+                                return;
+                            }
+
+                            this.subnetInspection = data;
+                        } catch {
+                            this.subnetErrorValidation = 'Failed to load subnet inspection';
+                        } finally {
+                            this.subnetLoading = false;
+                        }
+                    },
+
+
+                    async inspectVpcDependencies() {
+                        if (!this.selectedVpcId) return;
+
+                        this.inspectingVpc = true;
+                        this.vpcInspectionError = null;
+
+                        this.vpcInspectionResult = null;
+                        this.internetGatewayInspection = [];
+                        this.routeTableInspection = null;
+                        this.subnetInspection = null;
+
+                        const vpcId = this.selectedVpcId;
+
+
+
+                        try {
+                            const res = await fetch(`/api/v1/aws/vpcs/${vpcId}/inspect`);
+                            const data = await res.json();
+
+                            if (!res.ok) {
+                                this.vpcInspectionError = data.error || 'Inspection failed';
+                                return;
+                            }
+
+                            this.vpcInspectionResult = data;
+
+                            await this.loadRouteTableValidation();
+                            await this.loadSubnetInspection();
+
+                            try {
+                                const igwRes = await fetch(`/api/v1/aws/internet-gateways/inspect?vpc_id=${vpcId}`);
+                                const igwData = await igwRes.json();
+                                this.internetGatewayInspection = Array.isArray(igwData.details) ? igwData.details : [];
+                            } catch {
+                                this.internetGatewayInspection = [];
+                            }
+
+                        } catch {
+                            this.vpcInspectionError = 'Failed to contact backend';
+                        } finally {
+                            this.inspectingVpc = false;
+                            // Refresh inventory so UI stays consistent
+                            await this.loadSubnets();
+                        }
+
+                    },
+
+
+                    // =============================
+                    // HEALTH (unchanged)
+                    // =============================
+                    backendHealth: null,
+                    awsHealth: null,
+                    awsLegacyHealth: null,
+                    healthError: null,
+                    healthCheckedAt: null,
+
+                    async checkBackendHealth() {
+                        try {
+                            const r = await fetch('/api/v1/health');
+                            this.backendHealth = await r.json();
+                        } catch {
+                            this.backendHealth = { status: 'failed' };
+                        }
+                    },
+
+                    async checkAwsHealth() {
+                        try {
+                            const r = await fetch('/api/v1/aws/health');
+                            this.awsHealth = await r.json();
+                        } catch {
+                            this.awsHealth = { status: 'failed' };
+                        }
+                    },
+
+                    async checkAwsLegacyHealth() {
+                        try {
+                            const r = await fetch('/api/v1/aws/health/legacy');
+                            this.awsLegacyHealth = await r.json();
+                        } catch {
+                            this.awsLegacyHealth = { status: 'failed' };
+                        }
+                    },
+
+                    async checkAllHealth() {
+                        this.healthError = null;
+                        this.healthCheckedAt = new Date().toISOString();
+                        await Promise.all([this.checkBackendHealth(), this.checkAwsHealth(), this.checkAwsLegacyHealth()]);
+                    },
+
+                    // =============================
+                    // LOADERS (stable + subnet fix)
+                    // =============================
+                    async loadVPCs() {
+                        try {
+                            const r = await fetch('/api/v1/aws/vpcs');
+                            const d = await r.json();
+                            this.vpcs = d.vpcs || [];
+
+                            if (this.vpcs.length && !this.selectedVpcId) {
+                                this.selectedVpcId = this.vpcs[0].vpc_id;
+                            }
+                        } catch {
+                            this.showError('Failed to load VPCs');
+                        }
+                    },
+
+                    async loadSubnets() {
+                        if (!this.selectedVpcId) {
+                            this.subnets = [];
+                            return;
+                        }
+
+                        try {
+                            const r = await fetch(`/api/v1/aws/subnets?vpc_id=${encodeURIComponent(this.selectedVpcId)}`);
+                            const d = await r.json();
+
+                            // ✅ FIX: accept both response shapes
+                            if (Array.isArray(d)) this.subnets = d;
+                            else if (Array.isArray(d.subnets)) this.subnets = d.subnets;
+                            else this.subnets = [];
+
+                        } catch {
+                            this.showError('Failed to load subnets');
+                            this.subnets = [];
+                        }
+                    },
+
+                    async loadAZs() {
+                        try {
+                            const r = await fetch('/api/v1/aws/availability-zones');
+                            const d = await r.json();
+                            this.availabilityZones = d.availability_zones || d.zones || [];
+                        } catch {
+                            this.showError('Failed to load Availability Zones');
+                            this.availabilityZones = [];
+                        }
+                    },
+
+                    async loadRouteTables() {
+                        try {
+                            const r = await fetch('/api/v1/aws/route-tables');
+                            const d = await r.json();
+                            this.routeTables = d.route_tables || [];
+                        } catch {
+                            this.showError('Failed to load route tables');
+                        }
+                    },
+
+                    async loadInternetGateways() {
+                        try {
+                            const r = await fetch('/api/v1/aws/internet-gateways');
+                            const d = await r.json();
+                            this.internetGateways = (d.internet_gateways || []).map(igw => ({
+                                ...igw,
+                                attached_vpc_ids: igw.attached_vpc_id ? [igw.attached_vpc_id] : []
+                            }));
+                        } catch {
+                            this.showError('Failed to load Internet Gateways');
+                        }
+                    },
+
+                    // =============================
+                    // OBSERVABILITY – LOG LOADING (STEP 1b)
+                    // =============================
+                    async loadLogs() {
+                        try {
+                            const res = await fetch("/api/v1/logs/recent?limit=50");
+                            const data = await res.json();
+                            this.recentLogs = data.logs || [];
+                        } catch (err) {
+                            console.error("Failed to load logs", err);
+                            this.showError("Unable to load backend logs");
+                            this.recentLogs = [];
+                        }
+                    },
+
+                    async loadNatGateways() {
+                        try {
+                            const r = await fetch('/api/v1/aws/nat-gateways');
+                            const d = await r.json();
+                            this.natGateways = (d.nat_gateways || []).map(ngw => ({
+                                ...ngw,
+                                public_ip: ngw.addresses && ngw.addresses.length ? ngw.addresses[0].public_ip : null
+                            }));
+                        } catch {
+                            this.showError('Failed to load NAT Gateways');
+                        }
+                    },
+
+                    async loadBackendHealth() {
+                        try {
+                            const res = await fetch('/api/v1/health');
+                            this.backendHealth = await res.json();
+                        } catch (e) {
+                            this.backendHealth = { status: 'error' };
+                        }
+                    },
+
+                    // =============================
+                    // FETCH ALERTS (Phase 7.3)
+                    // =============================
+                    async fetchAlerts() {
+                        try {
+                            const res = await fetch("/api/v1/alerts/cloudwatch");
+                            const data = await res.json();
+                            this.alerts = data.alarms || [];
+                            this.alertsError = null;
+                        } catch (e) {
+                            console.error("fetchAlerts failed", e);
+                            this.alertsError = "Failed to load alerts";
+                        }
+                    },
+
+                    // =============================
+                    // ALERTS POLLING CONTROL
+                    // =============================
+                    startAlertsPolling() {
+                        if (this.alertsPollTimer) return;
+
+                        this.fetchAlerts(); // immediate load
+
+                        this.alertsPollTimer = setInterval(() => {
+                            this.fetchAlerts();
+                        }, this.alertsPollingIntervalMs);
+                    },
+
+                    stopAlertsPolling() {
+                        if (this.alertsPollTimer) {
+                            clearInterval(this.alertsPollTimer);
+                            this.alertsPollTimer = null;
+                        }
+                    },
+                };
+            }
+        </script>
+    </div>
+    {% endblock %}
