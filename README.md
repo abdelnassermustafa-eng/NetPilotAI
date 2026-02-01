@@ -226,7 +226,7 @@ Write capabilities are planned for future phases and will be **opt-in, guarded, 
 
 👤 Author
 
-**Nasser Abdelghani**  
+Nasser Abdelghani  
 Senior Network, Automation & Cloud Engineer
 
 NetPilot AI reflects long-term hands-on experience in:
@@ -241,11 +241,11 @@ This project was built to demonstrate how **clarity, correctness, and safety** c
 
 ✅ Project Status
 
-**✔ MVP v1 — Shipped**  
-**✔ Stable**  
-**✔ Read-only & safe by design**  
-**🚀 Actively evolving**
+- MVP v1 — Shipped  
+- Stable  
+- Read-only & safe by design  
+🚀 Actively evolving
 
-NetPilot AI is now in a **shippable, reviewable, and extensible** state.
+NetPilot AI is now in a shippable, reviewable, and extensible state.
 
 
