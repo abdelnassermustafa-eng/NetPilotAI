@@ -1,0 +1,128 @@
+<!-- ================= ALERTS SECTION ================= -->
+<div x-show="observabilitySection === 'alerts'" x-cloak class="space-y-4">
+
+  <!-- HEADER -->
+  <h3 class="text-base font-semibold text-slate-800">🚨 Alerts</h3>
+
+  <!-- ALERTS SCOPE NOTICE -->
+  <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm text-slate-700">
+    Alerts are displayed for awareness only.
+    This view does not support alert creation, suppression,
+    acknowledgment, or remediation actions.
+  </div>
+
+  <p class="text-xs italic text-slate-500 mt-2">
+    Alert coverage may be limited or partial depending on source availability.
+  </p>
+
+  <!-- DESCRIPTION -->
+  <p class="text-sm text-slate-700">
+    Displayed alerts reflect current state only. Alert configuration, notification routing,
+    and automated remediation are not available in this version.
+  </p>
+
+  <!-- CAPABILITIES / STATUS (COLLAPSIBLE) -->
+  <details class="bg-amber-50 border border-amber-200 rounded-md p-3 text-sm">
+    <summary class="cursor-pointer font-medium text-amber-800">
+      Show Alerts capabilities & status
+    </summary>
+
+    <div class="mt-3 space-y-3 text-slate-700 leading-relaxed">
+
+      <!-- IMPLEMENTED -->
+      <p class="font-semibold">✅ Implemented</p>
+      <ul class="list-disc list-inside ml-4 space-y-1">
+        <li><strong>CloudWatch Alarms (read-only)</strong></li>
+        <li><strong>Alert state visibility (OK / ALARM)</strong></li>
+      </ul>
+
+      <!-- PARTIALLY IMPLEMENTED -->
+      <p class="font-semibold">⚠️ Partially implemented</p>
+      <ul class="list-disc list-inside ml-4 space-y-1">
+        <li><strong>Service health warnings</strong></li>
+      </ul>
+
+      <!-- PLANNED -->
+      <p class="font-semibold">🚧 Planned</p>
+      <ul class="list-disc list-inside ml-4 space-y-1">
+        <li>Threshold configuration</li>
+        <li>Notification routing (SNS / Email / Slack)</li>
+        <li>Automated remediation</li>
+      </ul>
+
+    </div>
+  </details>
+
+  <!-- ALERT LIST -->
+  <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+    <li>
+      <div class="flex items-center justify-between cursor-pointer select-none"
+        @click="expandedAlerts.cloudwatch = !expandedAlerts.cloudwatch">
+        <strong>CloudWatch Alarms</strong>
+        <span class="text-xs text-slate-500" x-text="expandedAlerts.cloudwatch ? 'Hide' : 'Show'"></span>
+      </div>
+
+      <div x-show="expandedAlerts.cloudwatch" x-cloak class="mt-2 ml-4 space-y-2 text-sm text-slate-700">
+
+        <template x-if="alertsError">
+          <div class="text-red-600" x-text="alertsError"></div>
+        </template>
+
+        <template x-if="alerts.length === 0">
+          <div class="italic text-slate-500 flex items-center gap-2">
+            <span>✅</span>
+            <span>No active alerts</span>
+          </div>
+        </template>
+
+        <template x-for="alert in alerts" :key="alert.id">
+          <div class="border border-slate-200 rounded-lg p-3 bg-white">
+
+            <!-- HEADER ROW -->
+            <div class="flex justify-between items-center cursor-pointer select-none"
+              @click="alert._open = !alert._open">
+
+              <div class="flex items-center gap-2">
+                <span class="flex items-center gap-2 font-medium text-slate-800">
+                  <span x-text="alertSeverityIcon(alert.severity)"></span>
+                  <span x-text="alert.name"></span>
+                </span>
+
+                <span class="text-xs px-2 py-0.5 rounded font-mono" :class="alert.state === 'ALARM'
+                        ? 'bg-red-100 text-red-700'
+                        : 'bg-emerald-100 text-emerald-700'">
+                  <span x-text="alert.state"></span>
+                </span>
+              </div>
+
+              <span class="text-xs text-slate-400" x-text="alert._open ? 'Hide' : 'Details'"></span>
+            </div>
+
+            <!-- EXPANDED DETAILS -->
+            <div x-show="alert._open" x-cloak class="mt-3 text-sm text-slate-600 space-y-1">
+
+              <div>
+                <strong>Description:</strong>
+                <span x-text="alert.description"></span>
+              </div>
+
+              <div>
+                <strong>Source:</strong>
+                <span x-text="alert.source"></span>
+              </div>
+
+              <div>
+                <strong>Last Updated:</strong>
+                <span class="font-mono" x-text="alert.updated_at"></span>
+              </div>
+
+            </div>
+          </div>
+        </template>
+
+      </div>
+    </li>
+  </ul>
+
+</div>
+<!-- =============== END ALERTS SECTION =============== -->

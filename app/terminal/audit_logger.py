@@ -1,0 +1,3 @@
+"""
+Audit logger placeholder.
+"""

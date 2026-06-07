@@ -1,0 +1,23 @@
+<!-- ============================= -->
+<!-- BACKEND HEALTH BADGE (OBSERVABILITY SCOPE) -->
+<!-- ============================= -->
+<template x-if="backendHealth">
+    <div class="flex items-center space-x-2">
+        <template x-if="backendHealth.status === 'ok'">
+            <div class="flex items-center space-x-2 text-green-700">
+                <span>🟢</span>
+                <span class="text-sm font-medium">Backend healthy</span>
+                <span class="text-xs text-slate-500">
+                    (<span x-text="backendHealth.service"></span>)
+                </span>
+            </div>
+        </template>
+
+        <template x-if="backendHealth.status !== 'ok'">
+            <div class="flex items-center space-x-2 text-red-700">
+                <span>🔴</span>
+                <span class="text-sm font-medium">Backend unreachable</span>
+            </div>
+        </template>
+    </div>
+</template>

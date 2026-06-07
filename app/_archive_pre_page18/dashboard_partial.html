@@ -1,0 +1,905 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1 class="text-2xl font-semibold text-slate-800 mb-6">
+    AWS Network Inventory
+</h1>
+
+<!-- ROOT ALPINE CONTROLLER -->
+<div x-data="networkConsole()" x-init="init()" class="space-y-6">
+
+    <!-- GLOBAL ERROR BAR -->
+    <template x-if="globalError">
+        <div class="mb-4 bg-red-100 text-red-800 border border-red-300 px-4 py-2 rounded text-sm"
+             x-text="globalError">
+        </div>
+    </template>
+
+    <!-- MAIN TABS -->
+    <div class="border-b border-slate-200 mb-4">
+        <nav class="flex space-x-4">
+            <button @click="activeTab = 'network'"
+                :class="activeTab === 'network'
+                ? 'px-3 py-2 text-sm font-medium border-b-2 border-blue-600 text-blue-600'
+                : 'px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-800'">
+                🌐 VPCs & Subnets
+            </button>
+
+            <button @click="activeTab = 'routes'"
+                :class="activeTab === 'routes'
+                ? 'px-3 py-2 text-sm font-medium border-b-2 border-blue-600 text-blue-600'
+                : 'px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-800'">
+                📦 Route Tables
+            </button>
+
+            <button @click="activeTab = 'igws'"
+                :class="activeTab === 'igws'
+                ? 'px-3 py-2 text-sm font-medium border-b-2 border-blue-600 text-blue-600'
+                : 'px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-800'">
+                🌐 Internet Gateways
+            </button>
+
+            <button @click="activeTab = 'nat'"
+                :class="activeTab === 'nat'
+                ? 'px-3 py-2 text-sm font-medium border-b-2 border-blue-600 text-blue-600'
+                : 'px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-800'">
+                ⚙️ NAT Gateways
+            </button>
+        </nav>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- TAB 1: VPCs & SUBNETS -->
+    <!-- ============================================================= -->
+    <div x-show="activeTab === 'network'" x-cloak class="space-y-8">
+
+        <!-- ACTION BAR -->
+        <div class="flex space-x-3">
+            <button @click="showCreateVPC = true"
+                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                + Create VPC
+            </button>
+
+            <button @click="showCreateSubnet = true"
+                class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                + Create Subnet
+            </button>
+
+            <button @click="reloadAll()"
+                class="bg-slate-600 text-white px-4 py-2 rounded hover:bg-slate-700">
+                Refresh
+            </button>
+        </div>
+
+        <!-- ================= CREATE VPC MODAL ================= -->
+        <div x-show="showCreateVPC" x-cloak
+            class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+
+            <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+                <h2 class="text-lg font-semibold mb-4">Create New VPC</h2>
+
+                <input type="text"
+                    placeholder="CIDR (e.g. 10.0.0.0/16)"
+                    x-model="newVpcCidr"
+                    class="border p-2 rounded w-full mb-4" />
+
+                <div class="flex justify-end space-x-3">
+                    <button @click="showCreateVPC = false"
+                        class="px-4 py-2 bg-slate-300 rounded hover:bg-slate-400">
+                        Cancel
+                    </button>
+
+                    <button @click="createVPC(); showCreateVPC = false"
+                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        Create
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= CREATE SUBNET MODAL ================= -->
+        <div x-show="showCreateSubnet" x-cloak
+            class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+
+            <div class="bg-white p-6 rounded-lg shadow-lg w-[28rem]">
+                <h2 class="text-lg font-semibold mb-4">Create New Subnet</h2>
+
+                <template x-if="subnetError">
+                    <div class="mb-3 bg-red-100 text-red-800 border border-red-300 px-3 py-2 rounded text-sm"
+                        x-text="subnetError"></div>
+                </template>
+
+                <label class="block mb-1 font-semibold">VPC</label>
+                <select x-model="newSubnetVPC" class="border p-2 rounded w-full mb-2">
+                    <option value="">-- Select VPC --</option>
+                    <template x-for="vpc in vpcs" :key="vpc.vpc_id">
+                        <option :value="vpc.vpc_id"
+                            x-text="`${vpc.vpc_id} (${vpc.cidr})`"></option>
+                    </template>
+                </select>
+
+                <input type="text"
+                    placeholder="Or type VPC ID manually"
+                    x-model="newSubnetVPCManual"
+                    class="border p-2 rounded w-full mb-3" />
+
+                <label class="block mb-1 font-semibold">CIDR</label>
+                <input type="text"
+                    placeholder="10.0.1.0/24"
+                    x-model="newSubnetCIDR"
+                    class="border p-2 rounded w-full mb-3" />
+
+                <label class="block mb-1 font-semibold">Availability Zone</label>
+                <select x-model="newSubnetAZ" class="border p-2 rounded w-full mb-3">
+                    <option value="">-- Select AZ --</option>
+                    <template x-for="az in availabilityZones" :key="az">
+                        <option :value="az" x-text="az"></option>
+                    </template>
+                </select>
+
+                <label class="block mb-1 font-semibold">Name (optional)</label>
+                <input type="text"
+                    x-model="newSubnetName"
+                    class="border p-2 rounded w-full mb-4" />
+
+                <div class="flex justify-end space-x-3">
+                    <button @click="closeSubnetModal()"
+                        class="px-4 py-2 bg-slate-300 rounded hover:bg-slate-400">
+                        Cancel
+                    </button>
+
+                    <button @click="submitCreateSubnet()"
+                        class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                        Create
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= VPC TABLE ================= -->
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-lg font-semibold mb-4">Existing VPCs</h2>
+
+            <table class="min-w-full border border-slate-300 rounded">
+                <thead class="bg-slate-200">
+                    <tr>
+                        <th class="px-4 py-2 border">VPC ID</th>
+                        <th class="px-4 py-2 border">CIDR</th>
+                        <th class="px-4 py-2 border">State</th>
+                        <th class="px-4 py-2 border">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="vpc in vpcs" :key="vpc.vpc_id">
+                        <tr>
+                            <td class="px-4 py-2 border" x-text="vpc.vpc_id"></td>
+                            <td class="px-4 py-2 border" x-text="vpc.cidr"></td>
+                            <td class="px-4 py-2 border" x-text="vpc.state"></td>
+                            <td class="px-4 py-2 border space-x-2">
+                                <button @click="deleteVPC(vpc)"
+                                    class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">
+                                    Delete
+                                </button>
+                                <button @click="safeDeleteVPC(vpc)"
+                                    class="bg-yellow-500 text-black px-3 py-1 rounded hover:bg-yellow-600">
+                                    Safe Delete
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ================= SUBNET TABLE ================= -->
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-lg font-semibold mb-4">Subnets</h2>
+
+            <table class="min-w-full border border-slate-300 rounded">
+                <thead class="bg-slate-200">
+                    <tr>
+                        <th class="px-4 py-2 border">Subnet ID</th>
+                        <th class="px-4 py-2 border">VPC ID</th>
+                        <th class="px-4 py-2 border">CIDR</th>
+                        <th class="px-4 py-2 border">AZ</th>
+                        <th class="px-4 py-2 border">State</th>
+                        <th class="px-4 py-2 border">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="subnet in subnets" :key="subnet.subnet_id">
+                        <tr>
+                            <td class="px-4 py-2 border" x-text="subnet.subnet_id"></td>
+                            <td class="px-4 py-2 border" x-text="subnet.vpc_id"></td>
+                            <td class="px-4 py-2 border" x-text="subnet.cidr"></td>
+                            <td class="px-4 py-2 border" x-text="subnet.availability_zone"></td>
+                            <td class="px-4 py-2 border" x-text="subnet.state"></td>
+                            <td class="px-4 py-2 border">
+                                <button @click="deleteSubnet(subnet)"
+                                    class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- TAB 2: ROUTE TABLES -->
+    <!-- ============================================================= -->
+    <div x-show="activeTab === 'routes'" x-cloak class="space-y-8">
+
+        <!-- ACTION BAR -->
+        <div class="flex space-x-3">
+            <button @click="openCreateRTBModal()"
+                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                + Create Route Table
+            </button>
+
+            <button @click="reloadRoutes()"
+                class="bg-slate-600 text-white px-4 py-2 rounded hover:bg-slate-700">
+                Refresh Route Tables
+            </button>
+        </div>
+
+        <!-- ================= CREATE ROUTE TABLE MODAL ================= -->
+        <div x-show="showCreateRTB" x-cloak
+            class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+
+            <div class="bg-white p-6 rounded-lg shadow-lg w-[28rem]">
+                <h2 class="text-lg font-semibold mb-4">Create New Route Table</h2>
+
+                <template x-if="rtbCreateError">
+                    <div class="mb-3 bg-red-100 text-red-800 border border-red-300 px-3 py-2 rounded text-sm"
+                        x-text="rtbCreateError"></div>
+                </template>
+
+                <label class="block mb-1 font-semibold">VPC</label>
+                <select x-model="newRTBVPC" class="border p-2 rounded w-full mb-3">
+                    <option value="">-- Select VPC --</option>
+                    <template x-for="vpc in vpcs" :key="vpc.vpc_id">
+                        <option :value="vpc.vpc_id"
+                            x-text="`${vpc.vpc_id} (${vpc.cidr})`"></option>
+                    </template>
+                </select>
+
+                <label class="block mb-1 font-semibold">Name</label>
+                <input type="text"
+                    x-model="newRTBName"
+                    class="border p-2 rounded w-full mb-3" />
+
+                <label class="block mb-1 font-semibold">Description</label>
+                <textarea x-model="newRTBDescription"
+                    class="border p-2 rounded w-full mb-4"
+                    rows="3"></textarea>
+
+                <div class="flex justify-end space-x-3">
+                    <button @click="closeCreateRTBModal()"
+                        class="px-4 py-2 bg-slate-300 rounded hover:bg-slate-400">
+                        Cancel
+                    </button>
+
+                    <button @click="submitCreateRTB()"
+                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        Create
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= ASSOCIATE ROUTE TABLE MODAL ================= -->
+        <div x-show="showAssociateRTB" x-cloak
+            class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+
+            <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+                <h2 class="text-lg font-semibold mb-4">Associate Route Table</h2>
+
+                <template x-if="rtbAssocError">
+                    <div class="mb-3 bg-red-100 text-red-800 border border-red-300 px-3 py-2 rounded text-sm"
+                        x-text="rtbAssocError"></div>
+                </template>
+
+                <p class="text-sm mb-2">
+                    <strong>Route Table:</strong>
+                    <span x-text="selectedRTBId"></span>
+                </p>
+
+                <label class="block mb-1 font-semibold">Subnet</label>
+                <select x-model="selectedSubnetForAssoc"
+                    class="border p-2 rounded w-full mb-4">
+                    <option value="">-- Select Subnet --</option>
+                    <template x-for="sn in candidateSubnetsForRTB" :key="sn.subnet_id">
+                        <option :value="sn.subnet_id"
+                            x-text="`${sn.subnet_id} (${sn.cidr})`"></option>
+                    </template>
+                </select>
+
+                <div class="flex justify-end space-x-3">
+                    <button @click="closeAssocModal()"
+                        class="px-4 py-2 bg-slate-300 rounded hover:bg-slate-400">
+                        Cancel
+                    </button>
+
+                    <button @click="submitAssociateRTB()"
+                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        Associate
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= ADD ROUTE MODAL ================= -->
+        <div x-show="showAddRoute" x-cloak
+            class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+
+            <div class="bg-white p-6 rounded-lg shadow-lg w-[28rem]">
+                <h2 class="text-lg font-semibold mb-4">Add Route</h2>
+
+                <template x-if="addRouteError">
+                    <div class="mb-3 bg-red-100 text-red-800 border border-red-300 px-3 py-2 rounded text-sm"
+                        x-text="addRouteError"></div>
+                </template>
+
+                <label class="block mb-1 font-semibold">Destination CIDR</label>
+                <input type="text"
+                    x-model="addRouteDestination"
+                    placeholder="0.0.0.0/0"
+                    class="border p-2 rounded w-full mb-3" />
+
+                <label class="block mb-1 font-semibold">Target Type</label>
+                <select x-model="addRouteTargetType"
+                    class="border p-2 rounded w-full mb-3">
+                    <option value="igw">Internet Gateway</option>
+                    <option value="nat">NAT Gateway</option>
+                </select>
+
+                <label class="block mb-1 font-semibold">Target ID</label>
+                <input type="text"
+                    x-model="addRouteTargetId"
+                    class="border p-2 rounded w-full mb-4" />
+
+                <div class="flex justify-end space-x-3">
+                    <button @click="closeAddRouteModal()"
+                        class="px-4 py-2 bg-slate-300 rounded hover:bg-slate-400">
+                        Cancel
+                    </button>
+
+                    <button @click="submitAddRoute()"
+                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        Add Route
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= ROUTE TABLES TABLE ================= -->
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-lg font-semibold mb-4">Route Tables</h2>
+
+            <table class="min-w-full border border-slate-300 rounded">
+                <thead class="bg-slate-200">
+                    <tr>
+                        <th class="px-4 py-2 border">RTB ID</th>
+                        <th class="px-4 py-2 border">VPC</th>
+                        <th class="px-4 py-2 border">Main</th>
+                        <th class="px-4 py-2 border">Associations</th>
+                        <th class="px-4 py-2 border">Routes</th>
+                        <th class="px-4 py-2 border">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <template x-for="rt in routeTables" :key="rt.route_table_id">
+                        <tr class="align-top">
+                            <td class="px-4 py-2 border font-mono" x-text="rt.route_table_id"></td>
+                            <td class="px-4 py-2 border font-mono" x-text="rt.vpc_id"></td>
+                            <td class="px-4 py-2 border" x-text="rt.is_main ? 'Yes' : 'No'"></td>
+
+                            <td class="px-4 py-2 border text-sm">
+                                <template x-if="rt.associations.length === 0">
+                                    <span class="text-slate-400">None</span>
+                                </template>
+                                <template x-if="rt.associations.length > 0">
+                                    <ul class="list-disc list-inside">
+                                        <template x-for="sn in rt.associations" :key="sn">
+                                            <li x-text="sn"></li>
+                                        </template>
+                                    </ul>
+                                </template>
+                            </td>
+
+                            <td class="px-4 py-2 border text-xs">
+                                <ul class="list-disc list-inside space-y-1">
+                                    <template x-for="r in rt.routes" :key="r.cidr + r.target">
+                                        <li>
+                                            <span class="font-mono" x-text="r.cidr"></span>
+                                            →
+                                            <span x-text="r.target"></span>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </td>
+
+                            <td class="px-4 py-2 border space-y-2">
+                                <button @click="openAssocModal(rt)"
+                                    class="bg-green-600 text-white px-3 py-1 rounded text-xs w-full hover:bg-green-700">
+                                    Associate Subnet
+                                </button>
+
+                                <button @click="openAddRouteModal(rt)"
+                                    class="bg-blue-600 text-white px-3 py-1 rounded text-xs w-full hover:bg-blue-700">
+                                    Add Route
+                                </button>
+
+                                <button @click="deleteRouteTable(rt)"
+                                    :disabled="rt.is_main"
+                                    class="bg-red-600 text-white px-3 py-1 rounded text-xs w-full hover:bg-red-700">
+                                    Delete RTB
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- TAB 3: NAT GATEWAYS -->
+    <!-- ============================================================= -->
+    <div x-show="activeTab === 'nat'" x-cloak class="space-y-6">
+
+        <!-- ACTION BAR -->
+        <div class="flex space-x-3">
+            <button @click="openCreateNATModal()"
+                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                + Create NAT Gateway
+            </button>
+
+            <button @click="loadNatGateways()"
+                class="bg-slate-600 text-white px-4 py-2 rounded hover:bg-slate-700">
+                Refresh NAT Gateways
+            </button>
+        </div>
+
+        <!-- ================= CREATE NAT MODAL ================= -->
+        <div x-show="showCreateNAT" x-cloak
+            class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+
+            <div class="bg-white p-6 rounded-lg shadow-lg w-[28rem]">
+                <h2 class="text-lg font-semibold mb-4">Create NAT Gateway</h2>
+
+                <template x-if="natCreateError">
+                    <div class="mb-3 bg-red-100 text-red-800 border border-red-300 px-3 py-2 rounded text-sm"
+                        x-text="natCreateError"></div>
+                </template>
+
+                <label class="block mb-1 font-semibold">Name (optional)</label>
+                <input type="text"
+                    x-model="newNATName"
+                    class="border p-2 rounded w-full mb-3" />
+
+                <label class="block mb-1 font-semibold">Subnet</label>
+                <select x-model="newNATSubnetId"
+                    class="border p-2 rounded w-full mb-3">
+                    <option value="">-- Select Subnet --</option>
+                    <template x-for="sn in subnets" :key="sn.subnet_id">
+                        <option :value="sn.subnet_id"
+                            x-text="`${sn.subnet_id} (${sn.cidr})`"></option>
+                    </template>
+                </select>
+
+                <p class="text-xs text-slate-500 mb-4">
+                    Subnet must be public (has route to an Internet Gateway).
+                </p>
+
+                <div class="flex justify-end space-x-3">
+                    <button @click="closeCreateNATModal()"
+                        class="px-4 py-2 bg-slate-300 rounded hover:bg-slate-400">
+                        Cancel
+                    </button>
+
+                    <button @click="submitCreateNAT()"
+                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        Create
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= NAT GATEWAYS TABLE ================= -->
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-lg font-semibold mb-4">NAT Gateways</h2>
+
+            <table class="min-w-full border border-slate-300 rounded">
+                <thead class="bg-slate-200">
+                    <tr>
+                        <th class="px-3 py-2 border">NAT ID</th>
+                        <th class="px-3 py-2 border">State</th>
+                        <th class="px-3 py-2 border">Subnet</th>
+                        <th class="px-3 py-2 border">VPC</th>
+                        <th class="px-3 py-2 border">Public IP</th>
+                        <th class="px-3 py-2 border">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <template x-for="ngw in natGateways" :key="ngw.nat_gateway_id">
+                        <tr>
+                            <td class="px-3 py-2 border font-mono"
+                                x-text="ngw.nat_gateway_id"></td>
+
+                            <td class="px-3 py-2 border">
+                                <span class="px-2 py-1 text-xs rounded"
+                                    :class="ngw.state === 'available'
+                                        ? 'bg-green-100 text-green-800'
+                                        : (ngw.state === 'pending'
+                                            ? 'bg-yellow-100 text-yellow-800'
+                                            : 'bg-slate-100 text-slate-700')"
+                                    x-text="ngw.state"></span>
+                            </td>
+
+                            <td class="px-3 py-2 border font-mono"
+                                x-text="ngw.subnet_id || '—'"></td>
+
+                            <td class="px-3 py-2 border font-mono"
+                                x-text="ngw.vpc_id || '—'"></td>
+
+                            <td class="px-3 py-2 border font-mono"
+                                x-text="ngw.public_ip || '—'"></td>
+
+                            <td class="px-3 py-2 border">
+                                <button @click="deleteNatGateway(ngw)"
+                                    class="bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</div> <!-- END networkConsole ROOT -->
+
+{% endblock %}
+
+<!-- ============================================================= -->
+<!-- ALPINE.JS : NETWORK CONSOLE (CORE STATE) -->
+<!-- ============================================================= -->
+<script>
+function networkConsole() {
+    return {
+        /* -----------------------------
+         * GLOBAL STATE
+         * ----------------------------- */
+        activeTab: 'network',
+        globalError: null,
+
+        /* -----------------------------
+         * DATA STORES
+         * ----------------------------- */
+        vpcs: [],
+        subnets: [],
+        availabilityZones: [],
+        routeTables: [],
+        internetGateways: [],
+        natGateways: [],
+
+        /* -----------------------------
+         * UI STATE
+         * ----------------------------- */
+        showCreateVPC: false,
+        showCreateSubnet: false,
+        showCreateRTB: false,
+        showAssociateRTB: false,
+        showAddRoute: false,
+        showCreateNAT: false,
+
+        /* -----------------------------
+         * INIT
+         * ----------------------------- */
+        init() {
+            this.reloadAll();
+
+            // Auto-refresh NAT gateways (safe)
+            setInterval(() => {
+                this.loadNatGateways();
+            }, 5000);
+        },
+
+        /* -----------------------------
+         * GLOBAL HELPERS
+         * ----------------------------- */
+        showError(msg) {
+            this.globalError = msg;
+            setTimeout(() => this.globalError = null, 6000);
+        },
+
+        /* -----------------------------
+         * LOADERS
+         * ----------------------------- */
+        async reloadAll() {
+            await Promise.all([
+                this.loadVPCs(),
+                this.loadSubnets(),
+                this.loadAZs(),
+                this.loadRouteTables(),
+                this.loadInternetGateways(),
+                this.loadNatGateways()
+            ]);
+        },
+
+        async loadVPCs() {
+            try {
+                const res = await fetch('/api/v1/aws/vpcs');
+                const data = await res.json();
+                this.vpcs = data.vpcs || [];
+            } catch {
+                this.showError('Failed to load VPCs');
+            }
+        },
+
+        async loadSubnets() {
+            try {
+                const res = await fetch('/api/v1/aws/subnets');
+                const data = await res.json();
+                this.subnets = data.subnets || [];
+            } catch {
+                this.showError('Failed to load subnets');
+            }
+        },
+
+        async loadAZs() {
+            try {
+                const res = await fetch('/api/v1/aws/availability-zones');
+                const data = await res.json();
+                this.availabilityZones = data.availability_zones || [];
+            } catch {
+                this.showError('Failed to load availability zones');
+            }
+        },
+
+        async loadRouteTables() {
+            try {
+                const res = await fetch('/api/v1/aws/route-tables');
+                const data = await res.json();
+                this.routeTables = data.route_tables || [];
+            } catch {
+                this.showError('Failed to load route tables');
+            }
+        },
+
+        async loadInternetGateways() {
+            try {
+                const res = await fetch('/api/v1/aws/igw');
+                const data = await res.json();
+                this.internetGateways = data.internet_gateways || [];
+            } catch {
+                this.showError('Failed to load internet gateways');
+            }
+        },
+
+        async loadNatGateways() {
+            try {
+                const res = await fetch('/api/v1/aws/nat');
+                const data = await res.json();
+                this.natGateways = data.nat_gateways || [];
+            } catch {
+                this.showError('Failed to load NAT gateways');
+            }
+        },
+
+        /* -----------------------------
+         * VPC ACTIONS
+         * ----------------------------- */
+        async createVPC() {
+            try {
+                const res = await fetch(
+                    `/api/v1/aws/vpcs?cidr=${encodeURIComponent(this.newVpcCidr)}`,
+                    { method: 'POST' }
+                );
+                const data = await res.json();
+
+                if (!res.ok || data.status === 'failed') {
+                    this.showError(data.error || 'VPC creation failed');
+                    return;
+                }
+
+                this.showCreateVPC = false;
+                this.loadVPCs();
+            } catch (e) {
+                this.showError('Failed to create VPC');
+            }
+        },
+
+        async deleteVPC(vpc) {
+            try {
+                const res = await fetch(
+                    `/api/v1/aws/vpc/${vpc.vpc_id}/delete`,
+                    { method: 'DELETE' }
+                );
+                const data = await res.json();
+
+                if (!res.ok || data.status === 'failed') {
+                    this.showError(data.error || 'VPC delete failed');
+                    return;
+                }
+
+                this.loadVPCs();
+                this.loadSubnets();
+                this.loadRouteTables();
+            } catch {
+                this.showError('Failed to delete VPC');
+            }
+        },
+
+        async safeDeleteVPC(vpc) {
+            try {
+                const res = await fetch(
+                    `/api/v1/aws/vpc/${vpc.vpc_id}/safe-delete`,
+                    { method: 'DELETE' }
+                );
+                const data = await res.json();
+
+                if (!res.ok || data.status === 'failed') {
+                    this.showError(data.error || 'Safe delete failed');
+                    return;
+                }
+
+                this.loadVPCs();
+                this.loadSubnets();
+                this.loadRouteTables();
+            } catch {
+                this.showError('Failed to safe-delete VPC');
+            }
+        },
+
+        /* -----------------------------
+         * SUBNET HELPERS
+         * ----------------------------- */
+        getEffectiveVPCId() {
+            return this.newSubnetVPC || this.newSubnetVPCManual;
+        },
+
+        ipToInt(ip) {
+            return ip.split('.').reduce((acc, oct) => {
+                return (acc << 8) + (parseInt(oct, 10) & 255);
+            }, 0) >>> 0;
+        },
+
+        intToIp(num) {
+            return [
+                (num >>> 24) & 255,
+                (num >>> 16) & 255,
+                (num >>> 8) & 255,
+                num & 255,
+            ].join('.');
+        },
+
+        cidrRange(cidr) {
+            const [ip, prefixStr] = cidr.split('/');
+            const prefix = parseInt(prefixStr, 10);
+            const ipInt = this.ipToInt(ip);
+            const mask = prefix === 0 ? 0 : (~0 << (32 - prefix)) >>> 0;
+            const network = ipInt & mask;
+            const broadcast = network | (~mask >>> 0);
+            return { network, broadcast, prefix, cidr };
+        },
+
+        rangesOverlap(a, b) {
+            return a.network <= b.broadcast && b.network <= a.broadcast;
+        },
+
+        computeCidrSuggestions(vpcCidr, existing, desiredPrefix) {
+            const suggestions = [];
+            if (!vpcCidr || isNaN(desiredPrefix)) return suggestions;
+
+            const vpcRange = this.cidrRange(vpcCidr);
+            const blockSize = Math.pow(2, 32 - desiredPrefix);
+
+            const existingRanges = existing
+                .filter(s => s.cidr)
+                .map(s => this.cidrRange(s.cidr));
+
+            for (let start = vpcRange.network; start <= vpcRange.broadcast; start += blockSize) {
+                const candidate = {
+                    network: start,
+                    broadcast: start + blockSize - 1,
+                    prefix: desiredPrefix,
+                    cidr: this.intToIp(start) + '/' + desiredPrefix,
+                };
+
+                if (candidate.broadcast > vpcRange.broadcast) break;
+
+                const overlaps = existingRanges.some(r => this.rangesOverlap(candidate, r));
+                if (!overlaps) suggestions.push(candidate.cidr);
+                if (suggestions.length >= 5) break;
+            }
+
+            return suggestions;
+        },
+
+        filterCidrSuggestions() {
+            this.subnetError = '';
+            this.cidrSuggestions = [];
+
+            const cidr = this.newSubnetCIDR;
+            const vpcId = this.getEffectiveVPCId();
+            if (!cidr || !vpcId) return;
+
+            const vpc = this.vpcs.find(v => v.vpc_id === vpcId);
+            if (!vpc) return;
+
+            try {
+                const desired = this.cidrRange(cidr);
+                const existing = this.subnets.filter(s => s.vpc_id === vpcId);
+                this.cidrSuggestions = this.computeCidrSuggestions(
+                    vpc.cidr,
+                    existing,
+                    desired.prefix
+                );
+            } catch {}
+        },
+
+        /* -----------------------------
+         * SUBNET ACTIONS
+         * ----------------------------- */
+        async submitCreateSubnet() {
+            this.subnetError = '';
+
+            const vpcId = this.getEffectiveVPCId();
+            if (!vpcId || !this.newSubnetCIDR || !this.newSubnetAZ) {
+                this.subnetError = 'Missing required subnet fields';
+                return;
+            }
+
+            try {
+                const url =
+                    `/api/v1/aws/subnets?vpc_id=${encodeURIComponent(vpcId)}` +
+                    `&cidr=${encodeURIComponent(this.newSubnetCIDR)}` +
+                    `&availability_zone=${encodeURIComponent(this.newSubnetAZ)}` +
+                    `&name=${encodeURIComponent(this.newSubnetName || 'Subnet')}`;
+
+                const res = await fetch(url, { method: 'POST' });
+                const data = await res.json();
+
+                if (!res.ok || data.status === 'failed') {
+                    this.subnetError = data.error || 'Subnet creation failed';
+                    return;
+                }
+
+                this.showCreateSubnet = false;
+                this.loadSubnets();
+                this.loadRouteTables();
+            } catch {
+                this.subnetError = 'Failed to create subnet';
+            }
+        },
+
+        async deleteSubnet(subnet) {
+            try {
+                const res = await fetch(
+                    `/api/v1/aws/subnets/${subnet.subnet_id}`,
+                    { method: 'DELETE' }
+                );
+                const data = await res.json();
+
+                if (!res.ok || data.status === 'failed') {
+                    this.showError(data.error || 'Subnet delete failed');
+                    return;
+                }
+
+                this.loadSubnets();
+                this.loadRouteTables();
+            } catch {
+                this.showError('Failed to delete subnet');
+            }
+        },

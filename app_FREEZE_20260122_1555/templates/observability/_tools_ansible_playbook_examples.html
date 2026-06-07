@@ -1,0 +1,2461 @@
+<!-- ============================================================= -->
+<!-- ANSIBLE PLAYBOOK EXAMPLES (REFERENCE ONLY) -->
+<!-- ============================================================= -->
+
+<section class="space-y-4">
+
+  <h4 class="text-sm font-semibold text-slate-800">
+    🧩 Ansible Playbook Examples (AWS)
+  </h4>
+
+  <p class="text-sm text-slate-700">
+    This section provides <strong>reference Ansible playbook examples</strong>
+    for AWS validation and inspection workflows.
+    These examples are not executable by NetPilot and are not shipped as files.
+  </p>
+
+  <p class="text-xs text-slate-500 italic">
+    You are expected to adapt these examples into your own Ansible repositories,
+    inventories, and execution pipelines.
+  </p>
+
+  <p class="text-xs text-slate-500 italic">
+    🔴 Operator responsibility applies.
+    These examples are informational and must be reviewed, adapted,
+    and executed by you in your own environment.
+  </p>
+
+  <!-- ========================================================= -->
+  <!-- CATEGORY 1: AWS ACCOUNT & IDENTITY VALIDATION -->
+  <!-- ========================================================= -->
+
+  <details class="border border-slate-200 rounded-lg p-4">
+    <summary class="cursor-pointer font-medium text-slate-800">
+      🟢 AWS Account &amp; Identity Validation
+    </summary>
+
+    <div class="mt-4 space-y-4 text-sm">
+      <!-- CATEGORY 1 ITEMS START -->
+
+      <div>
+        <div class="font-medium text-slate-800">
+          Validate IAM Account Alias
+        </div>
+
+        <p class="text-slate-600">
+          Confirms the AWS account identity and alias.
+        </p>
+
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Validate AWS account alias
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Fetch account alias
+      amazon.aws.iam_account_info:
+      register: account_info
+
+    - name: Display account alias
+      debug:
+        var: account_info.account_aliases
+        </pre>
+      </div>
+
+      <div>
+        <div class="font-medium text-slate-800">
+          Validate AWS Account ID
+        </div>
+
+        <p class="text-slate-600">
+          Confirms the AWS account ID Ansible is operating against.
+          Always validate this before any other inspection.
+        </p>
+
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Validate AWS Account ID
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Retrieve caller identity
+      amazon.aws.sts_caller_info:
+      register: sts_identity
+
+    - name: Display account ID
+      debug:
+        var: sts_identity.account
+        </pre>
+      </div>
+
+      <div>
+        <div class="font-medium text-slate-800">
+          Enumerate IAM Users
+        </div>
+
+        <p class="text-slate-600">
+          Lists IAM users for visibility and drift detection.
+        </p>
+
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate IAM users
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Gather IAM users
+      amazon.aws.iam_user_info:
+      register: iam_users
+
+    - name: Display IAM users
+      debug:
+        var: iam_users.users
+        </pre>
+      </div>
+
+      <div>
+        <div class="font-medium text-slate-800">
+          Enumerate IAM Roles
+        </div>
+
+        <p class="text-slate-600">
+          Retrieves all IAM roles to inspect trust surface area.
+        </p>
+
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate IAM roles
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Gather IAM roles
+      amazon.aws.iam_role_info:
+      register: iam_roles
+
+    - name: Display IAM roles
+      debug:
+        var: iam_roles.roles
+        </pre>
+      </div>
+
+      <!-- CATEGORY 1 ITEMS END -->
+      {% raw %}
+
+      <!-- ================= CATEGORY 1: ADDITIONAL IDENTITY VALIDATION ================= -->
+
+      <div>
+        <div class="font-medium text-slate-800">
+          Enumerate Instance Profiles
+        </div>
+
+        <p class="text-slate-600">
+          Lists IAM instance profiles and attached roles.
+        </p>
+
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate instance profiles
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Fetch instance profiles
+      amazon.aws.iam_instance_profile_info:
+      register: profiles
+
+    - debug:
+        var: profiles.instance_profiles
+        </pre>
+      </div>
+
+      <div>
+        <div class="font-medium text-slate-800">
+          Inspect IAM Role Trust Policies
+        </div>
+
+        <p class="text-slate-600">
+          Reveals who is allowed to assume each role.
+        </p>
+
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect role trust policies
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.iam_role_info:
+      register: roles
+
+    - debug:
+        var: roles.roles[].assume_role_policy_document
+        </pre>
+      </div>
+
+      <div>
+        <div class="font-medium text-slate-800">
+          Enumerate Customer-Managed IAM Policies
+        </div>
+
+        <p class="text-slate-600">
+          Lists non-AWS-managed policies to detect privilege drift.
+        </p>
+
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate IAM policies
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.iam_policy_info:
+        scope: Local
+      register: policies
+
+    - debug:
+        var: policies.policies
+        </pre>
+      </div>
+
+      <div>
+        <div class="font-medium text-slate-800">
+          Validate MFA Status for IAM Users
+        </div>
+
+        <p class="text-slate-600">
+          Confirms which IAM users have MFA enabled.
+        </p>
+
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Check IAM MFA status
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.iam_user_info:
+      register: users
+
+    - debug:
+        msg: "{{ item.user_name }} MFA={{ item.mfa_devices | length > 0 }}"
+      loop: "{{ users.users }}"
+        </pre>
+      </div>
+
+      <div>
+        <div class="font-medium text-slate-800">
+          Validate Account Password Policy
+        </div>
+
+        <p class="text-slate-600">
+          Ensures baseline password policy enforcement.
+        </p>
+
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Validate password policy
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.iam_password_policy_info:
+      register: policy
+
+    - debug:
+        var: policy.password_policy
+        </pre>
+      </div>
+
+      {% endraw %}
+
+    </div>
+  </details>
+
+  <!-- ========================================================= -->
+  <!-- CATEGORY 2: NETWORKING & ROUTING VALIDATION -->
+  <!-- ========================================================= -->
+
+  <details class="border border-slate-200 rounded-lg p-4">
+    <summary class="cursor-pointer font-medium text-slate-800">
+      🟢 Networking Validation (VPC, Subnets, Routing)
+    </summary>
+    {% raw %}
+
+    <!-- Category 2 additions: Subnets, Gateways, ENIs -->
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Enumerate Subnets
+      </div>
+
+      <p class="text-slate-600">
+        Lists subnets with CIDRs and Availability Zones.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate subnets
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.ec2_vpc_subnet_info:
+      register: subnets
+
+    - debug:
+        var: subnets.subnets
+        </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Enumerate NAT Gateways
+      </div>
+
+      <p class="text-slate-600">
+        Inspects NAT Gateways and associated subnets.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate NAT gateways
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.ec2_nat_gateway_info:
+      register: nat_gateways
+
+    - debug:
+        var: nat_gateways.nat_gateways
+        </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Enumerate VPC Endpoints
+      </div>
+
+      <p class="text-slate-600">
+        Lists gateway and interface VPC endpoints.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate VPC endpoints
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.ec2_vpc_endpoint_info:
+      register: endpoints
+
+    - debug:
+        var: endpoints.vpc_endpoints
+        </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Enumerate Network Interfaces (ENIs)
+      </div>
+
+      <p class="text-slate-600">
+        Inspects all ENIs to detect attachments and orphaned interfaces.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate ENIs
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.ec2_eni_info:
+      register: enis
+
+    - debug:
+        var: enis.network_interfaces
+        </pre>
+    </div>
+
+    {% endraw %}
+
+    {% raw %}
+
+    <div class="mt-4 space-y-4 text-sm">
+
+      <div>
+        <div class="font-medium text-slate-800">
+          Enumerate Route Tables
+        </div>
+
+        <p class="text-slate-600">
+          Inspects routing paths and default routes.
+        </p>
+
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate route tables
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.ec2_vpc_route_table_info:
+      register: routes
+
+    - debug:
+        var: routes.route_tables
+        </pre>
+      </div>
+
+      <div>
+        <div class="font-medium text-slate-800">
+          Enumerate Internet Gateways
+        </div>
+
+        <p class="text-slate-600">
+          Validates IGW attachment and exposure.
+        </p>
+
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate Internet Gateways
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.ec2_vpc_igw_info:
+      register: igws
+
+    - debug:
+        var: igws.internet_gateways
+        </pre>
+      </div>
+
+    </div>
+
+    {% endraw %}
+
+
+    <div class="mt-4 space-y-4 text-sm">
+      <!-- CATEGORY 2 ITEMS START -->
+
+      <div>
+        <div class="font-medium text-slate-800">
+          Inspect VPC Inventory
+        </div>
+
+        <p class="text-slate-600">
+          Lists VPCs and CIDR blocks for visibility and drift detection.
+        </p>
+
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect VPC inventory
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Gather VPC facts
+      amazon.aws.ec2_vpc_net_info:
+      register: vpcs
+
+    - name: Display VPCs
+      debug:
+        var: vpcs.vpcs
+        </pre>
+      </div>
+
+      <!-- CATEGORY 2 ITEMS END -->
+    </div>
+  </details>
+
+  {% raw %}
+
+  <!-- ============================================================= -->
+  <!-- CATEGORY 3: COMPUTE & TRAFFIC (EC2, ASG, ALB, NLB) -->
+  <!-- ============================================================= -->
+
+  <details class="border border-slate-200 rounded-lg p-4">
+    <summary class="cursor-pointer font-medium text-slate-800">
+      🟢 Compute &amp; Traffic (EC2, ASG, ALB, NLB)
+    </summary>
+
+    <div class="mt-4 space-y-4 text-sm">
+
+      <!-- EC2 -->
+      <div>
+        <div class="font-medium text-slate-800">
+          Enumerate EC2 Instances
+        </div>
+        <p class="text-slate-600">
+          Lists EC2 instances, states, AZ distribution, and instance types.
+        </p>
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate EC2 instances
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.ec2_instance_info:
+      register: instances
+
+    - debug:
+        var: instances.instances
+        </pre>
+      </div>
+
+      <!-- ASG -->
+      <div>
+        <div class="font-medium text-slate-800">
+          Enumerate Auto Scaling Groups
+        </div>
+        <p class="text-slate-600">
+          Inspects ASG capacity, AZ coverage, and/ui health configuration.
+        </p>
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate Auto Scaling Groups
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.autoscaling_group_info:
+      register: asgs
+
+    - debug:
+        var: asgs.auto_scaling_groups
+        </pre>
+      </div>
+
+      <!-- LOAD BALANCERS -->
+      <div>
+        <div class="font-medium text-slate-800">
+          Enumerate Load Balancers (ALB / NLB)
+        </div>
+        <p class="text-slate-600">
+          Lists all Application and Network Load Balancers and their exposure.
+        </p>
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate load balancers
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.elb_target_group_info:
+      register: lbs
+
+    - debug:
+        var: lbs.target_groups
+        </pre>
+      </div>
+
+      <!-- LISTENERS -->
+      <div>
+        <div class="font-medium text-slate-800">
+          Enumerate Load Balancer Listeners
+        </div>
+        <p class="text-slate-600">
+          Inspects listener ports, protocols, and TLS attachments.
+        </p>
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate load balancer listeners
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.elb_listener_info:
+      register: listeners
+
+    - debug:
+        var: listeners.listeners
+        </pre>
+      </div>
+
+      <!-- TARGET GROUPS -->
+      <div>
+        <div class="font-medium text-slate-800">
+          Enumerate Target Groups
+        </div>
+        <p class="text-slate-600">
+          Lists target groups, health checks, and registered targets.
+        </p>
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate target groups
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.elb_target_group_info:
+      register: tgs
+
+    - debug:
+        var: tgs.target_groups
+        </pre>
+      </div>
+
+    </div>
+  
+      <!-- NP:CAT3_BLAST_RADIUS_START -->
+      <div class="pt-4 border-t border-slate-200">
+        <div class="font-semibold text-slate-800 mb-2">
+          🚨 Blast-Radius Signals (Inspection-Only)
+        </div>
+
+        <p class="text-slate-600 text-sm mb-4">
+          These inspections highlight configurations where failure or misconfiguration
+          would have outsized impact. This section is intentionally inspection-only.
+        </p>
+
+        <div>
+          <div class="font-medium text-slate-800">
+            Inspect ASG AZ Coverage
+          </div>
+          <p class="text-slate-600">
+            Review Availability Zone distribution for Auto Scaling Groups.
+            Single-AZ coverage increases outage risk.
+          </p>
+          <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect ASG availability zones
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Gather Auto Scaling Groups
+      amazon.aws.autoscaling_group_info:
+      register: asgs
+
+    - name: Display ASGs (review AZ coverage)
+      debug:
+        var: asgs.auto_scaling_groups
+          </pre>
+        </div>
+
+        <div>
+          <div class="font-medium text-slate-800">
+            Inspect Target Group Membership
+          </div>
+          <p class="text-slate-600">
+            Review registered targets per target group. Single-target groups reduce redundancy.
+          </p>
+          <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect target group membership
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Gather target groups
+      amazon.aws.elb_target_group_info:
+      register: tgs
+
+    - name: Display target groups (review targets + health checks)
+      debug:
+        var: tgs.target_groups
+          </pre>
+        </div>
+
+        <div>
+          <div class="font-medium text-slate-800">
+            Inspect Load Balancer Exposure (Internet-facing vs Internal)
+          </div>
+          <p class="text-slate-600">
+            Review LB scheme, subnets, and AZ placement. Exposure misalignment is a common risk source.
+          </p>
+          <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect ALBs
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Gather Application Load Balancers
+      amazon.aws.elb_application_lb_info:
+      register: albs
+
+    - name: Display ALBs (review scheme + subnets)
+      debug:
+        var: albs.load_balancers
+          </pre>
+        </div>
+
+        <div>
+          <div class="font-medium text-slate-800">
+            Inspect ASG Traffic Attachments
+          </div>
+          <p class="text-slate-600">
+            Review whether ASGs are attached to load balancers / target groups. Unattached ASGs may be orphaned compute.
+          </p>
+          <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect ASG traffic attachments
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Gather Auto Scaling Groups
+      amazon.aws.autoscaling_group_info:
+      register: asgs
+
+    - name: Display ASGs (review load balancers / target groups)
+      debug:
+        var: asgs.auto_scaling_groups
+          </pre>
+        </div>
+
+      </div>
+      <!-- NP:CAT3_BLAST_RADIUS_END -->
+
+
+</details>
+
+
+  <!-- NP:CAT4_STORAGE_START -->
+  <!-- CATEGORY 4 -->
+  <details class="border border-slate-200 rounded-lg p-4">
+    <summary class="cursor-pointer font-medium text-slate-800">
+      🟢 Storage &amp; Data Path (EBS, Snapshots, S3, EFS, FSx)
+    </summary>
+
+    <div class="mt-4 space-y-4 text-sm">
+
+      <div>
+        <div class="font-medium text-slate-800">
+          Enumerate EBS Volumes
+        </div>
+
+        <p class="text-slate-600">
+          Lists EBS volumes to review attachment state, AZ placement, and encryption status.
+        </p>
+
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate EBS volumes
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Gather EBS volumes
+      amazon.aws.ec2_vol_info:
+      register: volumes
+
+    - name: Display volumes
+      debug:
+        var: volumes.volumes
+        </pre>
+      </div>
+
+      <div>
+        <div class="font-medium text-slate-800">
+          Enumerate EBS Snapshots
+        </div>
+
+        <p class="text-slate-600">
+          Lists snapshots for visibility and drift detection. Review ownership and sharing exposure.
+        </p>
+
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate EBS snapshots
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Gather EBS snapshots (owned)
+      amazon.aws.ec2_snapshot_info:
+        owner_ids: self
+      register: snaps
+
+    - name: Display snapshots
+      debug:
+        var: snaps.snapshots
+        </pre>
+      </div>
+
+      <div>
+        <div class="font-medium text-slate-800">
+          Enumerate S3 Buckets
+        </div>
+
+        <p class="text-slate-600">
+          Lists S3 buckets for account inventory visibility.
+        </p>
+
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate S3 buckets
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Gather S3 buckets
+      amazon.aws.s3_bucket_info:
+      register: buckets
+
+    - name: Display buckets
+      debug:
+        var: buckets.buckets
+        </pre>
+      </div>
+
+      <div>
+        <div class="font-medium text-slate-800">
+          Inspect S3 Public Access Block
+        </div>
+
+        <p class="text-slate-600">
+          Reviews Block Public Access configuration for a bucket.
+          Replace &lt;BUCKET_NAME&gt; with the target bucket.
+        </p>
+
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect S3 public access block
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    bucket_name: "&lt;BUCKET_NAME&gt;"
+  tasks:
+    - name: Get public access block
+      amazon.aws.s3_bucket_public_access_block_info:
+        bucket: "{ bucket_name }"
+      register: pab
+
+    - name: Display public access block
+      debug:
+        var: pab
+        </pre>
+      </div>
+
+      <div>
+        <div class="font-medium text-slate-800">
+          Enumerate EFS File Systems
+        </div>
+
+        <p class="text-slate-600">
+          Lists EFS file systems to review encryption and data path dependencies.
+        </p>
+
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate EFS file systems
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Gather EFS file systems
+      amazon.aws.efs_info:
+      register: efs
+
+    - name: Display EFS file systems
+      debug:
+        var: efs.file_systems
+        </pre>
+      </div>
+
+      <div>
+        <div class="font-medium text-slate-800">
+          Enumerate EFS Mount Targets
+        </div>
+
+        <p class="text-slate-600">
+          Reviews mount targets for multi-AZ coverage. Replace &lt;EFS_ID&gt; with a file system ID.
+        </p>
+
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate EFS mount targets
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    efs_id: "&lt;EFS_ID&gt;"
+  tasks:
+    - name: Gather EFS mount targets
+      amazon.aws.efs_mount_target_info:
+        file_system_id: "{ efs_id }"
+      register: mounts
+
+    - name: Display mount targets
+      debug:
+        var: mounts.mount_targets
+        </pre>
+      </div>
+
+      <div class="pt-4 border-t border-slate-200">
+        <div class="font-semibold text-slate-800 mb-2">
+          🚨 Blast-Radius Signals (Inspection-Only)
+        </div>
+
+        <p class="text-slate-600 text-sm mb-4">
+          These inspections highlight storage configurations that amplify operational impact.
+          No evaluation logic is performed here.
+        </p>
+
+        <div>
+          <div class="font-medium text-slate-800">
+            Identify Unencrypted Storage Surfaces
+          </div>
+
+          <p class="text-slate-600">
+            Review encryption settings for volumes, file systems, and bucket defaults.
+            Unencrypted storage increases compliance and incident scope risk.
+          </p>
+
+          <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect encryption posture (storage)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Gather EBS volumes
+      amazon.aws.ec2_vol_info:
+      register: volumes
+
+    - name: Gather EFS file systems
+      amazon.aws.efs_info:
+      register: efs
+
+    - name: Display EBS + EFS (review encryption flags)
+      debug:
+        msg:
+          - "EBS volumes collected: review 'encrypted' field"
+          - "EFS file systems collected: review 'encrypted' field"
+        </pre>
+        </div>
+
+        <div>
+          <div class="font-medium text-slate-800">
+            Identify Orphaned Billable Data
+          </div>
+
+          <p class="text-slate-600">
+            Review unattached volumes, old snapshots, and idle file systems
+            that may represent cost without operational value.
+          </p>
+
+          <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Identify billable-but-orphaned storage candidates
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Gather EBS volumes
+      amazon.aws.ec2_vol_info:
+      register: volumes
+
+    - name: Gather EBS snapshots (owned)
+      amazon.aws.ec2_snapshot_info:
+        owner_ids: self
+      register: snaps
+
+    - name: Display collected storage inventory (review attachment / age)
+      debug:
+        msg:
+          - "EBS volumes: review attachments"
+          - "Snapshots: review age and purpose"
+        </pre>
+        </div>
+
+      </div>
+
+    </div>
+  </details>
+  <!-- NP:CAT4_STORAGE_END -->
+
+
+  <!-- NP:CAT5_SECURITY_START -->
+  <!-- CATEGORY 5 -->
+  <details class="border border-slate-200 rounded-lg p-4">
+    <summary class="cursor-pointer font-medium text-slate-800">
+      🟢 Security &amp; Network Controls (SGs, NACLs, WAF, Shield)
+    </summary>
+
+    <div class="mt-4 space-y-4 text-sm">
+
+      <div>
+        <div class="font-medium text-slate-800">
+          Enumerate Security Groups
+        </div>
+        <p class="text-slate-600">
+          Lists security groups and rules to inspect exposure surface and drift.
+        </p>
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate security groups
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Gather security groups
+      amazon.aws.ec2_security_group_info:
+      register: sgs
+
+    - name: Display security groups
+      debug:
+        var: sgs.security_groups
+        </pre>
+      </div>
+
+      <div>
+        <div class="font-medium text-slate-800">
+          Enumerate Network ACLs
+        </div>
+        <p class="text-slate-600">
+          Reviews stateless NACL rules and subnet associations for boundary intent.
+        </p>
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate network ACLs
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Gather network ACLs
+      amazon.aws.ec2_vpc_nacl_info:
+      register: nacls
+
+    - name: Display network ACLs
+      debug:
+        var: nacls.network_acls
+        </pre>
+      </div>
+
+      <div>
+        <div class="font-medium text-slate-800">
+          Enumerate WAFv2 Web ACLs (REGIONAL)
+        </div>
+        <p class="text-slate-600">
+          Lists WAF Web ACLs for visibility. Review rules and intended protected resources.
+        </p>
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate WAF Web ACLs (regional)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Gather WAF Web ACLs
+      amazon.aws.wafv2_web_acl_info:
+        scope: REGIONAL
+      register: web_acls
+
+    - name: Display Web ACLs
+      debug:
+        var: web_acls.web_acls
+        </pre>
+      </div>
+
+      <div>
+        <div class="font-medium text-slate-800">
+          Enumerate WAFv2 IP Sets (REGIONAL)
+        </div>
+        <p class="text-slate-600">
+          Lists IP sets used for allow/deny controls and emergency blocks.
+        </p>
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate WAF IP sets (regional)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Gather WAF IP sets
+      amazon.aws.wafv2_ip_set_info:
+        scope: REGIONAL
+      register: ip_sets
+
+    - name: Display IP sets
+      debug:
+        var: ip_sets.ip_sets
+        </pre>
+      </div>
+
+      <div>
+        <div class="font-medium text-slate-800">
+          Inspect Shield Advanced Protections
+        </div>
+        <p class="text-slate-600">
+          Reviews Shield protections (if Shield Advanced is enabled in the account).
+        </p>
+        <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect Shield protections
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Gather Shield protections
+      amazon.aws.shield_protection_info:
+      register: protections
+
+    - name: Display protections
+      debug:
+        var: protections.protections
+        </pre>
+      </div>
+
+      <div class="pt-4 border-t border-slate-200">
+        <div class="font-semibold text-slate-800 mb-2">
+          🚨 Blast-Radius Signals (Inspection-Only)
+        </div>
+
+        <p class="text-slate-600 text-sm mb-3">
+          These are high-risk patterns where a single control-plane mistake
+          can expose large parts of the environment.
+        </p>
+
+        <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+          <li>SG ingress with 0.0.0.0/0 on sensitive ports (22/3389/DB ports)</li>
+          <li>SGs attached to internet-facing LBs with broad egress</li>
+          <li>NACLs that unintentionally allow wide inbound/outbound across subnets</li>
+          <li>Internet-facing ALBs/NLBs without WAF where applicable</li>
+          <li>Critical resources lacking Shield Advanced protections (if used)</li>
+        </ul>
+      </div>
+
+    </div>
+  </details>
+  <!-- NP:CAT5_SECURITY_END -->
+
+
+<!-- NP:CAT6_OBSERVABILITY_START -->
+<!-- CATEGORY 6 -->
+<details class="border border-slate-200 rounded-lg p-4">
+  <summary class="cursor-pointer font-medium text-slate-800">
+    🟢 Observability &amp; Signals (Logs, Metrics, Events)
+  </summary>
+
+  <div class="mt-4 space-y-4 text-sm">
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Enumerate CloudWatch Log Groups
+      </div>
+
+      <p class="text-slate-600">
+        Confirms which workloads are emitting logs and whether expected groups exist.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate CloudWatch log groups
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.cloudwatchlogs_log_group_info:
+      register: log_groups
+
+    - debug:
+        var: log_groups.log_groups
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Inspect Log Streams Activity
+      </div>
+
+      <p class="text-slate-600">
+        Reviews recent log stream activity to detect stalled ingestion.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect log stream activity
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.cloudwatchlogs_log_stream_info:
+        log_group_name: "{ log_group_name }"
+      register: streams
+
+    - debug:
+        var: streams.log_streams
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Enumerate CloudWatch Metrics (Namespace-Level)
+      </div>
+
+      <p class="text-slate-600">
+        Confirms metric publication for critical AWS services.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate CloudWatch metrics
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.cloudwatch_metric_info:
+        namespace: AWS/EC2
+      register: metrics
+
+    - debug:
+        var: metrics.metrics
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Enumerate CloudWatch Alarms
+      </div>
+
+      <p class="text-slate-600">
+        Reviews alarms that define alerting posture and detection coverage.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate CloudWatch alarms
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.cloudwatch_alarm_info:
+      register: alarms
+
+    - debug:
+        var: alarms.metric_alarms
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Enumerate EventBridge Rules
+      </div>
+
+      <p class="text-slate-600">
+        Identifies which system events are captured and routed.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate EventBridge rules
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.eventbridge_rule_info:
+      register: rules
+
+    - debug:
+        var: rules.rules
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Inspect Event Targets
+      </div>
+
+      <p class="text-slate-600">
+        Verifies whether events have downstream consumers (Lambda, SQS, SNS).
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect EventBridge rule targets
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.eventbridge_target_info:
+        rule: "{ rule_name }"
+      register: targets
+
+    - debug:
+        var: targets.targets
+      </pre>
+    </div>
+
+    <div class="pt-4 border-t border-slate-200">
+      <div class="font-semibold text-slate-800 mb-2">
+        🚨 Blast-Radius Signals (Inspection-Only)
+      </div>
+
+      <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+        <li>Critical services emitting no logs</li>
+        <li>Log streams with no recent ingestion</li>
+        <li>High-value resources lacking alarms</li>
+        <li>Alarms defined but never triggered historically</li>
+        <li>Event rules without downstream targets</li>
+        <li>Silent failures due to missing observability coverage</li>
+      </ul>
+    </div>
+
+  </div>
+</details>
+<!-- NP:CAT6_OBSERVABILITY_END -->
+
+
+<!-- NP:CAT7_COST_QUOTAS_START -->
+<!-- CATEGORY 7 -->
+<details class="border border-slate-200 rounded-lg p-4">
+  <summary class="cursor-pointer font-medium text-slate-800">
+    🟢 Cost, Quotas &amp; Account Limits
+  </summary>
+
+  <div class="mt-4 space-y-4 text-sm">
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Inspect Account-Level Service Quotas
+      </div>
+
+      <p class="text-slate-600">
+        Retrieves applied service quotas to detect hard scaling limits and hidden constraints.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect service quotas
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.servicequotas_service_quota_info:
+        service_code: ec2
+      register: quotas
+
+    - debug:
+        var: quotas.quotas
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Enumerate EC2 Instance Limits (Regional)
+      </div>
+
+      <p class="text-slate-600">
+        Confirms maximum allowed instance counts and family limits.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate EC2 instance limits
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.servicequotas_service_quota_info:
+        service_code: ec2
+      register: ec2_limits
+
+    - debug:
+        var: ec2_limits.quotas
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Inspect VPC &amp; Networking Quotas
+      </div>
+
+      <p class="text-slate-600">
+        Reviews limits that directly impact network expansion and isolation.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect VPC-related quotas
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.servicequotas_service_quota_info:
+        service_code: vpc
+      register: vpc_quotas
+
+    - debug:
+        var: vpc_quotas.quotas
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Enumerate EBS Volume &amp; Snapshot Limits
+      </div>
+
+      <p class="text-slate-600">
+        Detects storage scaling ceilings and snapshot accumulation risks.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect EBS quotas
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.servicequotas_service_quota_info:
+        service_code: ebs
+      register: ebs_quotas
+
+    - debug:
+        var: ebs_quotas.quotas
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Review Cost Explorer Enablement
+      </div>
+
+      <p class="text-slate-600">
+        Confirms that cost visibility tooling is enabled for the account.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Verify Cost Explorer availability
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.ce_cost_and_usage_info:
+        time_period:
+          start: "2024-01-01"
+          end: "2024-01-02"
+        granularity: DAILY
+        metrics:
+          - UnblendedCost
+      register: ce_data
+
+    - debug:
+        var: ce_data
+      </pre>
+    </div>
+
+    <div class="pt-4 border-t border-slate-200">
+      <div class="font-semibold text-slate-800 mb-2">
+        🚨 Blast-Radius Signals (Inspection-Only)
+      </div>
+
+      <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+        <li>Critical services operating near quota ceilings</li>
+        <li>Hidden regional limits blocking scale-out during incidents</li>
+        <li>Unbounded snapshot growth causing cost bleed</li>
+        <li>Missing cost visibility delaying incident response</li>
+        <li>Single-account architectures without spend guardrails</li>
+      </ul>
+    </div>
+
+  </div>
+</details>
+<!-- NP:CAT7_COST_QUOTAS_END -->
+
+
+<!-- NP:CAT8_BACKUP_DR_START -->
+<!-- CATEGORY 8 -->
+<details class="border border-slate-200 rounded-lg p-4">
+  <summary class="cursor-pointer font-medium text-slate-800">
+    🟢 Backup, DR &amp; Resilience
+  </summary>
+
+  <div class="mt-4 space-y-4 text-sm">
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Enumerate AWS Backup Plans
+      </div>
+
+      <p class="text-slate-600">
+        Lists defined AWS Backup plans to confirm protection intent.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate AWS Backup plans
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.backup_backup_plan_info:
+      register: backup_plans
+
+    - debug:
+        var: backup_plans.backup_plans
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Enumerate Backup Vaults
+      </div>
+
+      <p class="text-slate-600">
+        Inspects backup vaults and encryption posture.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate backup vaults
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.backup_vault_info:
+      register: vaults
+
+    - debug:
+        var: vaults.backup_vaults
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Inspect Backup Selections
+      </div>
+
+      <p class="text-slate-600">
+        Confirms which resources are included or excluded from backups.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect backup selections
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.backup_backup_selection_info:
+        backup_plan_id: "{ backup_plan_id }"
+      register: selections
+
+    - debug:
+        var: selections.backup_selections
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Enumerate EBS Snapshots
+      </div>
+
+      <p class="text-slate-600">
+        Reviews snapshot coverage and orphaned snapshots.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate EBS snapshots
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.ec2_snapshot_info:
+      register: snapshots
+
+    - debug:
+        var: snapshots.snapshots
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Inspect RDS Automated Backups
+      </div>
+
+      <p class="text-slate-600">
+        Confirms backup retention and recovery posture for databases.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect RDS backup retention
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.rds_instance_info:
+      register: rds_instances
+
+    - debug:
+        var: rds_instances.db_instances
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Inspect Multi-AZ Configuration
+      </div>
+
+      <p class="text-slate-600">
+        Reviews whether critical services are protected against AZ failure.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect Multi-AZ posture
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.rds_instance_info:
+      register: rds
+
+    - debug:
+        var: rds.db_instances
+      </pre>
+    </div>
+
+    <div class="pt-4 border-t border-slate-200">
+      <div class="font-semibold text-slate-800 mb-2">
+        🚨 Blast-Radius Signals (Inspection-Only)
+      </div>
+
+      <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+        <li>Critical resources not covered by any backup plan</li>
+        <li>Single-region backups without cross-region protection</li>
+        <li>Snapshots accumulating without lifecycle management</li>
+        <li>Databases without automated backups enabled</li>
+        <li>Single-AZ workloads with no failover strategy</li>
+        <li>Backup vaults lacking encryption or access controls</li>
+      </ul>
+    </div>
+
+  </div>
+</details>
+<!-- NP:CAT8_BACKUP_DR_END -->
+
+
+<!-- NP:CAT9_DEPLOYMENT_SAFETY_START -->
+<!-- CATEGORY 9 -->
+<details class="border border-slate-200 rounded-lg p-4">
+  <summary class="cursor-pointer font-medium text-slate-800">
+    🟢 Deployment Safety &amp; Change Readiness
+  </summary>
+
+  <div class="mt-4 space-y-4 text-sm">
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Inspect Auto Scaling Deployment Configuration
+      </div>
+
+      <p class="text-slate-600">
+        Reviews deployment-related ASG settings that influence rollout safety
+        such as health checks, cooldowns, and capacity buffers.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect ASG deployment configuration
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.autoscaling_group_info:
+      register: asgs
+
+    - debug:
+        var: asgs.auto_scaling_groups
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Inspect Load Balancer Health Check Configuration
+      </div>
+
+      <p class="text-slate-600">
+        Validates health check paths, intervals, and thresholds that gate deployments.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect load balancer target group health checks
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.elb_target_group_info:
+      register: target_groups
+
+    - debug:
+        var: target_groups.target_groups
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Inspect Deployment Blast Radius (Capacity Headroom)
+      </div>
+
+      <p class="text-slate-600">
+        Reviews whether sufficient spare capacity exists to tolerate failed deployments.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect ASG desired vs max capacity
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.autoscaling_group_info:
+      register: asgs
+
+    - debug:
+        msg: >
+          ASG { item.auto_scaling_group_name }
+          desired={ item.desired_capacity }
+          max={ item.max_size }
+      loop: "{ asgs.auto_scaling_groups }"
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Inspect Rolling Deployment Constraints
+      </div>
+
+      <p class="text-slate-600">
+        Detects configurations that allow too many instances to be replaced simultaneously.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect rolling update risk
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.autoscaling_group_info:
+      register: asgs
+
+    - debug:
+        var: asgs.auto_scaling_groups
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Inspect Change Visibility (Alarms &amp; Signals)
+      </div>
+
+      <p class="text-slate-600">
+        Ensures deployments are observable and rollback signals exist before change.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect CloudWatch alarms before deployment
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.cloudwatch_alarm_info:
+      register: alarms
+
+    - debug:
+        var: alarms.metric_alarms
+      </pre>
+    </div>
+
+    <div class="pt-4 border-t border-slate-200">
+      <div class="font-semibold text-slate-800 mb-2">
+        🚨 Blast-Radius Signals (Inspection-Only)
+      </div>
+
+      <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+        <li>No spare capacity to absorb failed deployments</li>
+        <li>Health checks misaligned with application startup behavior</li>
+        <li>Single-target or single-AZ deployments</li>
+        <li>Rolling updates replacing too many instances at once</li>
+        <li>Deployments performed without alarms or rollback signals</li>
+        <li>Change velocity exceeding observability coverage</li>
+      </ul>
+    </div>
+
+  </div>
+</details>
+<!-- NP:CAT9_DEPLOYMENT_SAFETY_END -->
+
+
+<!-- NP:CAT10_INCIDENT_READINESS_START -->
+<!-- CATEGORY 10 -->
+<details class="border border-slate-200 rounded-lg p-4">
+  <summary class="cursor-pointer font-medium text-slate-800">
+    🟢 Incident Response Readiness
+  </summary>
+
+  <div class="mt-4 space-y-4 text-sm">
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Enumerate CloudWatch Alarms (Incident Triggers)
+      </div>
+
+      <p class="text-slate-600">
+        Reviews alarms that are expected to trigger incident response.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate CloudWatch alarms
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.cloudwatch_alarm_info:
+      register: alarms
+
+    - debug:
+        var: alarms.metric_alarms
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Inspect Alarm Actions &amp; Notification Targets
+      </div>
+
+      <p class="text-slate-600">
+        Confirms alarms are wired to notification channels (SNS, Ops tooling).
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect alarm actions
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.cloudwatch_alarm_info:
+      register: alarms
+
+    - debug:
+        msg: "{ item.alarm_name } actions={ item.alarm_actions }"
+      loop: "{ alarms.metric_alarms }"
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Enumerate SNS Topics (Incident Fan-Out)
+      </div>
+
+      <p class="text-slate-600">
+        Lists SNS topics used for alert fan-out and escalation.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate SNS topics
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.sns_topic_info:
+      register: topics
+
+    - debug:
+        var: topics.topics
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Inspect EventBridge Rules for Incident Automation
+      </div>
+
+      <p class="text-slate-600">
+        Identifies automated responses tied to operational or failure events.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect EventBridge rules
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.eventbridge_rule_info:
+      register: rules
+
+    - debug:
+        var: rules.rules
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Inspect On-Call &amp; Escalation Readiness
+      </div>
+
+      <p class="text-slate-600">
+        Validates that notification paths exist beyond a single endpoint.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect SNS subscriptions
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.sns_subscription_info:
+      register: subs
+
+    - debug:
+        var: subs.subscriptions
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Inspect Log Retention for Forensics
+      </div>
+
+      <p class="text-slate-600">
+        Ensures logs are retained long enough for incident investigation.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect log retention settings
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.cloudwatchlogs_log_group_info:
+      register: log_groups
+
+    - debug:
+        var: log_groups.log_groups
+      </pre>
+    </div>
+
+    <div class="pt-4 border-t border-slate-200">
+      <div class="font-semibold text-slate-800 mb-2">
+        🚨 Blast-Radius Signals (Inspection-Only)
+      </div>
+
+      <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+        <li>Alarms without notification actions</li>
+        <li>Single-recipient alerting with no escalation</li>
+        <li>Event rules defined but not wired to responders</li>
+        <li>Insufficient log retention for post-incident analysis</li>
+        <li>Automated remediation without human visibility</li>
+        <li>Incidents detectable only through customer impact</li>
+      </ul>
+    </div>
+
+  </div>
+</details>
+<!-- NP:CAT10_INCIDENT_READINESS_END -->
+
+
+<!-- NP:CAT11_COMPLIANCE_AUDIT_START -->
+<!-- CATEGORY 11 -->
+<details class="border border-slate-200 rounded-lg p-4">
+  <summary class="cursor-pointer font-medium text-slate-800">
+    🟢 Compliance &amp; Audit Readiness
+  </summary>
+
+  <div class="mt-4 space-y-4 text-sm">
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Inspect CloudTrail Configuration
+      </div>
+
+      <p class="text-slate-600">
+        Confirms CloudTrail is enabled, multi-region, and logging management events.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect CloudTrail configuration
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.cloudtrail_trail_info:
+      register: trails
+
+    - debug:
+        var: trails.trails
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Inspect CloudTrail Log Destination
+      </div>
+
+      <p class="text-slate-600">
+        Reviews S3 buckets and CloudWatch log groups receiving audit logs.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect CloudTrail log destinations
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.cloudtrail_trail_info:
+      register: trails
+
+    - debug:
+        msg: >
+          Trail { item.name }
+          S3={ item.s3_bucket_name }
+          CWLogs={ item.cloud_watch_logs_log_group_arn }
+      loop: "{ trails.trails }"
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Enumerate AWS Config Recorders
+      </div>
+
+      <p class="text-slate-600">
+        Confirms configuration change tracking is enabled.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate AWS Config recorders
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.config_configuration_recorder_info:
+      register: recorders
+
+    - debug:
+        var: recorders.configuration_recorders
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Inspect Config Delivery Channels
+      </div>
+
+      <p class="text-slate-600">
+        Verifies where configuration snapshots are delivered for audit.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect AWS Config delivery channels
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.config_delivery_channel_info:
+      register: channels
+
+    - debug:
+        var: channels.delivery_channels
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Enumerate IAM Access Analyzer Findings
+      </div>
+
+      <p class="text-slate-600">
+        Identifies unintended public or cross-account access paths.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate IAM Access Analyzer findings
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.iam_access_analyzer_finding_info:
+      register: findings
+
+    - debug:
+        var: findings.findings
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Inspect GuardDuty Detectors
+      </div>
+
+      <p class="text-slate-600">
+        Confirms threat detection is enabled for the account.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect GuardDuty detectors
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.guardduty_detector_info:
+      register: detectors
+
+    - debug:
+        var: detectors.detectors
+      </pre>
+    </div>
+
+    <div class="pt-4 border-t border-slate-200">
+      <div class="font-semibold text-slate-800 mb-2">
+        🚨 Blast-Radius Signals (Inspection-Only)
+      </div>
+
+      <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+        <li>CloudTrail disabled or limited to a single region</li>
+        <li>Audit logs stored in unprotected or short-retention buckets</li>
+        <li>AWS Config disabled or not recording all resource types</li>
+        <li>Access Analyzer findings ignored or unresolved</li>
+        <li>GuardDuty disabled or not monitored</li>
+        <li>Audit evidence fragmented across multiple accounts</li>
+      </ul>
+    </div>
+
+  </div>
+</details>
+<!-- NP:CAT11_COMPLIANCE_AUDIT_END -->
+
+
+<!-- NP:CAT12_DATA_GOVERNANCE_PRIVACY_START -->
+<!-- CATEGORY 12 -->
+<details class="border border-slate-200 rounded-lg p-4">
+  <summary class="cursor-pointer font-medium text-slate-800">
+    🟢 Data Governance &amp; Privacy
+  </summary>
+
+  <div class="mt-4 space-y-4 text-sm">
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Enumerate S3 Buckets & Encryption Status
+      </div>
+
+      <p class="text-slate-600">
+        Reviews S3 bucket encryption settings to ensure data-at-rest protection.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate S3 buckets and encryption
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.s3_bucket_info:
+      register: buckets
+
+    - debug:
+        var: buckets.buckets
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Inspect S3 Public Access Blocks
+      </div>
+
+      <p class="text-slate-600">
+        Confirms public access is explicitly blocked on sensitive buckets.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect S3 public access blocks
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.s3_public_access_block_info:
+      register: pab
+
+    - debug:
+        var: pab.public_access_block_configurations
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Enumerate KMS Keys & Policies
+      </div>
+
+      <p class="text-slate-600">
+        Reviews customer-managed KMS keys used for encrypting sensitive data.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate KMS keys
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.kms_key_info:
+      register: kms_keys
+
+    - debug:
+        var: kms_keys.keys
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Inspect RDS Encryption & Backup Settings
+      </div>
+
+      <p class="text-slate-600">
+        Confirms databases storing regulated data are encrypted and backed up.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect RDS encryption and backups
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.rds_instance_info:
+      register: rds
+
+    - debug:
+        var: rds.instances
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Enumerate Data Classification Tags
+      </div>
+
+      <p class="text-slate-600">
+        Reviews resource tags used for data classification and retention policies.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate resource tags
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.resourcegroupstaggingapi_info:
+      register: tags
+
+    - debug:
+        var: tags.resource_tag_mapping_list
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Inspect Macie Findings (If Enabled)
+      </div>
+
+      <p class="text-slate-600">
+        Reviews sensitive data discovery findings for PII or regulated data.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect Macie findings
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.macie2_finding_info:
+      register: findings
+
+    - debug:
+        var: findings.findings
+      </pre>
+    </div>
+
+    <div class="pt-4 border-t border-slate-200">
+      <div class="font-semibold text-slate-800 mb-2">
+        🚨 Blast-Radius Signals (Inspection-Only)
+      </div>
+
+      <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+        <li>Unencrypted S3 buckets containing sensitive data</li>
+        <li>Public access allowed on regulated datasets</li>
+        <li>Customer-managed KMS keys with broad IAM policies</li>
+        <li>Databases storing PII without encryption or backups</li>
+        <li>Missing or inconsistent data classification tags</li>
+        <li>Macie findings ignored or not routed to security teams</li>
+      </ul>
+    </div>
+
+  </div>
+</details>
+<!-- NP:CAT12_DATA_GOVERNANCE_PRIVACY_END -->
+
+
+<!-- NP:CAT13_CROSS_ACCOUNT_ORG_GOVERNANCE_START -->
+<!-- CATEGORY 13 -->
+<details class="border border-slate-200 rounded-lg p-4">
+  <summary class="cursor-pointer font-medium text-slate-800">
+    🟢 Cross-Account &amp; Org Governance
+  </summary>
+
+  <div class="mt-4 space-y-4 text-sm">
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Enumerate AWS Organization Accounts
+      </div>
+
+      <p class="text-slate-600">
+        Lists all accounts in the AWS Organization for scope awareness.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate organization accounts
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.organizations_account_info:
+      register: org_accounts
+
+    - debug:
+        var: org_accounts.accounts
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Enumerate Organizational Units (OUs)
+      </div>
+
+      <p class="text-slate-600">
+        Inspects OU structure to validate account placement and blast-radius boundaries.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate organizational units
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.organizations_organizational_unit_info:
+      register: ous
+
+    - debug:
+        var: ous.organizational_units
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Enumerate Service Control Policies (SCPs)
+      </div>
+
+      <p class="text-slate-600">
+        Reviews SCPs to understand enforced guardrails across accounts.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate service control policies
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.organizations_policy_info:
+        filter: SERVICE_CONTROL_POLICY
+      register: scps
+
+    - debug:
+        var: scps.policies
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Inspect SCP Attachments
+      </div>
+
+      <p class="text-slate-600">
+        Confirms which SCPs are attached to accounts and OUs.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect SCP attachments
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.organizations_policy_attachment_info:
+      register: attachments
+
+    - debug:
+        var: attachments.attachments
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Enumerate Cross-Account IAM Roles
+      </div>
+
+      <p class="text-slate-600">
+        Identifies IAM roles that allow access from other AWS accounts.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate cross-account IAM roles
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.iam_role_info:
+      register: roles
+
+    - debug:
+        var: roles.roles
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Inspect Role Trust Relationships
+      </div>
+
+      <p class="text-slate-600">
+        Reviews which external accounts are allowed to assume roles.
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Inspect role trust relationships
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.iam_role_info:
+      register: roles
+
+    - debug:
+        var: roles.roles[].assume_role_policy_document
+      </pre>
+    </div>
+
+    <div>
+      <div class="font-medium text-slate-800">
+        Enumerate AWS RAM Shared Resources
+      </div>
+
+      <p class="text-slate-600">
+        Reviews resources shared across accounts (VPCs, subnets, gateways).
+      </p>
+
+      <pre class="bg-slate-900 text-slate-100 rounded-md p-3 text-xs overflow-x-auto">
+- name: Enumerate AWS RAM shared resources
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - amazon.aws.ram_resource_share_info:
+      register: ram_shares
+
+    - debug:
+        var: ram_shares.resource_shares
+      </pre>
+    </div>
+
+    <div class="pt-4 border-t border-slate-200">
+      <div class="font-semibold text-slate-800 mb-2">
+        🚨 Blast-Radius Signals (Inspection-Only)
+      </div>
+
+      <ul class="list-disc list-outside pl-5 text-sm text-slate-700 space-y-1">
+        <li>Accounts not placed under intended OUs</li>
+        <li>Missing or overly permissive SCPs</li>
+        <li>SCPs attached inconsistently across environments</li>
+        <li>Cross-account roles trusting broad principals</li>
+        <li>RAM shares exposing network resources unintentionally</li>
+        <li>Security tooling accounts lacking isolation SCPs</li>
+      </ul>
+    </div>
+
+  </div>
+</details>
+<!-- NP:CAT13_CROSS_ACCOUNT_ORG_GOVERNANCE_END -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  {% endraw %}
+
+</section>

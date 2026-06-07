@@ -1,0 +1,116 @@
+<!-- ================= LEFT SIDEBAR ================= -->
+<aside class="w-64 bg-slate-900 text-slate-100 flex flex-col">
+
+    <!-- BRAND -->
+    <div class="px-4 py-4 border-b border-slate-700">
+        <h1 class="text-lg font-semibold tracking-wide">
+            NetPilot AI
+        </h1>
+        <p class="text-xs text-slate-400 mt-1">
+            Network & Cloud Automation
+        </p>
+    </div>
+
+    <!-- NAV -->
+    <nav class="flex-1 px-2 py-4 space-y-1 text-sm">
+
+        <!-- OVERVIEW -->
+        <button @click="activePage = 'overview'"
+            :class="activePage === 'overview'
+                ? 'bg-slate-800 text-white'
+                : 'text-slate-300 hover:bg-slate-800'"
+            class="w-full text-left px-3 py-2 rounded font-medium">
+            Overview
+        </button>
+
+        <!-- NETWORKING -->
+        <div class="mt-4">
+            <p class="px-3 text-xs uppercase tracking-wider text-slate-500 mb-2">
+                Networking
+            </p>
+
+            <button @click="activePage = 'vpcs'"
+                :class="activePage === 'vpcs' ? 'bg-slate-800 text-white' : 'text-slate-300 hover:bg-slate-800'"
+                class="w-full text-left px-3 py-2 rounded">
+                VPCs & Subnets
+            </button>
+
+            <button @click="activePage = 'routes'"
+                :class="activePage === 'routes' ? 'bg-slate-800 text-white' : 'text-slate-300 hover:bg-slate-800'"
+                class="w-full text-left px-3 py-2 rounded">
+                Route Tables
+            </button>
+
+            <button @click="activePage = 'igws'"
+                :class="activePage === 'igws' ? 'bg-slate-800 text-white' : 'text-slate-300 hover:bg-slate-800'"
+                class="w-full text-left px-3 py-2 rounded">
+                Internet Gateways
+            </button>
+
+            <button @click="activePage = 'nats'"
+                :class="activePage === 'nats' ? 'bg-slate-800 text-white' : 'text-slate-300 hover:bg-slate-800'"
+                class="w-full text-left px-3 py-2 rounded">
+                NAT Gateways
+            </button>
+
+            <button @click="activePage = 'enis'"
+                :class="activePage === 'enis' ? 'bg-slate-800 text-white' : 'text-slate-300 hover:bg-slate-800'"
+                class="w-full text-left px-3 py-2 rounded">
+                Network Interfaces
+            </button>
+        </div>
+
+        <!-- OBSERVABILITY -->
+        <div class="mt-6">
+            <p class="px-3 text-xs uppercase tracking-wider text-slate-500 mb-2">
+                Observability
+            </p>
+
+            <button @click="activePage = 'observability'"
+                :class="activePage === 'observability'
+                    ? 'bg-slate-800 text-white'
+                    : 'text-slate-300 hover:bg-slate-800'"
+                class="w-full text-left px-3 py-2 rounded">
+                Logs · Metrics · Alerts
+            </button>
+        </div>
+
+        <!-- AUTOMATION -->
+        <div class="mt-6">
+            <p class="px-3 text-xs uppercase tracking-wider text-slate-500 mb-2">
+                Automation
+            </p>
+
+            <button @click="activePage = 'automation'"
+                :class="activePage === 'automation'
+                    ? 'bg-slate-800 text-white'
+                    : 'text-slate-300 hover:bg-slate-800'"
+                class="w-full text-left px-3 py-2 rounded">
+                Playbooks & CLI
+            </button>
+        </div>
+
+        <!-- SETTINGS -->
+        <div class="mt-6">
+            <p class="px-3 text-xs uppercase tracking-wider text-slate-500 mb-2">
+                Settings
+            </p>
+
+            <button @click="activePage = 'settings'"
+                :class="activePage === 'settings'
+                    ? 'bg-slate-800 text-white'
+                    : 'text-slate-300 hover:bg-slate-800'"
+                class="w-full text-left px-3 py-2 rounded">
+                Application Settings
+            </button>
+        </div>
+
+    </nav>
+
+    <!-- FOOTER -->
+    <div class="px-4 py-3 border-t border-slate-700 text-xs text-slate-400">
+        NetPilot AI © 2026
+    </div>
+
+</aside>
+<!-- =============== END SIDEBAR ================= -->

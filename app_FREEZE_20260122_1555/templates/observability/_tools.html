@@ -1,0 +1,116 @@
+<!-- ================= TOOLS SECTION ================= -->
+<div class="space-y-4">
+
+  <!-- HEADER -->
+  <h3 class="text-base font-semibold text-slate-800">🛠 Tools</h3>
+
+  <!-- DESCRIPTION -->
+  <p class="text-sm text-slate-600">
+    Operational playbooks and automation references for safe infrastructure operations.
+  </p>
+
+  <p class="text-sm text-slate-700">
+    The Tools panel provides structured, read-only guidance for operational workflows
+    such as validation, remediation, and controlled infrastructure changes.
+    In the current version, all tools are documentation-only and non-executable.
+  </p>
+
+  <p class="text-sm text-slate-700 italic">
+    NetPilot philosophy: A platform that teaches correct operations first,
+    and earns the right to execute later.
+  </p>
+
+  <!-- CAPABILITIES / STATUS -->
+  <details class="bg-slate-50 border border-slate-200 rounded-md p-3 text-sm">
+    <summary class="cursor-pointer font-medium text-slate-800">
+      Show Tools capabilities & status
+    </summary>
+
+    <div class="mt-3 space-y-3 text-slate-700 leading-relaxed">
+      <p class="font-semibold">🚧 Planned</p>
+      <ul class="list-disc list-inside ml-4 space-y-1">
+        <li>AWS CLI (read-only examples)</li>
+        <li>Bash scripts (operational reference)</li>
+        <li>Ansible playbooks</li>
+        <li>Terraform modules</li>
+        <li>Doctor-generated safe playbooks</li>
+      </ul>
+    </div>
+  </details>
+
+  <!-- ================= TOOLS SUB-TABS ================= -->
+  <div class="pt-2 space-y-4" x-data="{ toolsTab: 'cli' }">
+
+    <!-- SUB TAB BUTTONS -->
+    <div class="flex flex-wrap gap-2">
+
+      <button class="px-3 py-1 rounded-md text-xs font-medium border border-slate-200" :class="toolsTab === 'cli'
+          ? 'bg-slate-800 text-white border-slate-800'
+          : 'bg-white text-slate-700 hover:bg-slate-50'" @click="toolsTab = 'cli'">
+        📟 Operational Philosophy & Guidance
+      </button>
+
+      <button class="px-3 py-1 rounded-md text-xs font-medium border border-slate-200" :class="toolsTab === 'aws-cli'
+          ? 'bg-slate-800 text-white border-slate-800'
+          : 'bg-white text-slate-700 hover:bg-slate-50'" @click="toolsTab = 'aws-cli'">
+        📘 AWS CLI Examples
+      </button>
+
+      <button class="px-3 py-1 rounded-md text-xs font-medium border border-slate-200" :class="toolsTab === 'ansible'
+          ? 'bg-slate-800 text-white border-slate-800'
+          : 'bg-white text-slate-700 hover:bg-slate-50'" @click="toolsTab = 'ansible'">
+        🧩 Ansible Playbook Examples
+      </button>
+
+
+    </div>
+
+    <!-- ================= CATEGORY: OPERATIONAL PHILOSOPHY & GUIDANCE ================= -->
+    <div x-show="toolsTab === 'cli'" x-cloak class="border border-slate-200 rounded-lg p-4 space-y-4">
+      {% include "observability/_tools_operational_guidance.html" %}
+    </div>
+
+    <!-- ================= CATEGORY: AWS CLI EXAMPLES ================= -->
+    <div x-show="toolsTab === 'aws-cli'" x-cloak class="border border-slate-200 rounded-lg p-4 space-y-4">
+      {% include "observability/_tools_aws_cli_examples.html" %}
+    </div>
+
+    <!-- ================= CATEGORY: ANSIBLE PLAYBOOK EXAMPLES ================= -->
+    <div x-show="toolsTab === 'ansible'" x-cloak class="border border-slate-200 rounded-lg p-4 space-y-4">
+      {% include "observability/_tools_ansible_playbook_examples.html" %}
+    </div>
+
+
+    <!-- ================= CATEGORY: AUTOMATION (IAC) ================= -->
+    <div x-show="toolsTab === 'iac'" x-cloak class="border border-slate-200 rounded-lg p-4 space-y-3">
+
+      <div class="flex items-center justify-between">
+        <h4 class="text-sm font-semibold text-slate-800">
+          🤖 Automation &amp; Infrastructure-as-Code (IaC)
+        </h4>
+        <span class="text-xs px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
+          🚧 Planned — Reference Only
+        </span>
+      </div>
+
+      <p class="text-sm text-slate-600">
+        Repeatable, controlled automation patterns intended for consistent operations at scale.
+      </p>
+
+      <div class="text-sm text-slate-700">
+        <div class="font-medium text-slate-800 mb-1">What lives here</div>
+        <ul class="list-disc list-outside pl-5 space-y-1">
+          <li>Ansible playbooks for idempotent operational workflows</li>
+          <li>Terraform module references for infrastructure lifecycle patterns</li>
+          <li>Guarded create/update/destroy guidance (documentation-only in this phase)</li>
+        </ul>
+      </div>
+
+      <div class="text-xs text-slate-500 italic">
+        Reference-only. Execution will require explicit consent and additional safeguards in a future phase.
+      </div>
+    </div>
+
+  </div>
+</div>
+<!-- =============== END TOOLS SECTION =============== -->

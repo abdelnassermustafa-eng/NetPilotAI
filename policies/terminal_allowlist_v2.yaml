@@ -1,0 +1,37 @@
+version: 2
+policy_name: terminal-allowlist-v2
+description: NetPilot Terminal v2 verified allow-list
+
+defaults:
+  read_only: true
+
+commands:
+  - id: aws.sts.get_caller_identity
+    description: Show active AWS identity and account
+    executable: aws
+    args:
+      - sts
+      - get-caller-identity
+
+    category: identity
+    provider: aws
+
+    # 🔐 Phase 2.3 enforcement
+    allow_flags:
+      - --output
+
+    require_flags: []
+
+    deny_flags:
+      - --profile
+      - --endpoint-url
+
+    output_formats:
+      - json
+      - table
+      - text
+
+    allow_wildcards: false
+
+    risk: none
+    read_only: true

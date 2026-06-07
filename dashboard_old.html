@@ -1,0 +1,1539 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1 class="text-2xl font-semibold text-slate-800 mb-6">
+    AWS Network Inventory
+</h1>
+
+<div x-data="networkConsole()" x-init="init()" class="space-y-6">
+
+    <!-- GLOBAL ERROR BAR -->
+    <template x-if="globalError">
+        <div class="mb-4 bg-red-100 text-red-800 border border-red-300 px-4 py-2 rounded text-sm" x-text="globalError">
+        </div>
+    </template>
+
+    <!-- TABS -->
+    <div class="border-b border-slate-200 mb-4">
+        <nav class="flex space-x-4">
+            <button @click="activeTab = 'network'" :class="activeTab === 'network'
+                    ? 'px-3 py-2 text-sm font-medium border-b-2 border-blue-600 text-blue-600'
+                    : 'px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-800'">
+                🌐 VPCs &amp; Subnets
+            </button>
+
+            <button @click="activeTab = 'routes'" :class="activeTab === 'routes'
+                    ? 'px-3 py-2 text-sm font-medium border-b-2 border-blue-600 text-blue-600'
+                    : 'px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-800'">
+                📦 Route Tables
+            </button>
+
+            <button @click="activeTab = 'nat'"
+                :class="activeTab === 'nat' ? 'font-semibold border-b-2 border-blue-600' : 'text-slate-600'"
+                class="px-3 pb-2">
+                ⚙️ NAT Gateways
+            </button>
+
+        </nav>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- TAB 1: VPCs & SUBNETS -->
+    <!-- ============================================================= -->
+    <div x-show="activeTab === 'network'" x-cloak class="space-y-8">
+
+        <!-- ACTION BAR -->
+        <div class="flex space-x-3">
+
+            <button @click="showCreateVPC = true" :class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                + Create VPC
+            </button>
+
+            <button @click="showCreateSubnet = true"
+                :class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                + Create Subnet
+            </button>
+
+            <button @click="reloadAll()" :class="bg-slate-600 text-white px-4 py-2 rounded hover:bg-slate-700">
+                Refresh
+            </button>
+
+            <button @click="activeTab = 'igws'"
+                :class="activeTab === 'igws' ? 'font-bold border-b-2 border-blue-600' : ''">
+                🌐 Internet Gateways
+            </button>
+
+
+        </div>
+
+        <!-- CREATE VPC MODAL -->
+        <div x-show="showCreateVPC" x-cloak
+            class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+
+            <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+                <h2 class="text-lg font-semibold mb-4">Create New VPC</h2>
+
+                <input type="text" placeholder="CIDR (e.g. 10.0.0.0/16)" x-model="newVpcCidr"
+                    class="border p-2 rounded w-full mb-3" />
+
+                <div class="flex justify-end space-x-3">
+                    <button @click="showCreateVPC = false" class="px-4 py-2 bg-slate-300 rounded hover:bg-slate-400">
+                        Cancel
+                    </button>
+
+                    <button @click="createVPC(); showCreateVPC = false;"
+                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        Create
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CREATE SUBNET MODAL -->
+        <div x-show="showCreateSubnet" x-cloak
+            class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+
+            <div class="bg-white p-6 rounded-lg shadow-lg w-[28rem]">
+                <h2 class="text-lg font-semibold mb-4">Create New Subnet</h2>
+
+                <!-- INLINE ERROR -->
+                <template x-if="subnetError">
+                    <div class="mb-3 bg-red-100 text-red-800 border border-red-300 px-3 py-2 rounded text-sm"
+                        x-text="subnetError"></div>
+                </template>
+
+                <!-- VPC (dropdown + manual) -->
+                <label class="block mb-1 font-semibold">VPC</label>
+                <select x-model="newSubnetVPC" class="border p-2 rounded w-full mb-2">
+                    <option value="">-- Select VPC --</option>
+                    <template x-for="vpc in vpcs" :key="vpc.vpc_id">
+                        <option :value="vpc.vpc_id" x-text="`${vpc.vpc_id} (${vpc.cidr})`"></option>
+                    </template>
+                </select>
+                <p class="text-xs text-slate-500 mb-2">
+                    You can select a VPC above; if left empty, you may type a VPC ID manually below.
+                </p>
+                <input type="text" placeholder="Or type VPC ID (e.g. vpc-xxxxxxxx)" x-model="newSubnetVPCManual"
+                    class="border p-2 rounded w-full mb-3" />
+
+                <!-- CIDR -->
+                <label class="block mb-1 font-semibold">CIDR</label>
+                <input type="text" placeholder="10.0.1.0/24" x-model="newSubnetCIDR" @input="filterCidrSuggestions()
+" class="border p-2 rounded w-full mb-1" />
+                <p class="text-xs text-slate-500 mb-1">
+                    Must be inside the VPC CIDR and not overlap existing subnets.
+                </p>
+
+                <!-- CIDR SUGGESTIONS -->
+                <template x-if="cidrSuggestions.length > 0">
+                    <div class="mb-3">
+                        <p class="text-xs text-slate-600 mb-1">Suggested CIDR blocks:</p>
+                        <div class="flex flex-wrap gap-2">
+                            <template x-for="cidr in cidrSuggestions" :key="cidr">
+                                <button type="button" class="text-xs px-2 py-1 border rounded hover:bg-slate-100"
+                                    @click="applySuggestedCidr(cidr)">
+                                    <span x-text="cidr"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- AZ -->
+                <label class="block mb-1 font-semibold">Availability Zone</label>
+                <select x-model="newSubnetAZ" class="border p-2 rounded w-full mb-3">
+                    <option value="">-- Select AZ --</option>
+                    <template x-for="az in availabilityZones" :key="az">
+                        <option :value="az" x-text="az"></option>
+                    </template>
+                </select>
+
+                <!-- Name -->
+                <label class="block mb-1 font-semibold">Name (optional)</label>
+                <input type="text" placeholder="NetPilot-Subnet" x-model="newSubnetName"
+                    class="border p-2 rounded w-full mb-4" />
+
+                <div class="flex justify-end space-x-3">
+                    <button @click="closeSubnetModal()" class="px-4 py-2 bg-slate-300 rounded hover:bg-slate-400">
+                        Cancel
+                    </button>
+
+                    <button @click="submitCreateSubnet()"
+                        class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                        Create
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- VPC TABLE -->
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-lg font-semibold mb-4">Existing VPCs</h2>
+
+            <table class="min-w-full border border-slate-300 rounded">
+                <thead class="bg-slate-200">
+                    <tr>
+                        <th class="px-4 py-2 border">VPC ID</th>
+                        <th class="px-4 py-2 border">CIDR</th>
+                        <th class="px-4 py-2 border">State</th>
+                        <th class="px-4 py-2 border">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <template x-for="vpc in vpcs" :key="vpc.vpc_id">
+                        <tr class="border">
+                            <td class="px-4 py-2 border" x-text="vpc.vpc_id"></td>
+                            <td class="px-4 py-2 border" x-text="vpc.cidr"></td>
+                            <td class="px-4 py-2 border" x-text="vpc.state"></td>
+
+                            <td class="px-4 py-2 border space-x-2">
+                                <button @click="deleteVPC(vpc)"
+                                    class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">
+                                    Delete
+                                </button>
+
+                                <button @click="safeDeleteVPC(vpc)"
+                                    class="bg-yellow-500 text-black px-3 py-1 rounded hover:bg-yellow-600">
+                                    Safe Delete
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SUBNET TABLE -->
+        <div class="bg-white p-6 rounded-lg shadow">
+
+            <h2 class="text-lg font-semibold mb-4">Subnets</h2>
+
+            <table class="min-w-full border border-slate-300 rounded">
+                <thead class="bg-slate-200">
+                    <tr>
+                        <th class="px-4 py-2 border">Subnet ID</th>
+                        <th class="px-4 py-2 border">VPC ID</th>
+                        <th class="px-4 py-2 border">CIDR</th>
+                        <th class="px-4 py-2 border">AZ</th>
+                        <th class="px-4 py-2 border">State</th>
+                        <th class="px-4 py-2 border">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <template x-for="subnet in subnets" :key="subnet.subnet_id">
+                        <tr class="border">
+                            <td class="px-4 py-2 border" x-text="subnet.subnet_id"></td>
+                            <td class="px-4 py-2 border" x-text="subnet.vpc_id"></td>
+                            <td class="px-4 py-2 border" x-text="subnet.cidr"></td>
+                            <td class="px-4 py-2 border" x-text="subnet.availability_zone"></td>
+                            <td class="px-4 py-2 border" x-text="subnet.state"></td>
+
+                            <td class="px-4 py-2 border">
+                                <button @click="deleteSubnet(subnet)"
+                                    class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+
+        </div>
+
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- TAB 2: ROUTE TABLES -->
+    <!-- ============================================================= -->
+    <div x-show="activeTab === 'routes'" x-cloak class="space-y-8">
+
+        <!-- ACTION BAR -->
+        <div class="flex space-x-3">
+            <button @click="openCreateRTBModal()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                + Create Route Table
+            </button>
+
+            <button @click="reloadRoutes()" class="bg-slate-600 text-white px-4 py-2 rounded hover:bg-slate-700">
+                Refresh Route Tables
+            </button>
+        </div>
+
+        <!-- CREATE ROUTE TABLE MODAL -->
+        <div x-show="showCreateRTB" x-cloak
+            class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+
+            <div class="bg-white p-6 rounded-lg shadow-lg w-[28rem]">
+                <h2 class="text-lg font-semibold mb-4">Create New Route Table</h2>
+
+                <!-- INLINE ERROR -->
+                <template x-if="rtbCreateError">
+                    <div class="mb-3 bg-red-100 text-red-800 border border-red-300 px-3 py-2 rounded text-sm"
+                        x-text="rtbCreateError"></div>
+                </template>
+
+                <!-- VPC -->
+                <label class="block mb-1 font-semibold">VPC</label>
+                <select x-model="newRTBVPC" class="border p-2 rounded w-full mb-3">
+                    <option value="">-- Select VPC --</option>
+                    <template x-for="vpc in vpcs" :key="vpc.vpc_id">
+                        <option :value="vpc.vpc_id" x-text="`${vpc.vpc_id} (${vpc.cidr})`"></option>
+                    </template>
+                </select>
+
+                <!-- Name -->
+                <label class="block mb-1 font-semibold">Name</label>
+                <input type="text" placeholder="NetPilot-RTB" x-model="newRTBName"
+                    class="border p-2 rounded w-full mb-3" />
+
+                <!-- Description -->
+                <label class="block mb-1 font-semibold">Description</label>
+                <textarea x-model="newRTBDescription" placeholder="Optional description for this route table"
+                    class="border p-2 rounded w-full mb-4" rows="3"></textarea>
+
+                <div class="flex justify-end space-x-3">
+                    <button @click="closeCreateRTBModal()" class="px-4 py-2 bg-slate-300 rounded hover:bg-slate-400">
+                        Cancel
+                    </button>
+
+                    <button @click="submitCreateRTB()"
+                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        Create
+                    </button>
+
+                    <button
+                        onclick="deleteRoute('rtb-005c8297e67d5c0d6','0.0.0.0/0')"
+                        class="bg-red-600 text-white px-3 py-1 rounded mt-3">
+                        Delete Default Route (rtb-005c8297e67d5c0d6)
+                    </button>
+
+                </div>
+            </div>
+        </div>
+
+        <h3 class="text-lg font-semibold mt-6 mb-2">Add Route</h3>
+
+        <form onsubmit="addRoute(event)" class="flex flex-wrap gap-2 items-center">
+        <input id="rtbId" class="border px-2 py-1 rounded" placeholder="rtb-xxxx" required>
+        <input id="destinationCidr" class="border px-2 py-1 rounded" placeholder="0.0.0.0/0" required>
+
+        <select id="targetType" class="border px-2 py-1 rounded">
+            <option value="igw">IGW</option>
+            <option value="nat">NAT</option>
+        </select>
+
+        <input id="targetId" class="border px-2 py-1 rounded" placeholder="igw-xxxx or nat-xxxx" required>
+
+        <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded">
+            Add Route
+        </button>
+        </form>
+
+
+        <!-- ASSOCIATE ROUTE TABLE MODAL -->
+        <div x-show="showAssociateRTB" x-cloak
+            class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+
+            <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+                <h2 class="text-lg font-semibold mb-4">
+                    Associate Route Table
+                </h2>
+
+                <!-- INLINE ERROR -->
+                <template x-if="rtbAssocError">
+                    <div class="mb-3 bg-red-100 text-red-800 border border-red-300 px-3 py-2 rounded text-sm"
+                        x-text="rtbAssocError"></div>
+                </template>
+
+                <p class="text-sm mb-2">
+                    <span class="font-semibold">Route Table:</span>
+                    <span x-text="selectedRTBId"></span>
+                </p>
+
+                <label class="block mb-1 font-semibold">Subnet</label>
+                <select x-model="selectedSubnetForAssoc" class="border p-2 rounded w-full mb-4">
+                    <option value="">-- Select Subnet --</option>
+                    <template x-for="sn in candidateSubnetsForRTB" :key="sn.subnet_id">
+                        <option :value="sn.subnet_id" x-text="`${sn.subnet_id} (${sn.cidr})`"></option>
+                    </template>
+                </select>
+
+                <div class="flex justify-end space-x-3">
+                    <button @click="closeAssocModal()" class="px-4 py-2 bg-slate-300 rounded hover:bg-slate-400">
+                        Cancel
+                    </button>
+
+                    <button @click="submitAssociateRTB()"
+                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        Associate
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ADD ROUTE MODAL -->
+        <div x-show="showAddRoute" x-cloak
+            class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+            <div class="bg-white p-6 rounded-lg shadow-lg w-[28rem]">
+                <h2 class="text-lg font-semibold mb-4">Add Route</h2>
+
+                <template x-if="addRouteError">
+                    <div class="mb-3 bg-red-100 text-red-800 border border-red-300 px-3 py-2 rounded text-sm"
+                        x-text="addRouteError"></div>
+                </template>
+
+                <p class="text-xs text-slate-600 mb-3">
+                    Choose where traffic should go when it matches this destination.
+                    Example: <span class="font-mono">0.0.0.0/0</span> for Internet, or a private range like
+                    <span class="font-mono">10.0.1.0/24</span>.
+                </p>
+
+                <!-- Destination CIDR -->
+                <label class="block mb-1 font-semibold">Destination CIDR</label>
+                <input type="text" placeholder="0.0.0.0/0" x-model="addRouteDestination"
+                    class="border p-2 rounded w-full mb-3" />
+
+                <!-- Target Type -->
+                <label class="block mb-1 font-semibold">Target Type</label>
+                <select x-model="addRouteTargetType" class="border p-2 rounded w-full mb-2">
+                    <option value="igw">Internet Gateway (igw-xxxx)</option>
+                    <option value="nat">NAT Gateway (nat-xxxx)</option>
+                    <option value="instance">Instance (i-xxxx)</option>
+                    <option value="tgw">Transit Gateway (tgw-xxxx)</option>
+                    <option value="vpc_peering">VPC Peering (pcx-xxxx)</option>
+                </select>
+                <p class="text-xs text-slate-500 mb-2">
+                    Paste the target ID from AWS (e.g. <span class="font-mono">igw-0123456789abcdef0</span>).
+                </p>
+
+                <!-- Target ID -->
+                <label class="block mb-1 font-semibold">Target ID</label>
+                <input type="text" placeholder="igw-0123456789abcdef0" x-model="addRouteTargetId"
+                    class="border p-2 rounded w-full mb-4" />
+
+                <div class="flex justify-end space-x-3">
+                    <button @click="closeAddRouteModal()" class="px-4 py-2 bg-slate-300 rounded hover:bg-slate-400">
+                        Cancel
+                    </button>
+
+                    <button @click="submitAddRoute()"
+                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        Add Route
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROUTE TABLES TABLE -->
+        <div class="bg-white p-6 rounded-lg shadow">
+
+            <h2 class="text-lg font-semibold mb-4">Route Tables</h2>
+
+            <table class="min-w-full border border-slate-300 rounded">
+                <thead class="bg-slate-200">
+                    <tr>
+                        <th class="px-4 py-2 border">RTB ID</th>
+                        <th class="px-4 py-2 border">VPC ID</th>
+                        <th class="px-4 py-2 border">Main</th>
+                        <th class="px-4 py-2 border">Associations</th>
+                        <th class="px-4 py-2 border">Routes</th>
+                        <th class="px-4 py-2 border">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <template x-for="rt in routeTables" :key="rt.route_table_id">
+                        <tr class="border align-top">
+                            <td class="px-4 py-2 border" x-text="rt.route_table_id"></td>
+                            <td class="px-4 py-2 border" x-text="rt.vpc_id"></td>
+                            <td class="px-4 py-2 border">
+                                <span x-text="rt.is_main ? 'Yes' : 'No'"></span>
+                            </td>
+                            <td class="px-4 py-2 border text-sm">
+                                <template x-if="rt.associations.length === 0">
+                                    <span class="text-slate-400">None</span>
+                                </template>
+                                <template x-if="rt.associations.length > 0">
+                                    <ul class="list-disc list-inside">
+                                        <template x-for="sn in rt.associations" :key="sn">
+                                            <li x-text="sn"></li>
+                                        </template>
+                                    </ul>
+                                </template>
+                            </td>
+                            <td class="px-4 py-2 border text-xs">
+                                <template x-if="rt.routes.length === 0">
+                                    <span class="text-slate-400">No routes</span>
+                                </template>
+                                <template x-if="rt.routes.length > 0">
+                                    <ul class="list-disc list-inside space-y-1">
+                                        <template x-for="r in rt.routes" :key="r.cidr + r.target">
+                                            <li class="flex items-center justify-between gap-2">
+                                                <div>
+                                                    <span class="font-mono" x-text="r.cidr"></span>
+                                                    <span class="text-slate-500">→</span>
+                                                    <span x-text="r.target"></span>
+                                                </div>
+                                                <button @click="deleteRouteEntry(rt, r)"
+                                                    class="text-xs px-2 py-1 border border-red-400 text-red-600 rounded hover:bg-red-50">
+                                                    Delete
+                                                </button>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </template>
+                            </td>
+                            <td class="px-4 py-2 border space-y-2">
+                                <button @click="openAssocModal(rt)"
+                                    class="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700 w-full">
+                                    Associate Subnet
+                                </button>
+
+                                <button @click="openAddRouteModal(rt)"
+                                    class="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 w-full">
+                                    Add Route
+                                </button>
+
+                                <button @click="deleteRouteTable(rt)" :disabled="rt.is_main" :class="rt.is_main
+                                        ? 'bg-slate-300 text-slate-500 px-3 py-1 rounded text-xs w-full cursor-not-allowed'
+                                        : 'bg-red-600 text-white px-3 py-1 rounded text-xs w-full hover:bg-red-700'">
+                                    Delete RTB
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- ============================================== -->
+<!-- 🌐 INTERNET GATEWAY MANAGEMENT                 -->
+<!-- ============================================== -->
+<div x-show="activeTab === 'igws'" x-data="igwManager()" x-init="loadIGWs()" class="space-y-6">
+
+    <!-- ACTIONS -->
+    <div class="flex space-x-3">
+        <button @click="showCreate = true" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            + Create IGW
+        </button>
+
+        <button @click="loadIGWs()" class="bg-slate-600 text-white px-4 py-2 rounded hover:bg-slate-700">
+            Refresh List
+        </button>
+    </div>
+
+    <!-- CREATE IGW MODAL -->
+    <div x-show="showCreate" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg w-96 shadow">
+
+            <h2 class="text-lg font-semibold mb-3">Create Internet Gateway</h2>
+
+            <input x-model="newName" type="text" placeholder="Name tag (optional)"
+                class="border p-2 rounded w-full mb-3">
+
+            <select x-model="attachVpcId" class="border p-2 w-full rounded mb-3">
+                <option value="">-- Do not attach --</option>
+                <template x-for="vpc in vpcs" :key="vpc.vpc_id">
+                    <option :value="vpc.vpc_id" x-text="vpc.vpc_id"></option>
+                </template>
+            </select>
+
+            <div class="flex justify-end space-x-3">
+                <button @click="showCreate = false" class="bg-slate-300 px-4 py-2 rounded hover:bg-slate-400">
+                    Cancel
+                </button>
+
+                <button @click="createIGW(); showCreate = false"
+                    class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    Create
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- IGW TABLE -->
+    <div class="bg-white p-6 rounded shadow">
+        <h2 class="text-lg font-semibold mb-4">Internet Gateways</h2>
+
+        <table class="min-w-full border">
+            <thead class="bg-slate-200">
+                <tr>
+                    <th class="border px-3 py-2">IGW ID</th>
+                    <th class="border px-3 py-2">Attached VPC</th>
+                    <th class="border px-3 py-2">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <template x-for="igw in igws" :key="igw.igw_id">
+                    <tr class="border">
+                        <td class="border px-3 py-2" x-text="igw.igw_id"></td>
+                        <td class="border px-3 py-2" x-text="igw.vpc_id ?? '—'"></td>
+
+                        <td class="border px-3 py-2 space-x-2">
+
+                            <button @click="openAttach(igw)"
+                                class="bg-yellow-500 text-black px-3 py-1 rounded hover:bg-yellow-600">
+                                Attach
+                            </button>
+
+                            <button @click="openDetach(igw)"
+                                class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600">
+                                Detach
+                            </button>
+
+                            <button @click="deleteIGW(igw.igw_id)"
+                                class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">
+                                Delete
+                            </button>
+
+                            <button @click="disassociate(rt.association_id)"
+                                class="bg-orange-600 text-white px-3 py-1 rounded hover:bg-orange-700"
+                                x-show="rt.association_id">
+                                Deassociate
+                            </button>
+
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ATTACH MODAL -->
+    <div x-show="showAttach" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg w-96 shadow">
+
+            <h2 class="text-lg font-semibold mb-3">Attach IGW: <span x-text="selectedIGW"></span></h2>
+
+            <select x-model="attachVpcId" class="border p-2 w-full rounded mb-3">
+                <template x-for="vpc in vpcs" :key="vpc.vpc_id">
+                    <option :value="vpc.vpc_id" x-text="vpc.vpc_id"></option>
+                </template>
+            </select>
+
+            <div class="flex justify-end space-x-3">
+                <button @click="showAttach = false" class="px-4 py-2 bg-slate-300 rounded hover:bg-slate-400">
+                    Cancel
+                </button>
+
+                <button @click="attachIGW(); showAttach = false"
+                    class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    Attach
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DETACH MODAL -->
+    <div x-show="showDetach" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg w-96 shadow">
+
+            <h2 class="text-lg font-semibold mb-3">Detach from VPC</h2>
+
+            <p class="mb-4">
+                IGW: <strong x-text="selectedIGW"></strong><br>
+                Attached VPC: <strong x-text="selectedVpc"></strong>
+            </p>
+
+            <button @click="detachIGW(); showDetach = false"
+                class="bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700">
+                Detach
+            </button>
+
+            <button @click="showDetach = false" class="ml-3 bg-slate-300 px-4 py-2 rounded hover:bg-slate-400">
+                Cancel
+            </button>
+
+        </div>
+    </div>
+
+</div>
+
+
+<!-- ============================================================= -->
+<!-- TAB: NAT GATEWAYS -->
+<!-- ============================================================= -->
+<div x-show="activeTab === 'nat'" x-cloak class="space-y-6">
+
+    <!-- ACTION BAR -->
+    <div class="flex space-x-3">
+        <button @click="openCreateNATModal()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            + Create NAT Gateway
+        </button>
+
+        <button @click="loadNatGateways()" class="bg-slate-600 text-white px-4 py-2 rounded hover:bg-slate-700">
+            Refresh NAT Gateways
+        </button>
+    </div>
+
+    <!-- CREATE NAT MODAL -->
+    <div x-show="showCreateNAT" x-cloak class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-[28rem]">
+
+            <h2 class="text-lg font-semibold mb-4">Create NAT Gateway</h2>
+
+            <template x-if="natCreateError">
+                <div class="mb-3 bg-red-100 text-red-800 border border-red-300 px-3 py-2 rounded text-sm"
+                    x-text="natCreateError"></div>
+            </template>
+
+            <!-- NAME -->
+            <label class="block mb-1 font-semibold">Name (optional)</label>
+            <input type="text" x-model="newNATName" placeholder="NetPilot-NAT" class="border p-2 rounded w-full mb-3" />
+
+            <!-- SUBNET -->
+            <label class="block mb-1 font-semibold">Subnet</label>
+            <select x-model="newNATSubnetId" class="border p-2 rounded w-full mb-3">
+                <option value="">-- Select Subnet --</option>
+                <template x-for="sn in subnets" :key="sn.subnet_id">
+                    <option :value="sn.subnet_id" x-text="`${sn.subnet_id} (${sn.cidr})`"></option>
+                </template>
+            </select>
+            <p class="text-xs text-slate-500 mb-3">
+                Choose a subnet in a public VPC (with an Internet Gateway and route to 0.0.0.0/0).
+            </p>
+
+            <div class="flex justify-end space-x-3">
+                <button @click="closeCreateNATModal()" class="px-4 py-2 bg-slate-300 rounded hover:bg-slate-400">
+                    Cancel
+                </button>
+
+                <button @click="submitCreateNAT()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    Create
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- NAT GATEWAYS TABLE -->
+    <div class="bg-white p-6 rounded-lg shadow">
+        <h2 class="text-lg font-semibold mb-4">NAT Gateways</h2>
+
+        <table class="min-w-full border border-slate-300 rounded">
+            <thead class="bg-slate-200">
+                <tr>
+                    <th class="px-3 py-2 border">NAT Gateway ID</th>
+                    <th class="px-3 py-2 border">State</th>
+                    <th class="px-3 py-2 border">Subnet</th>
+                    <th class="px-3 py-2 border">VPC</th>
+                    <th class="px-3 py-2 border">Public IP</th>
+                    <th class="px-3 py-2 border">EIP Allocation ID</th>
+                    <th class="px-3 py-2 border">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <template x-for="ngw in natGateways" :key="ngw.nat_gateway_id">
+                    <tr class="border">
+                        <td class="px-3 py-2 border font-mono" x-text="ngw.nat_gateway_id"></td>
+
+                        <td class="px-3 py-2 border">
+                            <span class="px-2 py-1 text-xs rounded" :class="ngw.state === 'available'
+                                            ? 'bg-green-100 text-green-800'
+                                            : (ngw.state === 'pending'
+                                                ? 'bg-yellow-100 text-yellow-800'
+                                                : 'bg-slate-100 text-slate-700')" x-text="ngw.state">
+                            </span>
+                        </td>
+
+                        <td class="px-3 py-2 border font-mono" x-text="ngw.subnet_id || '—'"></td>
+                        <td class="px-3 py-2 border font-mono" x-text="ngw.vpc_id || '—'"></td>
+                        <td class="px-3 py-2 border font-mono" x-text="ngw.public_ip || '—'"></td>
+                        <td class="px-3 py-2 border font-mono" x-text="ngw.allocation_id || '—'"></td>
+
+                        <td class="px-3 py-2 border">
+                            <button @click="deleteNatGateway(ngw)"
+                                class="bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+
+    </div>
+
+</div>
+
+<!-- ============================================================= -->
+<!-- ALPINE.JS LOGIC -->
+<!-- ============================================================= -->
+<script>
+    function networkConsole() {
+        return {
+            // GLOBAL STATE
+            activeTab: 'network',
+            globalError: null,
+
+            // VPC / Subnet data
+            vpcs: [],
+            subnets: [],
+            availabilityZones: [],
+
+            showCreateVPC: false,
+            newVpcCidr: "10.0.0.0/16",
+
+            showCreateSubnet: false,
+            newSubnetVPC: "",
+            newSubnetVPCManual: "",
+            newSubnetCIDR: "",
+            newSubnetAZ: "",
+            newSubnetName: "NetPilot-Subnet",
+            subnetError: "",
+            cidrSuggestions: [],
+
+            // Route table data
+            routeTables: [],
+            showAssociateRTB: false,
+            selectedRTBId: "",
+            candidateSubnetsForRTB: [],
+            selectedSubnetForAssoc: "",
+            rtbAssocError: "",
+
+            showCreateRTB: false,
+            newRTBVPC: "",
+            newRTBName: "NetPilot-RTB",
+            newRTBDescription: "",
+            rtbCreateError: "",
+
+            // Add Route modal state
+            showAddRoute: false,
+            addRouteError: "",
+            addRouteRTBId: "",
+            addRouteDestination: "",
+            addRouteTargetType: "igw",
+            addRouteTargetId: "",
+
+            // Route table data
+            routeTables: [],
+            showAssociateRTB: false,
+            selectedRTBId: "",
+            candidateSubnetsForRTB: [],
+            selectedSubnetForAssoc: "",
+            rtbAssocError: "",
+
+            showCreateRTB: false,
+            newRTBVPC: "",
+            newRTBName: "NetPilot-RTB",
+            newRTBDescription: "",
+            rtbCreateError: "",
+
+            // NAT Gateway state
+            natGateways: [],
+            showCreateNAT: false,
+            newNATSubnetId: "",
+            newNATName: "NetPilot-NAT",
+            natCreateError: "",
+
+
+            init() {
+                this.reloadAll();
+
+                // Auto-refresh NAT Gateways every 5 seconds
+                setInterval(() => {
+                    this.loadNatGateways();
+                }, 5000);
+            },
+
+            // --------------------------------------------------------
+            // LOADERS
+            // --------------------------------------------------------
+            async reloadAll() {
+                await Promise.all([
+                    this.loadVPCs(),
+                    this.loadSubnets(),
+                    this.loadAZs(),        // ✅ THIS WAS LOST
+                    this.loadRouteTables(),
+                    this.loadInternetGateways?.(), // safe optional
+                    this.loadNatGateways?.(),      // safe optional
+                ]);
+            },
+
+            async reloadRoutes() {
+                await this.loadRouteTables();
+            },
+
+            async loadVPCs() {
+                try {
+                    const res = await fetch("/api/v1/aws/vpcs");
+                    const data = await res.json();
+                    this.vpcs = data.vpcs || [];
+                } catch (e) {
+                    this.showError("Failed to load VPCs: " + e);
+                }
+            },
+
+            async loadSubnets() {
+                try {
+                    const res = await fetch("/api/v1/aws/subnets");
+                    const data = await res.json();
+                    this.subnets = data.subnets || [];
+                } catch (e) {
+                    this.showError("Failed to load subnets: " + e);
+                }
+            },
+
+            async loadAZs() {
+                try {
+                    const res = await fetch("/api/v1/aws/availability-zones");
+                    const data = await res.json();
+                    this.availabilityZones = data.availability_zones || [];
+                } catch (e) {
+                    this.showError("Failed to load availability zones: " + e);
+                }
+            },
+
+            async loadRouteTables() {
+                try {
+                    const res = await fetch("/api/v1/aws/route-tables");
+                    const data = await res.json();
+                    this.routeTables = data.route_tables || [];
+                } catch (e) {
+                    this.showError("Failed to load route tables: " + e);
+                }
+            },
+
+            async disassociate(assocId) {
+                await fetch(`/api/v1/aws/route-tables/${assocId}/disassociate`, {
+                    method: "POST"
+                });
+                this.loadRouteTables();
+            },
+
+
+            // --------------------------------------------------------
+            // ERROR HANDLING
+            // --------------------------------------------------------
+            showError(msg) {
+                this.globalError = msg;
+                setTimeout(() => {
+                    this.globalError = null;
+                }, 6000);
+            },
+
+            // --------------------------------------------------------
+            // CREATE / DELETE VPC
+            // --------------------------------------------------------
+            async createVPC() {
+                try {
+                    const res = await fetch(`/api/v1/aws/vpcs?cidr=${encodeURIComponent(this.newVpcCidr)}`, {
+                        method: "POST",
+                    });
+                    const data = await res.json();
+                    if (!res.ok || data.status === "failed") {
+                        this.showError("Failed to create VPC: " + (data.error || data.detail || "Unknown error"));
+                    } else {
+                        this.loadVPCs();
+                    }
+                } catch (e) {
+                    this.showError("Failed to create VPC: " + e);
+                }
+            },
+
+            async deleteVPC(vpc) {
+                try {
+                    const res = await fetch(`/api/v1/aws/vpc/${vpc.vpc_id}/delete`, { method: "DELETE" });
+                    const data = await res.json();
+                    if (!res.ok || data.status === "failed") {
+                        this.showError("Failed to delete VPC: " + (data.error || data.detail || "Unknown error"));
+                    }
+                } catch (e) {
+                    this.showError("Failed to delete VPC: " + e);
+                }
+                this.loadVPCs();
+                this.loadSubnets();
+                this.loadRouteTables();
+            },
+
+            async safeDeleteVPC(vpc) {
+                try {
+                    const res = await fetch(`/api/v1/aws/vpc/${vpc.vpc_id}/safe-delete`, { method: "DELETE" });
+                    const data = await res.json();
+                    if (!res.ok || data.status === "failed") {
+                        this.showError("Safe delete failed: " + (data.error || data.detail || "Unknown error"));
+                    }
+                } catch (e) {
+                    this.showError("Safe delete failed: " + e);
+                }
+                this.loadVPCs();
+                this.loadSubnets();
+                this.loadRouteTables();
+            },
+
+            async function addRoute(event) {
+                event.preventDefault();
+
+                const rtbId = document.getElementById("rtbId").value.trim();
+                const destination = document.getElementById("destinationCidr").value.trim();
+                const targetType = document.getElementById("targetType").value.trim();
+                const targetId = document.getElementById("targetId").value.trim();
+
+                const url =
+                `/api/v1/aws/route-tables/${rtbId}/routes` +
+                `?destination_cidr=${encodeURIComponent(destination)}` +
+                `&target_type=${encodeURIComponent(targetType)}` +
+                `&target_id=${encodeURIComponent(targetId)}`;
+
+            const res = await fetch(url, { method: "POST" });
+            const data = await res.json();
+
+            console.table(data);
+
+            // Optional: show a simple message (keeps behavior obvious)
+            alert(data.status === "success" ? "Route added successfully" : (data.error || "Route add failed"));
+            }
+
+            async function deleteRoute(rtbId, cidr) {
+                const routeCidr = (cidr || "").trim();
+
+                if (routeCidr === "0.0.0.0/0") {
+                const ok = confirm("WARNING: Deleting the default route may break internet access. Continue?");
+                if (!ok) return;
+                }
+
+                const url =
+                `/api/v1/aws/route-tables/${rtbId}/routes` +
+                `?destination_cidr=${encodeURIComponent(routeCidr)}`;
+
+                const res = await fetch(url, { method: "DELETE" });
+                const data = await res.json();
+
+                console.table(data);
+                alert(data.status === "success" ? "Route deleted" : (data.error || "Route delete failed"));
+            }
+
+            // --------------------------------------------------------
+            // CIDR HELPERS
+            // --------------------------------------------------------
+            getEffectiveVPCId() {
+                return this.newSubnetVPC || this.newSubnetVPCManual;
+            },
+
+            ipToInt(ip) {
+                return ip.split(".").reduce((acc, oct) => {
+                    return (acc << 8) + (parseInt(oct, 10) & 255);
+                }, 0) >>> 0;
+            },
+
+            intToIp(num) {
+                return [
+                    (num >>> 24) & 255,
+                    (num >>> 16) & 255,
+                    (num >>> 8) & 255,
+                    num & 255,
+                ].join(".");
+            },
+
+            cidrRange(cidr) {
+                const [ip, prefixStr] = cidr.split("/");
+                const prefix = parseInt(prefixStr, 10);
+                if (isNaN(prefix) || prefix < 0 || prefix > 32) {
+                    throw new Error("Invalid CIDR prefix: " + cidr);
+                }
+                const ipInt = this.ipToInt(ip);
+                const mask = prefix === 0 ? 0 : (~0 << (32 - prefix)) >>> 0;
+                const network = ipInt & mask;
+                const broadcast = network | (~mask >>> 0);
+                return { network, broadcast, prefix, cidr };
+            },
+
+            rangesOverlap(a, b) {
+                return a.network <= b.broadcast && b.network <= a.broadcast;
+            },
+
+            computeCidrSuggestions(vpcCidr, existing, desiredPrefix) {
+                const suggestions = [];
+                if (!vpcCidr || isNaN(desiredPrefix)) return suggestions;
+
+                const vpcRange = this.cidrRange(vpcCidr);
+                const blockSize = Math.pow(2, 32 - desiredPrefix);
+
+                const existingRanges = existing
+                    .filter(s => s.cidr)
+                    .map(s => this.cidrRange(s.cidr));
+
+                for (let start = vpcRange.network; start <= vpcRange.broadcast; start += blockSize) {
+                    const candidate = {
+                        network: start,
+                        broadcast: start + blockSize - 1,
+                        prefix: desiredPrefix,
+                        cidr: this.intToIp(start) + "/" + desiredPrefix,
+                    };
+
+                    if (candidate.broadcast > vpcRange.broadcast) {
+                        break;
+                    }
+
+                    const overlaps = existingRanges.some(r => this.rangesOverlap(candidate, r));
+                    if (!overlaps) {
+                        suggestions.push(candidate.cidr);
+                    }
+
+                    if (suggestions.length >= 5) break;
+                }
+
+                return suggestions;
+            },
+
+            filterCidrSuggestions() {
+                this.subnetError = "";
+                this.cidrSuggestions = [];
+
+                const cidr = this.newSubnetCIDR;
+                const vpcId = this.getEffectiveVPCId();
+                if (!cidr || !vpcId) return;
+
+                const vpc = this.vpcs.find(v => v.vpc_id === vpcId);
+                if (!vpc || !vpc.cidr) return;
+
+                try {
+                    const desired = this.cidrRange(cidr);
+                    const existingInVpc = this.subnets.filter(s => s.vpc_id === vpcId);
+                    this.cidrSuggestions = this.computeCidrSuggestions(
+                        vpc.cidr,
+                        existingInVpc,
+                        desired.prefix
+                    );
+                } catch {
+                    // ignore; handled on submit
+                }
+            },
+
+            applySuggestedCidr(cidr) {
+                this.newSubnetCIDR = cidr;
+                this.subnetError = "";
+            },
+
+            closeSubnetModal() {
+                this.showCreateSubnet = false;
+                this.subnetError = "";
+                this.cidrSuggestions = [];
+                this.newSubnetCIDR = "";
+                this.newSubnetAZ = "";
+                this.newSubnetName = "NetPilot-Subnet";
+                this.newSubnetVPCManual = "";
+            },
+
+            // --------------------------------------------------------
+            // SUBNET CREATE / DELETE (with validation)
+            // --------------------------------------------------------
+            async submitCreateSubnet() {
+                this.subnetError = "";
+                this.cidrSuggestions = [];
+
+                const vpcId = this.getEffectiveVPCId();
+                const cidr = this.newSubnetCIDR;
+                const az = this.newSubnetAZ;
+                const name = this.newSubnetName || "NetPilot-Subnet";
+
+                if (!vpcId) {
+                    this.subnetError = "Please select or enter a VPC ID.";
+                    return;
+                }
+                if (!cidr) {
+                    this.subnetError = "Please enter a subnet CIDR.";
+                    return;
+                }
+                if (!az) {
+                    this.subnetError = "Please select an Availability Zone.";
+                    return;
+                }
+
+                const vpc = this.vpcs.find(v => v.vpc_id === vpcId);
+                if (!vpc || !vpc.cidr) {
+                    this.subnetError = "Selected VPC has no CIDR information.";
+                    return;
+                }
+
+                try {
+                    const vpcRange = this.cidrRange(vpc.cidr);
+                    const subnetRange = this.cidrRange(cidr);
+
+                    if (!(subnetRange.network >= vpcRange.network &&
+                        subnetRange.broadcast <= vpcRange.broadcast)) {
+                        this.subnetError = `CIDR ${cidr} is not fully inside VPC CIDR ${vpc.cidr}.`;
+                        const existingInVpc = this.subnets.filter(s => s.vpc_id === vpcId);
+                        this.cidrSuggestions = this.computeCidrSuggestions(
+                            vpc.cidr,
+                            existingInVpc,
+                            subnetRange.prefix
+                        );
+                        return;
+                    }
+
+                    const existingInVpc = this.subnets.filter(s => s.vpc_id === vpcId);
+                    const overlaps = existingInVpc.some(s => {
+                        try {
+                            const r = this.cidrRange(s.cidr);
+                            return this.rangesOverlap(subnetRange, r);
+                        } catch {
+                            return false;
+                        }
+                    });
+
+                    if (overlaps) {
+                        this.subnetError = `CIDR ${cidr} overlaps an existing subnet in this VPC.`;
+                        this.cidrSuggestions = this.computeCidrSuggestions(
+                            vpc.cidr,
+                            existingInVpc,
+                            subnetRange.prefix
+                        );
+                        return;
+                    }
+
+                } catch (e) {
+                    this.subnetError = "Invalid CIDR format: " + e.message;
+                    return;
+                }
+
+                try {
+                    const url = `/api/v1/aws/subnets?vpc_id=${encodeURIComponent(vpcId)}&cidr=${encodeURIComponent(cidr)}&availability_zone=${encodeURIComponent(az)}&name=${encodeURIComponent(name)}`;
+                    const res = await fetch(url, { method: "POST" });
+                    const data = await res.json();
+
+                    if (!res.ok || data.status === "failed") {
+                        const msg = data.error || data.detail || "Unknown AWS error while creating subnet.";
+                        this.subnetError = msg;
+                        this.showError("Subnet creation error: " + msg);
+                        return;
+                    }
+
+                    this.closeSubnetModal();
+                    this.loadSubnets();
+
+                } catch (e) {
+                    this.subnetError = "Failed to create subnet: " + e;
+                    this.showError("Failed to create subnet: " + e);
+                }
+            },
+
+            async deleteSubnet(subnet) {
+                try {
+                    const res = await fetch(`/api/v1/aws/subnets/${subnet.subnet_id}`, { method: "DELETE" });
+                    const data = await res.json();
+                    if (!res.ok || data.status === "failed") {
+                        const msg = data.error || data.detail || "Unknown AWS error while deleting subnet.";
+                        this.showError("Subnet delete error: " + msg);
+                        return;
+                    }
+                } catch (e) {
+                    this.showError("Failed to delete subnet: " + e);
+                }
+                this.loadSubnets();
+                this.loadRouteTables();
+            },
+
+            // --------------------------------------------------------
+            // ROUTE TABLE CREATE / DELETE / ASSOCIATE / ROUTES
+            // --------------------------------------------------------
+            openCreateRTBModal() {
+                this.showCreateRTB = true;
+                this.rtbCreateError = "";
+                this.newRTBVPC = "";
+                this.newRTBName = "NetPilot-RTB";
+                this.newRTBDescription = "";
+            },
+
+            closeCreateRTBModal() {
+                this.showCreateRTB = false;
+                this.rtbCreateError = "";
+            },
+
+            async submitCreateRTB() {
+                this.rtbCreateError = "";
+
+                if (!this.newRTBVPC) {
+                    this.rtbCreateError = "Please select a VPC.";
+                    return;
+                }
+                if (!this.newRTBName) {
+                    this.rtbCreateError = "Please enter a route table name.";
+                    return;
+                }
+
+                try {
+                    const res = await fetch("/api/v1/aws/route-tables", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            vpc_id: this.newRTBVPC,
+                            name: this.newRTBName,
+                            description: this.newRTBDescription || ""
+                        })
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok || data.status === "failed") {
+                        const msg = data.error || data.detail || "Unknown AWS error while creating route table.";
+                        this.rtbCreateError = msg;
+                        this.showError("Route table creation error: " + msg);
+                        return;
+                    }
+
+                    this.closeCreateRTBModal();
+                    this.loadRouteTables();
+
+                } catch (e) {
+                    this.rtbCreateError = "Failed to create route table: " + e;
+                    this.showError("Failed to create route table: " + e);
+                }
+            },
+
+            async deleteRouteTable(rt) {
+                if (rt.is_main) {
+                    return;
+                }
+                try {
+                    const res = await fetch(`/api/v1/aws/route-tables/${rt.route_table_id}`, {
+                        method: "DELETE"
+                    });
+                    const data = await res.json();
+                    if (!res.ok || data.status === "failed") {
+                        const msg = data.error || data.detail || "Unknown AWS error while deleting route table.";
+                        this.showError("Route table delete error: " + msg);
+                        return;
+                    }
+                } catch (e) {
+                    this.showError("Failed to delete route table: " + e);
+                }
+                this.loadRouteTables();
+            },
+
+            openAssocModal(rt) {
+                this.selectedRTBId = rt.route_table_id;
+                this.rtbAssocError = "";
+                this.selectedSubnetForAssoc = "";
+
+                // Only subnets in same VPC
+                this.candidateSubnetsForRTB = this.subnets.filter(s => s.vpc_id === rt.vpc_id);
+                this.showAssociateRTB = true;
+            },
+
+            closeAssocModal() {
+                this.showAssociateRTB = false;
+                this.rtbAssocError = "";
+                this.selectedRTBId = "";
+                this.selectedSubnetForAssoc = "";
+                this.candidateSubnetsForRTB = [];
+            },
+
+            async submitAssociateRTB() {
+                this.rtbAssocError = "";
+
+                if (!this.selectedRTBId) {
+                    this.rtbAssocError = "Missing route table ID.";
+                    return;
+                }
+                if (!this.selectedSubnetForAssoc) {
+                    this.rtbAssocError = "Please select a subnet.";
+                    return;
+                }
+
+                try {
+                    const res = await fetch(`/api/v1/aws/route-tables/${this.selectedRTBId}/associate`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            subnet_id: this.selectedSubnetForAssoc
+                        })
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok || data.status === "failed") {
+                        const msg = data.error || data.detail || "Unknown AWS error while associating route table.";
+                        this.rtbAssocError = msg;
+                        this.showError("Route table association error: " + msg);
+                        return;
+                    }
+
+                    this.closeAssocModal();
+                    this.loadRouteTables();
+
+                } catch (e) {
+                    this.rtbAssocError = "Failed to associate route table: " + e;
+                    this.showError("Failed to associate route table: " + e);
+                }
+            },
+
+            // ---------------------------
+            // ADD ROUTE
+            // ---------------------------
+            openAddRouteModal(rt) {
+                this.addRouteRTBId = rt.route_table_id;
+                this.addRouteDestination = "";
+                this.addRouteTargetType = "igw";
+                this.addRouteTargetId = "";
+                this.addRouteError = "";
+                this.showAddRoute = true;
+            },
+
+            closeAddRouteModal() {
+                this.showAddRoute = false;
+                this.addRouteError = "";
+                this.addRouteRTBId = "";
+                this.addRouteDestination = "";
+                this.addRouteTargetType = "igw";
+                this.addRouteTargetId = "";
+            },
+
+            async submitAddRoute() {
+                this.addRouteError = "";
+
+                if (!this.addRouteRTBId) {
+                    this.addRouteError = "Missing route table ID.";
+                    return;
+                }
+                if (!this.addRouteDestination) {
+                    this.addRouteError = "Please enter a destination CIDR.";
+                    return;
+                }
+                if (!this.addRouteTargetType) {
+                    this.addRouteError = "Please select a target type.";
+                    return;
+                }
+                if (!this.addRouteTargetId) {
+                    this.addRouteError = "Please enter a target ID.";
+                    return;
+                }
+
+                try {
+                    const res = await fetch("/api/v1/aws/routes", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            route_table_id: this.addRouteRTBId,
+                            destination_cidr: this.addRouteDestination,
+                            target_type: this.addRouteTargetType,
+                            target_id: this.addRouteTargetId,
+                        })
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok || data.status === "failed") {
+                        const msg = data.error || data.detail || "Unknown AWS error while creating route.";
+                        this.addRouteError = msg;
+                        this.showError("Route creation error: " + msg);
+                        return;
+                    }
+
+                    this.closeAddRouteModal();
+                    this.loadRouteTables();
+
+                } catch (e) {
+                    this.addRouteError = "Failed to create route: " + e;
+                    this.showError("Failed to create route: " + e);
+                }
+            },
+
+            // ---------------------------
+            // DELETE ROUTE ENTRY
+            // ---------------------------
+            async deleteRouteEntry(rt, route) {
+                try {
+                    const url = `/api/v1/aws/routes/${encodeURIComponent(rt.route_table_id)}?destination_cidr=${encodeURIComponent(route.cidr)}`;
+                    const res = await fetch(url, { method: "DELETE" });
+                    const data = await res.json();
+                    if (!res.ok || data.status === "failed") {
+                        const msg = data.error || data.detail || "Unknown AWS error while deleting route.";
+                        this.showError("Route delete error: " + msg);
+                        return;
+                    }
+                } catch (e) {
+                    this.showError("Failed to delete route: " + e);
+                }
+                this.loadRouteTables();
+            },
+
+        }
+    }
+
+    function igwManager() {
+        return {
+            igws: [],
+            vpcs: [],
+            newName: "",
+            attachVpcId: "",
+            showCreate: false,
+            showAttach: false,
+            showDetach: false,
+            selectedIGW: "",
+            selectedVpc: "",
+
+            async loadIGWs() {
+                const res = await fetch("/api/v1/aws/internet-gateways");
+                const data = await res.json();
+                this.igws = data.igws;
+                await this.loadVPCs();
+            },
+
+            async loadVPCs() {
+                const res = await fetch("/api/v1/aws/vpcs");
+                const data = await res.json();
+                this.vpcs = data.vpcs;
+            },
+
+            async createIGW() {
+                await fetch(`/api/v1/aws/internet-gateways?name=${this.newName}&vpc_id=${this.attachVpcId}`, {
+                    method: "POST"
+                });
+                this.loadIGWs();
+            },
+
+            openAttach(igw) {
+                this.selectedIGW = igw.igw_id;
+                this.showAttach = true;
+            },
+
+            async attachIGW() {
+                await fetch(`/api/v1/aws/internet-gateways/${this.selectedIGW}/attach?vpc_id=${this.attachVpcId}`, {
+                    method: "POST"
+                });
+                this.loadIGWs();
+            },
+
+            openDetach(igw) {
+                this.selectedIGW = igw.igw_id;
+                this.selectedVpc = igw.vpc_id;
+                this.showDetach = true;
+            },
+
+            async detachIGW() {
+                await fetch(`/api/v1/aws/internet-gateways/${this.selectedIGW}/detach?vpc_id=${this.selectedVpc}`, {
+                    method: "POST"
+                });
+                this.loadIGWs();
+            },
+
+            async deleteIGW(igw_id) {
+                await fetch(`/api/v1/aws/internet-gateways/${igw_id}`, {
+                    method: "DELETE"
+                });
+                this.loadIGWs();
+            }
+        }
+    }
+
+</script>
+
+{% endblock %}
